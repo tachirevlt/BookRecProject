@@ -4,7 +4,7 @@ using Core.Interfaces;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-// Thêm các namespace cho Models phân trang/lọc
+
 using Core.Models; 
 
 namespace Application.Queries

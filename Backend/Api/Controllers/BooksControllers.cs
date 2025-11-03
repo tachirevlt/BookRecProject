@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Application.Commands;
 using Application.Queries;
 using Core.Entities;
-
+using Core.Models;
 namespace Api.Controllers
 {
     [Route("api/[controller]")]
@@ -12,6 +12,7 @@ namespace Api.Controllers
     
     public class BooksController(ISender sender) : ControllerBase
     {
+
         [HttpPost("")]
         public async Task<IActionResult> AddBookAsync([FromBody] BookEntity book)
         { 
@@ -41,6 +42,21 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [ProducesResponseType(typeof(PagedList<BookEntity>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllBooks(
+            [FromQuery] PaginationParams pagination,
+            [FromQuery] BookFilterParams filters,
+            CancellationToken cancellationToken)
+        {
+            var query = new GetAllBooksQuery(pagination, filters);
+
+            // ĐÃ SỬA: Sử dụng 'sender' thay vì '_mediator'
+            var result = await sender.Send(query, cancellationToken);
+
+            return Ok(result);
+        }
+        
         [HttpDelete("{BookId}")]
         public async Task<IActionResult> DeleteBookAsync([FromRoute] Guid BookId)
         {
