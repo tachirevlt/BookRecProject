@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Infrastructure\\Infrastructure.csproj": {}
+    "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Infrastructure\\Infrastructure.csproj": {}
   },
   "projects": {
-    "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Application\\Application.csproj": {
+    "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Application\\Application.csproj",
+        "projectUniqueName": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj",
         "projectName": "Application",
-        "projectPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Application\\Application.csproj",
+        "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Application\\obj\\",
+        "outputPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -26,8 +26,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\Core.csproj": {
-                "projectPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\Core.csproj"
+              "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj": {
+                "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj"
               }
             }
           }
@@ -76,14 +76,14 @@
         }
       }
     },
-    "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\Core.csproj": {
+    "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\Core.csproj",
+        "projectUniqueName": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj",
         "projectName": "Core",
-        "projectPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\Core.csproj",
+        "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\obj\\",
+        "outputPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -152,14 +152,14 @@
         }
       }
     },
-    "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Infrastructure\\Infrastructure.csproj": {
+    "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Infrastructure\\Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Infrastructure\\Infrastructure.csproj",
+        "projectUniqueName": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Infrastructure\\Infrastructure.csproj",
         "projectName": "Infrastructure",
-        "projectPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Infrastructure\\Infrastructure.csproj",
+        "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Infrastructure\\Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Infrastructure\\obj\\",
+        "outputPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -174,11 +174,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Application\\Application.csproj": {
-                "projectPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Application\\Application.csproj"
+              "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj": {
+                "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj"
               },
-              "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\Core.csproj": {
-                "projectPath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Core\\Core.csproj"
+              "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj": {
+                "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj"
               }
             }
           }
