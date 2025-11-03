@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "XBHBP9A17QU=",
+  "dgSpecHash": "wgp33uXPFAA=",
   "success": true,
-  "projectFilePath": "E:\\CodeFolder\\Cs_project\\BookRecBackend\\Api\\Api.csproj",
+  "projectFilePath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Api\\Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",

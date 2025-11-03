@@ -5,7 +5,7 @@ using Core.Interfaces;
 using Core.Options;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
-using Infrastructure.Services;
+
 
 namespace Infrastructure
 {
@@ -20,23 +20,10 @@ namespace Infrastructure
                 options.UseSqlServer(connectionString);
             });
             
-            // XÓA PHIÊN BẢN CŨ NÀY
-            // services.AddDbContext<AppDbContext>((provider, options) =>
-            // {
-            //     var connection = provider.GetRequiredService<IOptionsSnapshot<ConnectionStringOptions>>().Value.DefaultConnection;
-            //     options.UseSqlServer(connection);
-            // });
+
 
             services.AddScoped<IBookRepository, BookRepository>();
-            services.AddScoped<IExternalVendorRepository, ExternalVendorRepository>();
-            services.AddHttpClient<IJokeHttpClientService, JokeHttpClientService>(client =>
-            {
-                client.BaseAddress = new Uri("https://official-joke-api.appspot.com/"); 
-            });
-            services.AddHttpClient<ICoindeskHttpClientService, CoindeskHttpClientService>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.coindesk.com/v1/"); 
-            });
+
             return services;
         }
     }

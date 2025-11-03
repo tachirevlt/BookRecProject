@@ -10,13 +10,14 @@ namespace Core.Entities
     {
         public Guid Id { get; set; }
         public string title { get; set; } = null!;
-        public string authors { get; set; } = null!;
+        public string author { get; set; } = null!;
+        public string tag_name { get; set; } = null!;
         public double? year { get; set; } = null!;
         public int? books_count { get; set; } = null!;
         public string work_id { get; set; } = null!;
         public string isbn { get; set; } = null!;
         public string language_code { get; set; } = null!;
-        public double? average_rating { get; set; } = null!;
+        public decimal? average_rating { get; set; } = null!;
         public int? ratings { get; set; } = null!;
     }
 }

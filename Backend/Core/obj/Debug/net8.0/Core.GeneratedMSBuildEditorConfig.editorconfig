@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Core
-build_property.ProjectDir = E:\CodeFolder\Cs_project\BookRecBackend\Core\
+build_property.ProjectDir = E:\CodeFolder\Github_project\BookRecProject\Backend\Core\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

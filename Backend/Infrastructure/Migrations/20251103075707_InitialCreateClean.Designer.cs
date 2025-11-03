@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251028090449_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251103075707_InitialCreateClean")]
+    partial class InitialCreateClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,12 +31,13 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("authors")
+                    b.Property<string>("author")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("average_rating")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("average_rating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
 
                     b.Property<int?>("books_count")
                         .HasColumnType("int");
@@ -51,6 +52,10 @@ namespace Infrastructure.Migrations
 
                     b.Property<int?>("ratings")
                         .HasColumnType("int");
+
+                    b.Property<string>("tag_name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("title")
                         .IsRequired()

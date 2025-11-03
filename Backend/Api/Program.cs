@@ -7,8 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCore(builder.Configuration); 
 builder.Services.AddApplicationDI();
 
-var connectionString = builder.Configuration.GetSection("ConnectionStringOptions:DefaultConnection").Value;
-
+var connectionString = builder.Configuration.GetSection("ConnectionStringOptions:DefaultConnection").Value
+    ?? throw new InvalidOperationException("Configuration 'ConnectionStringOptions:DefaultConnection' is missing.");
 
 builder.Services.AddInfrastructureDI(connectionString);
 

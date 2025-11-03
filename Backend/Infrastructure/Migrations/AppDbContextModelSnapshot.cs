@@ -28,12 +28,13 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("authors")
+                    b.Property<string>("author")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("average_rating")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("average_rating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
 
                     b.Property<int?>("books_count")
                         .HasColumnType("int");
@@ -48,6 +49,10 @@ namespace Infrastructure.Migrations
 
                     b.Property<int?>("ratings")
                         .HasColumnType("int");
+
+                    b.Property<string>("tag_name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("title")
                         .IsRequired()
