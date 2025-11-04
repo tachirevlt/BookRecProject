@@ -1,204 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đề xuất Sách cho User ID: {{ user_id }}</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
-</head>
-<body>
+{% extends "_layout.html" %}
 
-<div class="content-wrapper">
-  <nav class="navbar navbar-expand navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">BookStore - Đề xuất Sách Thông Minh</a>
-      <div class="navbar-nav ml-auto">
-        <a class="nav-link mr-3" href="/"><i class="fas fa-home"></i> Trang chủ</a>
-        </div>
-    </div>
-  </nav>
+{% block title %}Đề xuất cho User {{ user_id }} - BookStore{% endblock %}
 
-  <div class="container mt-5" id="recommendationResults">
+{% block content %}
+<div class="container mt-5" id="recommendationResults">
     <h2 class="text-center mb-4">Sách đề xuất cho User ID: {{ user_id }}</h2>
 
     {% if error %}
     <div class="alert alert-danger text-center">
-      <h4>Lỗi</h4>
-      <p>{{ error }}</p>
+        <h4>Lỗi</h4>
+        <p>{{ error }}</p>
     </div>
     {% elif message %}
     <div class="alert alert-info text-center">
-      <h4>Thông báo</h4>
-      <p>{{ message }}</p>
+        <h4>Thông báo</h4>
+        <p>{{ message }}</p>
     </div>
     {% endif %}
 
     {% if books and based_on_book %}
     <div class="alert alert-info">
-      <p class="mb-0">Đề xuất dựa trên cuốn sách bạn đã xem gần đây: <strong>{{ based_on_book.book_title or 'Không rõ tên sách' }}</strong> (ID: {{ based_on_book.book_id }})</p>
+        <p class="mb-0">Đề xuất dựa trên cuốn sách bạn đã xem/mua gần đây: <strong>{{ based_on_book.book_title or 'Không rõ sách' }}</strong> (ID: {{ based_on_book.book_id }})</p>
     </div>
 
     <div class="row mt-4" id="recommendedBooksContainer">
-      {% for book in books %}
-      <div class="col-md-4 mb-4">
-        <div class="card h-100">
-          {% set image_path = book.image_path %}
-          {% if image_path and image_path.startswith('http') %}
-            {% set image_src = image_path %}
-          {% elif image_path %}
-            {% set image_src = url_for('static', path='image/' + image_path.split('/')[-1]) %}
-          {% else %}
-            {% set image_src = url_for('static', path='image/placeholder.jpg') %}
-          {% endif %}
-          <img src="{{ image_src }}" class="card-img-top" alt="{{ book.book_title or 'Bìa sách' }}" style="height: 200px; object-fit: contain;" onerror="this.onerror=null;this.src='{{ url_for('static', path='image/placeholder.jpg') }}';">
-          <div class="card-body">
-            <h5 class="card-title">{{ book.book_title or 'Không có tên' }}</h5>
-            <p class="card-text">
-              <strong>Tác giả:</strong> {{ book.author or 'N/A' }}<br>
-              <strong>Giá:</strong> {{ book.price | float | round(0) | int | format(group_separator='.') if book.price else 'N/A' }} VNĐ<br>
-              <strong>Đánh giá:</strong> {{ book.avg_star or 'N/A' }} ({{ book.num_rating or 0 }} đánh giá)<br>
-              <strong>Thể loại:</strong> {{ book.genre or 'N/A' }}
-            </p>
-          </div>
-          <div class="card-footer">
-            <button class="btn btn-primary btn-sm">Thêm vào giỏ</button>
-          </div>
+        {% for book in books %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% set image_path = book.image_path %}
+                {% if image_path and image_path.startswith('http') %}
+                    {% set image_src = image_path %}
+                {% elif image_path %}
+                    {% set image_src = url_for('static', path='image/' + image_path.split('/')[-1]) %}
+                {% else %}
+                    {% set image_src = url_for('static', path='image/placeholder.jpg') %}
+                {% endif %}
+                <img src="{{ image_src }}" class="card-img-top" alt="{{ book.book_title or 'Bìa sách' }}" style="height: 200px; object-fit: contain;" onerror="this.onerror=null;this.src='{{ url_for('static', path='image/placeholder.jpg') }}';">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.book_title or 'Không có tên' }}</h5>
+                    <p class="card-text">
+                        <strong>Tác giả:</strong> {{ book.author or 'N/A' }}<br>
+                        <strong>Giá:</strong> {{ book.price | float | round(0) | int | format(group_separator='.') if book.price else 'N/A' }} VNĐ<br>
+                        <strong>Đánh giá:</strong> {{ book.avg_star or 'N/A' }} ({{ book.num_rating or 0 }} đánh giá)<br>
+                        <strong>Thể loại:</strong> {{ book.genre or 'N/A' }}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary btn-sm">Thêm vào giỏ</button>
+                </div>
+            </div>
         </div>
-      </div>
-      {% endfor %}
+        {% endfor %}
     </div>
     {% elif show_popular %}
     <div class="container mt-5" id="popularBooks">
-      <h3 class="text-center mb-4">Sách Bán Chạy</h3>
-      <div class="row mt-4" id="popularBooksContainer">
-        <div class="col-12 text-center">
-          <div class="spinner-border text-primary" role="status">
-            <span class="sr-only">Loading...</span>
-          </div>
-          <p>Đang tải sách bán chạy...</p>
+        <h3 class="text-center mb-4">Sách Bán Chạy</h3>
+        <div class="row mt-4" id="popularBooksContainer">
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p>Đang tải sách bán chạy...</p>
+            </div>
         </div>
-      </div>
     </div>
     {% else %}
     <div class="alert alert-warning text-center">
-      <p>Không tìm thấy sách đề xuất phù hợp.</p>
+        <p>Không tìm thấy sách đề xuất phù hợp.</p>
     </div>
     {% endif %}
 
     <div class="text-center mt-4">
-      <a href="/" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Quay lại Trang chủ</a>
+        <a href="/" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Quay lại Trang chủ</a>
     </div>
-  </div>
 </div>
+{% endblock %}
 
-<footer class="footer bg-dark text-white">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-4">
-        <h5>Về chúng tôi:</h5>
-        <p>Hệ thống đề xuất sách thông minh, mang tri thức đến mọi nhà.</p>
-      </div>
-      <div class="col-md-4">
-        <h5>Liên kết nhanh</h5>
-        <ul class="list-unstyled">
-          <li><a href="/" class="text-white">Trang chủ</a></li>
-          <li><a href="#" class="text-white">Sách</a></li>
-          <li><a href="#" class="text-white">Liên hệ</a></li>
-        </ul>
-      </div>
-      <div class="col-md-4">
-        <h5>Liên hệ</h5>
-        <address>
-          <i class="fas fa-envelope"></i> Email: chuanghira@gmail.com<br>
-          <i class="fas fa-phone"></i> Điện thoại: +84 123 456 789
-        </address>
-      </div>
-    </div>
-    <div class="row mt-3">
-      <div class="col-md-12">
-        <hr class="bg-light">
-        <p class="text-center">© 2025 BookStore. All Rights Reserved.</p>
-      </div>
-    </div>
-  </div>
-</footer>
 
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+{% block scripts %}
 {% if show_popular %}
 <script>
-  // Function to fetch popular books from API
-  // Thay đổi tên hàm và endpoint
-  function fetchPopularBooks() {
-    fetch('/recommend/popular_books?num=15') // Thay đổi API endpoint
-      .then(response => response.json())
-      .then(data => {
-        // Thay đổi hàm hiển thị và key (data.products -> data.books)
-        displayPopularBooks(data.books); 
-      })
-      .catch(error => {
-        console.error('Error fetching popular books:', error);
-        // Thay đổi ID container và text lỗi
-        document.getElementById('popularBooksContainer').innerHTML = 
-          '<div class="col-12 text-center">Không thể tải sách. Vui lòng thử lại sau.</div>';
-      });
-  }
+    // Function to fetch popular books from API
+    function fetchPopularBooks() {
+        fetch('/recommend/popular_books?num=15') // Giả sử 15 là số lượng
+            .then(response => response.json())
+            .then(data => {
+                displayPopularBooks(data.books);
+            })
+            .catch(error => {
+                console.error('Error fetching popular books:', error);
+                document.getElementById('popularBooksContainer').innerHTML =
+                    '<div class="col-12 text-center">Không thể tải sách. Vui lòng thử lại sau.</div>';
+            });
+    }
 
-  // Function to display popular books
-  // Thay đổi tên hàm và tham số
-  function displayPopularBooks(books) {
-    // Thay đổi ID container
-    const container = document.getElementById('popularBooksContainer');
-    container.innerHTML = ''; // Clear loading spinner
-    
-    // Thay đổi biến lặp
-    books.forEach(book => {
-      const bookCard = document.createElement('div');
-      bookCard.className = 'col-md-4 mb-4';
-      
-      // Get image path, with fallback to placeholder
-      // Thay đổi biến
-      const imagePath = book.image_path ? 
-        (book.image_path.startsWith('http') ? book.image_path : `/static/image/${book.image_path}`) : 
-        '/static/image/placeholder.jpg';
-      
-      // Thay đổi các biến trong HTML
-      bookCard.innerHTML = `
-        <div class="card h-100">
-          <img src="${imagePath}" class="card-img-top" alt="${book.book_title}" 
-               onerror="this.src='/static/image/placeholder.jpg'" style="height: 200px; object-fit: contain;">
-          <div class="card-body">
-            <h5 class="card-title">${book.book_title || 'Không có tên'}</h5>
-            <p class="card-text">
-              <strong>Tác giả:</strong> ${book.author || 'N/A'}<br>
-              <strong>Giá:</strong> ${book.price || 'N/A'} VNĐ<br>
-              <strong>Đánh giá:</strong> ${book.avg_star || '0'} (${book.num_rating || '0'} đánh giá)<br>
-              <strong>Thể loại:</strong> ${book.genre || 'N/A'}<br>
-              <strong>Nhà xuất bản:</strong> ${book.publisher || 'N/A'}
-            </p>
-          </div>
-          <div class="card-footer">
-            <button class="btn btn-primary btn-sm">Thêm vào giỏ</button>
-            <button class="btn btn-outline-secondary btn-sm">Chi tiết</button>
-          </div>
-        </div>
-      `;
-      
-      container.appendChild(bookCard);
+    // Function to display popular books
+    function displayPopularBooks(books) {
+        const container = document.getElementById('popularBooksContainer');
+        container.innerHTML = ''; // Clear loading
+        
+        books.forEach(book => {
+            const bookCard = document.createElement('div');
+            bookCard.className = 'col-md-4 mb-4';
+            
+            const imagePath = book.image_path ? 
+                (book.image_path.startsWith('http') ? book.image_path : `/static/image/${book.image_path}`) : 
+                '/static/image/placeholder.jpg';
+            
+            bookCard.innerHTML = `
+                <div class="card h-100">
+                    <img src="${imagePath}" class="card-img-top" alt="${book.book_title}" 
+                         onerror="this.src='/static/image/placeholder.jpg'" style="height: 200px; object-fit: contain;">
+                    <div class="card-body">
+                        <h5 class="card-title">${book.book_title || 'Unknown Book'}</h5>
+                        <p class="card-text">
+                            <strong>Tác giả:</strong> ${book.author || 'N/A'}<br>
+                            <strong>Giá:</strong> ${book.price || 'N/A'} VNĐ<br>
+                            <strong>Đánh giá:</strong> ${book.avg_star || '0'} (${book.num_rating || '0'} đánh giá)<br>
+                            <strong>Thể loại:</strong> ${book.genre || 'N/A'}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-sm">Thêm vào giỏ</button>
+                    </div>
+                </div>`;
+            container.appendChild(bookCard);
+        });
+    }
+
+    // Load popular books when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchPopularBooks();
     });
-  }
-
-  // Load popular books when the page loads
-  document.addEventListener('DOMContentLoaded', function() {
-    // Thay đổi hàm gọi
-    fetchPopularBooks();
-  });
 </script>
 {% endif %}
-
-</body>
-</html>
+{% endblock %}

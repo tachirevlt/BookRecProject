@@ -1,436 +1,135 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Đề xuất Sách</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
-</head>
-<body>
+{% extends "_layout.html" %}
 
-<div class="content-wrapper">
-  <nav class="navbar navbar-expand navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">BookStore - Đề xuất Sách Thông Minh</a>
-      <div class="navbar-nav ml-auto">
-        <a class="nav-link mr-3" href="/"><i class="fas fa-home"></i> Trang chủ</a>
-        <a class="nav-link" href="#" id="settingsLink"><i class="fas fa-cog"></i> Cài đặt</a>
-      </div>
-    </div>
-  </nav>
+{% block title %}Trang chủ - BookStore{% endblock %}
 
-  <div class="container search-container">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Tìm kiếm sách, tác giả..." aria-label="Search books" id="searchInput">
-          <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" id="searchButton">
-              <i class="fas fa-search"></i> Tìm kiếm
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="container recommendation-container">
-    <h4 class="text-center mb-4">Đề xuất sách dựa trên User ID</h4>
-    <div class="row">
-      <div class="col-md-8 mx-auto">
-        <form action="/recommend/hybrid_books" method="post" id="recommendForm">
-          <div class="input-group mb-3">
-            <input type="number" name="user_id" id="userIdInput" class="form-control" placeholder="Nhập User ID..." 
-                   aria-label="User ID" required>
-            <div class="input-group-append">
-              <button class="btn btn-primary" type="submit" id="recommendButton">
-                <i class="fas fa-lightbulb"></i> Đề xuất
-              </button>
+{% block content %}
+<div class="container">
+    <div class="row search-container">
+        <div class="col-md-12">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Tìm kiếm sách, tác giả..." id="searchInput">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                </div>
             </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div class="container mt-5" id="popularBooks">
-  <h2 class="text-center mb-4">Sách Bán Chạy</h2>
-  <div class="row mt-4" id="popularBooksContainer">
-    <div class="col-12 text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="sr-only">Loading...</span>
-      </div>
-      <p>Đang tải sách bán chạy...</p>
-    </div>
-  </div>
-
-  <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="settingsModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="settingsModalLabel">Cài đặt</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
         </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="themeSelect">Chọn giao diện:</label>
-            <select class="form-control" id="themeSelect">
-              <option value="light">Sáng</option>
-              <option value="dark">Tối</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Thu phóng:</label>
-            <div class="btn-group" role="group">
-              <button type="button" class="btn btn-outline-primary" id="zoomOut">-</button>
-              <button type="button" class="btn btn-outline-primary" id="zoomIn">+</button>
+    </div>
+
+    <div class="row recommendation-container">
+        <div class="col-md-8 mx-auto">
+            <h4 class="text-center mb-4">Đề xuất sách dựa trên User ID</h4>
+            <form action="/recommend/hybrid_books" method="post" id="recommendForm">
+                <div class="input-group mb-3">
+                    <input type="number" name="user_id" id="userIdInput" class="form-control" placeholder="Nhập User ID..." required>
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit" id="recommendButton">
+                            <i class="fas fa-lightbulb"></i> Đề xuất
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-5" id="popularBooks">
+        <h2 class="text-center mb-4">Sách Bán Chạy</h2>
+        <div class="row mt-4" id="popularBooksContainer">
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p>Đang tải sách bán chạy...</p>
             </div>
-          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
-          <button type="button" class="btn btn-primary" id="applyTheme">Áp dụng</button>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
+{% endblock %}
 
-<footer class="footer bg-dark text-white">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-4">
-        <h5>Về chúng tôi:</h5>
-        <p>Hệ thống đề xuất sách thông minh, mang tri thức đến mọi nhà.</p>
-      </div>
-      <div class="col-md-4">
-        <h5>Liên kết nhanh</h5>
-        <ul class="list-unstyled">
-          <li><a href="/" class="text-white">Trang chủ</a></li>
-          <li><a href="#" class="text-white">Sách</a></li>
-          <li><a href="#" class="text-white">Liên hệ</a></li>
-        </ul>
-      </div>
-      <div class="col-md-4">
-        <h5>Liên hệ</h5>
-        <address>
-          <i class="fas fa-envelope"></i> Email: chuanghira@gmail.com<br>
-          <i class="fas fa-phone"></i> Điện thoại: +84 123 456 789
-        </address>
-      </div>
-    </div>
-    <div class="row mt-3">
-      <div class="col-md-12">
-        <hr class="bg-light">
-        <p class="text-center">© 2025 BookStore. All Rights Reserved.</p>
-      </div>
-    </div>
-  </div>
-</footer>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+{% block scripts %}
 <script>
-  // Xử lý nút cài đặt (Không thay đổi)
-  document.getElementById('settingsLink').addEventListener('click', function() {
-    $('#settingsModal').modal('show');
-  });
-
-  // Xử lý áp dụng giao diện (Code logic này có vẻ bị lỗi, 
-  // vì nó tìm 'input[name="theme"]:checked' nhưng trong HTML là <select>.
-  // Tạm thời giữ nguyên logic gốc của bạn)
-  document.getElementById('applyTheme').addEventListener('click', function() {
-    // Lấy giá trị từ <select> thay vì input radio
-    var selectedTheme = document.getElementById('themeSelect').value;
-    
-    if (selectedTheme === 'dark') { // Thay 'black' thành 'dark' cho khớp với <option>
-      // Body and general text
-      document.body.style.backgroundColor = '#121212';
-      document.body.style.color = 'white';
-      
-      // Navbar customization for dark theme
-      document.querySelectorAll('.navbar').forEach(function(el) {
-        el.classList.remove('navbar-light', 'bg-light');
-        el.classList.add('navbar-dark', 'bg-dark');
-      });
-      
-      // Make navbar links visible
-      document.querySelectorAll('.navbar-nav .nav-link').forEach(function(el) {
-        el.style.color = 'rgba(255,255,255,0.8)';
-      });
-      document.querySelectorAll('.navbar-brand').forEach(function(el) {
-        el.style.color = 'white';
-      });
-      
-      // Cards and containers
-      document.querySelectorAll('.card, .recommendation-container').forEach(function(el) {
-        el.style.backgroundColor = '#1f1f1f';
-        el.style.color = 'white';
-      });
-      
-      // Ensure modal text is visible in dark theme
-      document.querySelectorAll('.modal-content').forEach(function(el) {
-        el.style.backgroundColor = '#1f1f1f';
-        el.style.color = 'white';
-      });
-      
-      // Make sure form labels are visible
-      document.querySelectorAll('.modal-content .form-check-label').forEach(function(el) {
-        el.style.color = 'white';
-      });
-      
-      // Make modal headers visible
-      document.querySelectorAll('.modal-header, .modal-footer').forEach(function(el) {
-        el.style.backgroundColor = '#2d2d2d';
-      });
-    } else { // Mặc định là 'light'
-      // Body and general text
-      document.body.style.backgroundColor = '#f8f9fa';
-      document.body.style.color = 'black';
-      
-      // Navbar customization for light theme
-      document.querySelectorAll('.navbar').forEach(function(el) {
-        el.classList.remove('navbar-dark', 'bg-dark');
-        el.classList.add('navbar-light', 'bg-light');
-      });
-      
-      // Reset navbar links
-      document.querySelectorAll('.navbar-nav .nav-link').forEach(function(el) {
-        el.style.color = '';
-      });
-      document.querySelectorAll('.navbar-brand').forEach(function(el) {
-        el.style.color = '';
-      });
-      
-      // Cards and containers
-      document.querySelectorAll('.card, .recommendation-container').forEach(function(el) {
-        el.style.backgroundColor = '#fff';
-        el.style.color = 'black';
-      });
-      
-      // Reset modal colors for light theme
-      document.querySelectorAll('.modal-content').forEach(function(el) {
-        el.style.backgroundColor = '#fff';
-        el.style.color = 'black';
-      });
-      
-      // Reset form labels
-      document.querySelectorAll('.modal-content .form-check-label').forEach(function(el) {
-        el.style.color = 'black';
-      });
-      
-      // Reset modal headers
-      document.querySelectorAll('.modal-header, .modal-footer').forEach(function(el) {
-        el.style.backgroundColor = '#f8f9fa';
-      });
-    }
-    
-    $('#settingsModal').modal('hide');
-  });
-
-  // Xử lý thu phóng (Không thay đổi)
-  document.getElementById('zoomIn').addEventListener('click', function() {
-    document.body.style.zoom = "110%";
-  });
-
-  document.getElementById('zoomOut').addEventListener('click', function() {
-    document.body.style.zoom = "100%";
-  });
-
-  // Xử lý nút tìm kiếm (Không thay đổi)
-  // document.getElementById('searchButton').addEventListener('click', function() {
-  //   const searchTerm = document.getElementById('searchInput').value;
-  //   // Add search functionality here
-  //   console.log('Searching for:', searchTerm);
-  // });
-  // Lưu ý: Nút tìm kiếm này đã được xử lý ở sự kiện DOMContentLoaded bên dưới
-
-  // Handle recommendation form submission with POST method
-  // **SỬA LỖI**: ID "recommendForm" đã được thêm vào thẻ <form>
-  document.getElementById('recommendForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent default form submission
-    
-    const userId = document.getElementById('userIdInput').value;
-    
-    if (!userId) {
-      alert('Vui lòng nhập User ID');
-      return;
+    // Function to fetch popular books from API
+    function fetchPopularBooks() {
+        fetch('/recommend/popular_books?num=9')
+            .then(response => response.json())
+            .then(data => {
+                displayPopularBooks(data.books);
+            })
+            .catch(error => {
+                console.error('Error fetching popular books:', error);
+                document.getElementById('popularBooksContainer').innerHTML =
+                    '<div class="col-12 text-center">Không thể tải sách. Vui lòng thử lại sau.</div>';
+            });
     }
 
-    // Show loading indicator
-    const recommendButton = document.getElementById('recommendButton');
-    const originalText = recommendButton.innerHTML;
-    recommendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-    recommendButton.disabled = true;
+    // Function to display popular books
+    function displayPopularBooks(books) {
+        const container = document.getElementById('popularBooksContainer');
+        container.innerHTML = ''; // Clear loading spinner
+        
+        books.forEach(book => {
+            const bookCard = document.createElement('div');
+            bookCard.className = 'col-md-4 mb-4';
+            const imagePath = book.image_path ? 
+                (book.image_path.startsWith('http') ? book.image_path : `/static/image/${book.image_path}`) : 
+                '/static/image/placeholder.jpg';
+            
+            bookCard.innerHTML = `
+                <div class="card h-100">
+                    <img src="${imagePath}" class="card-img-top" alt="${book.book_title || 'Bìa sách'}"
+                         onerror="this.src='/static/image/placeholder.jpg'" style="height: 200px; object-fit: contain;">
+                    <div class="card-body">
+                        <h5 class="card-title">${book.book_title || 'Unknown Book'}</h5>
+                        <p class="card-text">
+                            <strong>Tác giả:</strong> ${book.author || 'N/A'}<br>
+                            <strong>Giá:</strong> ${book.price || 'N/A'} VNĐ<br>
+                            <strong>Đánh giá:</strong> ${book.avg_star || '0'} (${book.num_rating || '0'} đánh giá)<br>
+                            <strong>Thể loại:</strong> ${book.genre || 'N/A'}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-sm">Thêm vào giỏ</button>
+                    </div>
+                </div>`;
+            container.appendChild(bookCard);
+        });
+    }
 
-    // Create form data for POST request
-    const formData = new FormData();
-    formData.append('user_id', userId);
+    // Load popular books when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchPopularBooks();
 
-    // Make POST request to content-based recommendation endpoint
-    // Thay đổi endpoint
-    fetch('/recommend/content_based_books', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.text())
-    .then(html => {
-      document.open();
-      document.write(html);
-      document.close();
+        // Handle search functionality
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                window.location.href = `/search?query=${encodeURIComponent(query)}`;
+            }
+        }
+        
+        // Search button click
+        document.getElementById('searchButton').addEventListener('click', performSearch);
+        
+        // Enter key press in search input
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Handle recommendation form submission
+        document.getElementById('recommendForm').addEventListener('submit', function(event) {
+            const userId = document.getElementById('userIdInput').value;
+            if (!userId) {
+                alert('Vui lòng nhập User ID');
+                event.preventDefault(); // Ngăn chặn submit nếu chưa nhập ID
+                return;
+            }
+            // Không cần fetch, vì form đã có action="POST"
+            // Đoạn code này chỉ để validation
+        });
     });
-  });
-
-  // Function to display recommended books
-  // (Hàm này có vẻ không được gọi ở đâu, nhưng vẫn đổi tên cho nhất quán)
-  // Thay đổi tên hàm và các biến
-  function displayRecommendedBooks(books, basedOnBook) {
-      const container = document.getElementById('recommendedProductsContainer'); // ID này không tồn tại trong HTML
-      container.innerHTML = '';
-      
-      // Add "Based on" information
-      if (basedOnBook) {
-          container.innerHTML = `
-              <div class="col-12 mb-3">
-                  <div class="alert alert-info">
-                      Đề xuất dựa trên cuốn sách bạn đã xem gần đây: <strong>${basedOnBook}</strong>
-                  </div>
-              </div>
-          `;
-      }
-      
-      // Add product cards -> book cards
-      books.forEach(book => {
-          const bookCard = document.createElement('div');
-          bookCard.className = 'col-md-4 mb-4';
-          
-          // Get image path, with fallback to placeholder
-          const imagePath = book.image_path ? 
-              (book.image_path.startsWith('http') ? book.image_path : `/static/image/${book.image_path}`) : 
-              '/static/image/placeholder.jpg';
-          
-          // Thay đổi các trường thông tin
-          bookCard.innerHTML = `
-              <div class="card h-100">
-                  <img src="${imagePath}" class="card-img-top" alt="${book.book_title}" 
-                      onerror="this.src='/static/image/placeholder.jpg'" style="height: 200px; object-fit: contain;">
-                  <div class="card-body">
-                      <h5 class="card-title">${book.book_title || 'Unknown Book'}</h5>
-                      <p class="card-text">
-                          <strong>Tác giả:</strong> ${book.author || 'N/A'}<br>
-                          <strong>Giá:</strong> ${book.price || 'N/A'} VNĐ<br>
-                          <strong>Đánh giá:</strong> ${book.avg_star || '0'} (${book.num_rating || '0'} đánh giá)<br>
-                          <strong>Nhà xuất bản:</strong> ${book.publisher || 'N/A'}<br>
-                          <strong>Thể loại:</strong> ${book.genre || 'Mọi loại sách'}
-                      </p>
-                  </div>
-                  <div class="card-footer">
-                      <button class="btn btn-primary btn-sm">Thêm vào giỏ</button>
-                      <button class="btn btn-outline-secondary btn-sm">Chi tiết</button>
-                  </div>
-              </div>
-          `;
-          
-          container.appendChild(bookCard);
-      });
-  }
 </script>
-
-<script>
-  // Function to fetch popular books from API
-  // Thay đổi tên hàm
-  function fetchPopularBooks() {
-    // Thay đổi endpoint
-    fetch('/recommend/popular_books?num=9')
-      .then(response => response.json())
-      .then(data => {
-        // Thay đổi hàm hiển thị và key (data.products -> data.books)
-        displayPopularBooks(data.books);
-      })
-      .catch(error => {
-        console.error('Error fetching popular books:', error);
-        // Thay đổi container ID và text lỗi
-        document.getElementById('popularBooksContainer').innerHTML = 
-          '<div class="col-12 text-center">Không thể tải sách. Vui lòng thử lại sau.</div>';
-      });
-  }
-
-  // Function to display popular books
-  // Thay đổi tên hàm và tham số
-  function displayPopularBooks(books) {
-    // Thay đổi container ID
-    const container = document.getElementById('popularBooksContainer');
-    container.innerHTML = ''; // Clear loading spinner
-    
-    // Thay đổi biến lặp
-    books.forEach(book => {
-      const bookCard = document.createElement('div');
-      bookCard.className = 'col-md-4 mb-4';
-      
-      // Get image path, with fallback to placeholder
-      // Thay đổi biến
-      const imagePath = book.image_path ? 
-        (book.image_path.startsWith('http') ? book.image_path : `/static/image/${book.image_path}`) : 
-        '/static/image/placeholder.jpg';
-      
-      // Thay đổi các biến trong HTML
-      bookCard.innerHTML = `
-        <div class="card h-100">
-          <img src="${imagePath}" class="card-img-top" alt="${book.book_title}" 
-               onerror="this.src='/static/image/placeholder.jpg'" style="height: 200px; object-fit: contain;">
-          <div class="card-body">
-            <h5 class="card-title">${book.book_title || 'Unknown Book'}</h5>
-            <p class="card-text">
-              <strong>Tác giả:</strong> ${book.author || 'N/A'}<br>
-              <strong>Giá:</strong> ${book.price || 'N/A'} VNĐ<br>
-              <strong>Đánh giá:</strong> ${book.avg_star || '0'} (${book.num_rating || '0'} đánh giá)<br>
-              <strong>Nhà xuất bản:</strong> ${book.publisher || 'N/A'}<br>
-              <strong>Thể loại:</strong> ${book.genre || 'Mọi loại sách'}
-            </p>
-          </div>
-          <div class="card-footer">
-            <button class="btn btn-primary btn-sm">Thêm vào giỏ</button>
-            <button class="btn btn-outline-secondary btn-sm">Chi tiết</button>
-          </div>
-        </div>
-      `;
-      
-      container.appendChild(bookCard);
-    });
-  }
-
-  // Load popular books when the page loads
-  document.addEventListener('DOMContentLoaded', function() {
-    // Thay đổi hàm gọi
-    fetchPopularBooks();
-    
-    // Handle search functionality (Không thay đổi logic)
-    function performSearch() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (query) {
-        window.location.href = `/search?query=${encodeURIComponent(query)}`;
-      }
-    }
-    
-    // Search button click
-    document.getElementById('searchButton').addEventListener('click', function() {
-      performSearch();
-    });
-    
-    // Enter key press in search input
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-      if (e.which === 13 || e.keyCode === 13) { // Enter key
-        performSearch();
-      }
-    });
-  });
-</script>
-
-</body>
-</html>
+{% endblock %}
