@@ -17,8 +17,7 @@ namespace Infrastructure.Repositories
 
         public async Task<UserEntity?> GetUserByIdAsync(Guid userId, CancellationToken ct = default)
         {
-            // Đổi FindAsync thành FirstOrDefaultAsync + Include
-            // để tải danh sách FavoriteBooks
+
             return await _db.Users
                 .Include(u => u.FavoriteBooks)
                 .FirstOrDefaultAsync(u => u.UserId == userId, ct);
@@ -31,14 +30,13 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
             return user; // Trả về entity đã được thêm (EF Core sẽ cập nhật ID)
         }
+        public async Task<UserEntity?> GetUserByUsernameAsync(string username, CancellationToken ct = default)
+        {
+            // Dùng FirstOrDefaultAsync để tìm user theo tên
+            return await _db.Users
+                .FirstOrDefaultAsync(u => u.Username == username, ct);
+        }
 
-        public async Task<UserEntity?> GetUserByIdWithFavoritesAsync(Guid id, CancellationToken ct = default)
-                {
-                    // Dùng Include để tải danh sách FavoriteBooks cùng lúc với User
-                    return await _db.Users
-                        .Include(u => u.FavoriteBooks)
-                        .FirstOrDefaultAsync(u => u.UserId == id, ct);
-                }
         public async Task<UserEntity> UpdateUserAsync(Guid userId, UserEntity updatedUserData, CancellationToken ct = default)
         {
             var existingUser = await _db.Users.FindAsync(new object?[] { userId }, ct);
