@@ -42,6 +42,16 @@ namespace Api.Controllers
                 return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
             }
         }
+                [HttpGet("{UserId}")]
+        public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
+        {
+            var result = await sender.Send(new GetUserByIdQuery(UserId));
+            if (result == null)
+            {
+                return NotFound($"Không tìm thấy sách với ID: {UserId}"); 
+            }
+            return Ok(result);
+        }
         [HttpPost("")]
         public async Task<IActionResult> AddUserAsync([FromBody] UserEntity user)
         { 
@@ -59,19 +69,7 @@ namespace Api.Controllers
             }
             return Ok(result);
         }
-
-        [HttpGet("{UserId}")]
-        public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
-        {
-            var result = await sender.Send(new GetUserByIdQuery(UserId));
-            if (result == null)
-            {
-                return NotFound($"Không tìm thấy sách với ID: {UserId}"); 
-            }
-            return Ok(result);
-        }
-
-        
+      
         [HttpDelete("{UserId}")]
         public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid UserId)
         {

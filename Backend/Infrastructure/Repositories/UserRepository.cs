@@ -15,12 +15,13 @@ namespace Infrastructure.Repositories
             _db = db;
         }
 
-        public async Task<UserEntity?> GetUserByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<UserEntity?> GetUserByIdAsync(Guid userId, CancellationToken ct = default)
         {
-            var user = await _db.Users.FindAsync(new object?[] { id }, ct);
-            // Xử lý trường hợp không tìm thấy nếu cần (ví dụ throw exception)
-            if (user == null) throw new KeyNotFoundException($"Không tìm thấy sách với ID: {id}");
-            return user;
+            // Đổi FindAsync thành FirstOrDefaultAsync + Include
+            // để tải danh sách FavoriteBooks
+            return await _db.Users
+                .Include(u => u.FavoriteBooks)
+                .FirstOrDefaultAsync(u => u.UserId == userId, ct);
         }
 
 
