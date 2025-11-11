@@ -8,7 +8,7 @@ namespace Core.Entities
 {
     public class BookEntity
     {
-        public Guid Id { get; set; }
+        public Guid BookId { get; set; }
         public string title { get; set; } = null!;
         public string author { get; set; } = null!;
         public string tag_name { get; set; } = null!;

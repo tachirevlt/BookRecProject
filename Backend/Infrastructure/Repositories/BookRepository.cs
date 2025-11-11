@@ -72,7 +72,7 @@ namespace Infrastructure.Repositories
                 
                 
                 // Mặc định sắp xếp theo ID để đảm bảo tính ổn định (Required for Skip/Take)
-                query = query.OrderBy(b => b.Id); 
+                query = query.OrderBy(b => b.BookId); 
 
                 // Nếu có tiêu chí sắp xếp, áp dụng sắp xếp động
                 if (!string.IsNullOrWhiteSpace(filters.SortBy))

@@ -11,17 +11,15 @@ namespace Infrastructure
 {
     public static class DependencyInjection
     {
-        // THAY ĐỔI 1: Thêm tham số "string connectionString"
         public static IServiceCollection AddInfrastructureDI(this IServiceCollection services, string connectionString)
         {
-            // THAY ĐỔI 2: Dùng trực tiếp "connectionString"
             services.AddDbContext<AppDbContext>(options =>
             {
                 options.UseSqlServer(connectionString);
             });
             
 
-
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IBookRepository, BookRepository>();
 
             return services;
