@@ -46,7 +46,7 @@ namespace Infrastructure.Repositories
                 throw new KeyNotFoundException($"Không tìm thấy user với ID: {userId}");
             }
 
-            existingUser.userName = updatedUserData.userName;
+            existingUser.Username = updatedUserData.Username;
             existingUser.FavoriteBooks = updatedUserData.FavoriteBooks;
 
 

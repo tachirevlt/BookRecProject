@@ -77,12 +77,7 @@ namespace Api.Controllers
             }
             return Ok(result);
         }
-        [HttpPost("")]
-        public async Task<IActionResult> AddUserAsync([FromBody] UserEntity user)
-        { 
-            var result = await sender.Send(new AddUserCommand(user));
-            return Ok(result);
-        }
+
 
         [HttpPut("{UserId}")]
         public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserEntity User)
