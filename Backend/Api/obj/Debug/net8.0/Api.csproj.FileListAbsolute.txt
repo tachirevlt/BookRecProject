@@ -300,3 +300,6 @@ E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\scopedc
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.csproj.Up2Date
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.genruntimeconfig.cache
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\ref\Api.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\BCrypt.Net-Next.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.Bcl.TimeProvider.dll

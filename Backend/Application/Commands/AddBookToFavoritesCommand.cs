@@ -32,7 +32,7 @@ namespace Application.Commands
         public async Task<bool> Handle(AddBookToFavoritesCommand request, CancellationToken cancellationToken)
         {
             // 1. Lấy User (bao gồm cả danh sách favorites hiện tại)
-            var user = await _userRepository.GetUserByIdWithFavoritesAsync(request.UserId, cancellationToken);
+            var user = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
             if (user == null)
             {
                 throw new KeyNotFoundException($"Không tìm thấy User với ID: {request.UserId}");

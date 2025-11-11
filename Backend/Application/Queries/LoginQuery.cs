@@ -1,16 +1,16 @@
 using MediatR;
 using Core.Entities;
 using Core.Interfaces;
-using Core.Models; // Cần cho UserLoginDto
+using Core.Models;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt; // Cần để tạo Token
-using System.Security.Claims; // Cần cho Claims
-using System.Text; // Cần cho Encoding
+using System.IdentityModel.Tokens.Jwt; 
+using System.Security.Claims; 
+using System.Text; 
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration; // Cần để đọc appsettings.json
-using Microsoft.IdentityModel.Tokens; // Cần cho SymmetricSecurityKey
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens; 
 
 namespace Application.Queries
 {
@@ -54,18 +54,23 @@ namespace Application.Queries
         private string GenerateJwtToken(UserEntity user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            
-            // Lấy Secret Key từ appsettings.json
-            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:Key"]);
 
-            // Tạo "Claims" (Thông tin bên trong Token)
+            var jwtKeyString = _configuration["JwtSettings:Key"]
+                ?? throw new InvalidOperationException("Không tìm thấy cấu hình 'JwtSettings:Key' trong appsettings.json.");
+            var key = Encoding.UTF8.GetBytes(jwtKeyString);
+
+            if (key.Length < 32)
+            {
+                throw new InvalidOperationException("Key bí mật (JwtSettings:Key) phải có ít nhất 32 ký tự.");
+            }
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), // ID của User
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()), // ID của User
                 new Claim(JwtRegisteredClaimNames.Name, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role) // <-- Đây là phần Phân quyền (Role)
             };
+
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

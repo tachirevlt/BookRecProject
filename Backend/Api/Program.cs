@@ -4,6 +4,7 @@ using Core;
 using System.Text; 
 using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,28 +29,39 @@ var connectionString = builder.Configuration.GetSection("ConnectionStringOptions
 
 builder.Services.AddInfrastructureDI(connectionString);
 
+var jwtKeyString = builder.Configuration["JwtSettings:Key"] 
+    ?? throw new InvalidOperationException("Không tìm thấy cấu hình 'JwtSettings:Key' trong appsettings.json.");
+
+var keyBytes = Encoding.UTF8.GetBytes(jwtKeyString);
+if (keyBytes.Length < 32)
+{
+    throw new InvalidOperationException("Key bí mật (JwtSettings:Key) phải có ít nhất 32 ký tự (256-bit).");
+}
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    // Định nghĩa "Bearer"
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        In = ParameterLocation.Header,
         Description = "Nhập 'Bearer' [dấu cách] và sau đó là token của bạn.\n\nVí dụ: 'Bearer 12345abcdef'"
     });
 
-    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    // Yêu cầu token cho các endpoint
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.OpenApiReferenceType.SecurityScheme,
+                    // DÒNG ĐÚNG LÀ ĐÂY:
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
@@ -57,6 +69,7 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -73,7 +86,9 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
+        
+        // Dùng biến "keyBytes" đã được kiểm tra an toàn
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes) 
     };
 });
 

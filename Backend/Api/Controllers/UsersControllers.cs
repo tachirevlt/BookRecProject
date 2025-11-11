@@ -67,7 +67,7 @@ namespace Api.Controllers
                 return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
             }
         }
-                [HttpGet("{UserId}")]
+        [HttpGet("{UserId}")]
         public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
         {
             var result = await sender.Send(new GetUserByIdQuery(UserId));
