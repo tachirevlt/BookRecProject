@@ -14,13 +14,13 @@ namespace Application.Commands
         public async Task<BookEntity> Handle(AddBookCommand request, CancellationToken cancellationToken)
         {
             
-            if (request.Book.Id == Guid.Empty)
+            if (request.Book.BookId == Guid.Empty)
             {
-                request.Book.Id = Guid.NewGuid();
+                request.Book.BookId = Guid.NewGuid();
             }
             var createdBook = await bookRepository.AddBookAsync(request.Book);
 
-            await mediator.Publish(new BookCreatedEvent(createdBook.Id), cancellationToken); 
+            await mediator.Publish(new BookCreatedEvent(createdBook.BookId), cancellationToken); 
 
             return createdBook;
         }

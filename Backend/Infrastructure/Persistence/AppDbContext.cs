@@ -13,15 +13,26 @@ namespace Infrastructure.Persistence
         {
             base.OnModelCreating(modelBuilder);
 
-            // Cấu hình cụ thể cho BookEntity
             modelBuilder.Entity<BookEntity>(entity =>
             {
-
                 entity.Property(b => b.average_rating)
-                      .HasPrecision(3, 2);
+                    .HasPrecision(3, 2);
+
+                entity.Property(b => b.BookId)
+                    .ValueGeneratedNever();
+
+            });
+
+            modelBuilder.Entity<UserEntity>(entity =>
+            {
+                entity.HasMany(u => u.FavoriteBooks)
+                    .WithMany()
+                    .UsingEntity("UserFavoriteBooks");
+
             });
         }
         public DbSet<BookEntity> Books { get; set; } = null!;
+        public DbSet<UserEntity> Users { get; set; } = null!;
     }
 }
 
