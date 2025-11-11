@@ -9,28 +9,35 @@ namespace Infrastructure.Persistence
             : base(options)
         {
         }
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<BookEntity>(entity =>
         {
-            base.OnModelCreating(modelBuilder);
+            // 1. (FIX LỖI) Chỉ định rõ ràng BookId là Khóa chính
+            entity.HasKey(b => b.BookId);
 
-            modelBuilder.Entity<BookEntity>(entity =>
-            {
-                entity.Property(b => b.average_rating)
-                    .HasPrecision(3, 2);
+            // 2. Cấu hình HasPrecision (code cũ của bạn)
+            entity.Property(b => b.average_rating)
+                .HasPrecision(3, 2);
 
-                entity.Property(b => b.BookId)
-                    .ValueGeneratedNever();
+            // 3. Cấu hình C# tự tạo Guid (đã dùng BookId - đúng)
+            entity.Property(b => b.BookId)
+                .ValueGeneratedNever();
+        });
 
-            });
+        modelBuilder.Entity<UserEntity>(entity =>
+        {
+            // 1. (FIX LỖI) Chỉ định rõ ràng Id là Khóa chính
+            entity.HasKey(u => u.UserId);
 
-            modelBuilder.Entity<UserEntity>(entity =>
-            {
-                entity.HasMany(u => u.FavoriteBooks)
-                    .WithMany()
-                    .UsingEntity("UserFavoriteBooks");
-
-            });
-        }
+            // 2. Cấu hình Favorites (code cũ của bạn)
+            entity.HasMany(u => u.FavoriteBooks)
+                .WithMany()
+                .UsingEntity("UserFavoriteBooks");
+        });
+    }
         public DbSet<BookEntity> Books { get; set; } = null!;
         public DbSet<UserEntity> Users { get; set; } = null!;
     }
