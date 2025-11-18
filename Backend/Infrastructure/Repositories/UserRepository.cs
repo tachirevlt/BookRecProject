@@ -40,19 +40,21 @@ namespace Infrastructure.Repositories
         public async Task<UserEntity> UpdateUserAsync(Guid userId, UserEntity updatedUserData, CancellationToken ct = default)
         {
             var existingUser = await _db.Users.FindAsync(new object?[] { userId }, ct);
+            
             if (existingUser is null)
             {
-                // Nên throw exception hoặc trả về null/Result pattern tùy thiết kế
                 throw new KeyNotFoundException($"Không tìm thấy user với ID: {userId}");
             }
-
             existingUser.Username = updatedUserData.Username;
-            existingUser.FavoriteBooks = updatedUserData.FavoriteBooks;
+            existingUser.Email = updatedUserData.Email;
 
-
-            _db.Users.Update(existingUser); // Update entity đã được track
+            if (!string.IsNullOrEmpty(updatedUserData.HashedPassword))
+            {
+                existingUser.HashedPassword = updatedUserData.HashedPassword;
+            }
             await _db.SaveChangesAsync(ct);
-            return existingUser; // Trả về entity đã được cập nhật
+            
+            return existingUser;
         }
 
         public async Task<bool> DeleteUserAsync(Guid id, CancellationToken ct = default)
