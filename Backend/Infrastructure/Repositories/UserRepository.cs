@@ -72,5 +72,16 @@ namespace Infrastructure.Repositories
         {
             await _db.SaveChangesAsync(ct);
         }
+        public async Task<bool> IsEmailExistsAsync(string email, Guid? excludeUserId = null, CancellationToken ct = default)
+        {
+            // Kiểm tra xem có user nào KHÁC (người có ID != excludeUserId) đang dùng email này không
+            return await _db.Users
+                .AnyAsync(u => u.Email == email && (!excludeUserId.HasValue || u.UserId != excludeUserId), ct);
+        }
+        public async Task<bool> IsUsernameExistsAsync(string username, Guid? excludeUserId = null, CancellationToken ct = default)
+        {
+            return await _db.Users
+                .AnyAsync(u => u.Username == username && (!excludeUserId.HasValue || u.UserId != excludeUserId), ct);
+        }
     }
 }

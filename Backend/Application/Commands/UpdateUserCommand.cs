@@ -5,6 +5,7 @@ using Core.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace Application.Commands
 {
@@ -15,6 +16,10 @@ namespace Application.Commands
     {
         private readonly IUserRepository _userRepository;
 
+        private static readonly Regex EmailRegex = new Regex(
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public UpdateUserCommandHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
@@ -22,10 +27,25 @@ namespace Application.Commands
 
         public async Task<UserEntity> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
+            if (!EmailRegex.IsMatch(request.UpdateData.Email))
+            {
+                throw new ArgumentException("Định dạng email không hợp lệ.");
+            }
+
+            if (await _userRepository.IsUsernameExistsAsync(request.UpdateData.Username, request.UserId, cancellationToken))
+            {
+                throw new ArgumentException("Tên đăng nhập này đã được sử dụng bởi người khác.");
+            }
+
+            if (await _userRepository.IsEmailExistsAsync(request.UpdateData.Email, request.UserId, cancellationToken))
+            {
+                throw new ArgumentException("Email này đã được sử dụng bởi tài khoản khác.");
+            }
+            
             var userEntityUpdates = new UserEntity
             {
                 Username = request.UpdateData.Username,
-                Email = request.UpdateData.Email,
+                Email = request.UpdateData.Email
             };
 
             if (!string.IsNullOrEmpty(request.UpdateData.Password))

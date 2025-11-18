@@ -59,9 +59,30 @@ namespace Api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> RegisterAsync([FromBody] UserRegistrationDto userDto)
         {
-            var command = new AddUserCommand(userDto);
-            var result = await sender.Send(command);
-            return Ok(result);
+            try 
+            {
+                var command = new AddUserCommand(userDto);
+                var result = await sender.Send(command); 
+
+                var responseDto = new UserDto
+                {
+                    UserId = result.UserId,
+                    Username = result.Username,
+                    Email = result.Email,
+                    Role = result.Role,
+                    FavoriteBooks = result.FavoriteBooks
+                };
+                
+                return CreatedAtAction("GetUserById", new { UserId = result.UserId }, responseDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server.", error = ex.Message });
+            }
         }
 
 
@@ -105,13 +126,29 @@ namespace Api.Controllers
 
             try
             {
-                // Truyền DTO vào Command
-                var result = await sender.Send(new UpdateUserCommand(UserId, updateData));
-                return Ok(result);
+                var command = new UpdateUserCommand(UserId, updateData);
+                var result = await sender.Send(command); // result là UserEntity (chứa pass)
+
+                // 2. FIX LỖI BẢO MẬT: Map sang DTO trước khi trả về
+                var responseDto = new UserDto
+                {
+                    UserId = result.UserId,
+                    Username = result.Username,
+                    Email = result.Email,
+                    Role = result.Role,
+                    FavoriteBooks = result.FavoriteBooks
+                };
+
+                return Ok(responseDto);
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                // Bắt lỗi trùng lặp hoặc sai định dạng email
+                return Conflict(new { message = ex.Message });
             }
             catch (Exception ex)
             {
