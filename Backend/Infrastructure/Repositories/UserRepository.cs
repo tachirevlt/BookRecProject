@@ -15,12 +15,12 @@ namespace Infrastructure.Repositories
             _db = db;
         }
 
-        public async Task<UserEntity?> GetUserByIdAsync(Guid id, CancellationToken ct = default)
+        public async Task<UserEntity?> GetUserByIdAsync(Guid userId, CancellationToken ct = default)
         {
-            var user = await _db.Users.FindAsync(new object?[] { id }, ct);
-            // Xử lý trường hợp không tìm thấy nếu cần (ví dụ throw exception)
-            if (user == null) throw new KeyNotFoundException($"Không tìm thấy sách với ID: {id}");
-            return user;
+
+            return await _db.Users
+                .Include(u => u.FavoriteBooks)
+                .FirstOrDefaultAsync(u => u.UserId == userId, ct);
         }
 
 
@@ -30,30 +30,31 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
             return user; // Trả về entity đã được thêm (EF Core sẽ cập nhật ID)
         }
+        public async Task<UserEntity?> GetUserByUsernameAsync(string username, CancellationToken ct = default)
+        {
+            // Dùng FirstOrDefaultAsync để tìm user theo tên
+            return await _db.Users
+                .FirstOrDefaultAsync(u => u.Username == username, ct);
+        }
 
-        public async Task<UserEntity?> GetUserByIdWithFavoritesAsync(Guid id, CancellationToken ct = default)
-                {
-                    // Dùng Include để tải danh sách FavoriteBooks cùng lúc với User
-                    return await _db.Users
-                        .Include(u => u.FavoriteBooks)
-                        .FirstOrDefaultAsync(u => u.UserId == id, ct);
-                }
         public async Task<UserEntity> UpdateUserAsync(Guid userId, UserEntity updatedUserData, CancellationToken ct = default)
         {
             var existingUser = await _db.Users.FindAsync(new object?[] { userId }, ct);
+            
             if (existingUser is null)
             {
-                // Nên throw exception hoặc trả về null/Result pattern tùy thiết kế
                 throw new KeyNotFoundException($"Không tìm thấy user với ID: {userId}");
             }
+            existingUser.Username = updatedUserData.Username;
+            existingUser.Email = updatedUserData.Email;
 
-            existingUser.userName = updatedUserData.userName;
-            existingUser.FavoriteBooks = updatedUserData.FavoriteBooks;
-
-
-            _db.Users.Update(existingUser); // Update entity đã được track
+            if (!string.IsNullOrEmpty(updatedUserData.HashedPassword))
+            {
+                existingUser.HashedPassword = updatedUserData.HashedPassword;
+            }
             await _db.SaveChangesAsync(ct);
-            return existingUser; // Trả về entity đã được cập nhật
+            
+            return existingUser;
         }
 
         public async Task<bool> DeleteUserAsync(Guid id, CancellationToken ct = default)
@@ -66,6 +67,10 @@ namespace Infrastructure.Repositories
             _db.Users.Remove(entity);
             await _db.SaveChangesAsync(ct);
             return true; // Xóa thành công
+        }
+        public async Task SaveChangesAsync(CancellationToken ct = default)
+        {
+            await _db.SaveChangesAsync(ct);
         }
     }
 }

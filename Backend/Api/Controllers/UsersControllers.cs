@@ -5,6 +5,8 @@ using Application.Commands;
 using Application.Queries;
 using Core.Entities;
 using Core.Models;
+using Microsoft.AspNetCore.Authorization;
+
 namespace Api.Controllers
 {
     [Route("api/[controller]")]
@@ -12,7 +14,88 @@ namespace Api.Controllers
     
     public class UsersController(ISender sender) : ControllerBase
     {
+        /// Endpoint để Đăng ký (Tạo User mới)
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RegisterAsync([FromBody] UserRegistrationDto userDto)
+        {
+            var command = new AddUserCommand(userDto);
+            var result = await sender.Send(command);
+            return Ok(result);
+        }
+
+        /// Endpoint để Đăng nhập
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginAsync([FromBody] UserLoginDto loginDto)
+        {
+            try
+            {
+                var query = new LoginQuery(loginDto);
+                var token = await sender.Send(query);
+
+                // Trả về 200 OK với Token
+                return Ok(new { Token = token });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                // Trả về 401 Unauthorized (Không được phép) nếu sai tên hoặc mật khẩu
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("{UserId}")]
+        [Authorize]// <-- Yêu cầu đăng nhập để xem thông tin
+        public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
+        {
+            var result = await sender.Send(new GetUserByIdQuery(UserId));
+            if (result == null)
+            {
+                return NotFound($"Không tìm thấy sách với ID: {UserId}"); 
+            }
+            return Ok(result);
+        }
+
+
+        [HttpPut("{UserId}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserEntity User)
+        {
+            try 
+            {
+                var result = await sender.Send(new UpdateUserCommand(UserId, User));
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi cập nhật.", error = ex.Message });
+            }
+        }
+
+        [HttpDelete("{UserId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid UserId)
+        {
+            var success = await sender.Send(new DeleteUserCommand(UserId));
+            if (!success)
+            {
+                return NotFound($"Không tìm thấy người dùng với ID: {UserId} để xóa.");
+            }
+            return Ok(new { message = "Xóa người dùng thành công." });
+
+        }
+
+        
         [HttpPost("{userId}/favorites/{bookId}")]
+        [Authorize]
         public async Task<IActionResult> AddFavoriteBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
         {
             try
@@ -42,47 +125,37 @@ namespace Api.Controllers
                 return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
             }
         }
-        [HttpPost("")]
-        public async Task<IActionResult> AddUserAsync([FromBody] UserEntity user)
-        { 
-            var result = await sender.Send(new AddUserCommand(user));
-            return Ok(result);
-        }
-
-        [HttpPut("{UserId}")]
-        public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserEntity User)
-        {
-            var result = await sender.Send(new UpdateUserCommand(UserId, User));
-            if (result == null)
-            {
-                return NotFound();
-            }
-            return Ok(result);
-        }
-
-        [HttpGet("{UserId}")]
-        public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
-        {
-            var result = await sender.Send(new GetUserByIdQuery(UserId));
-            if (result == null)
-            {
-                return NotFound($"Không tìm thấy sách với ID: {UserId}"); 
-            }
-            return Ok(result);
-        }
-
         
-        [HttpDelete("{UserId}")]
-        public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid UserId)
+        [HttpDelete("{userId}/favorites/{bookId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveFavoriteBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
         {
-            var success = await sender.Send(new DeleteUserCommand(UserId));
-            if (!success)
+            try
             {
-                return NotFound($"Không tìm thấy sách với ID: {UserId} để xóa."); 
-            }
-            return Ok(new { message = "Xóa sách thành công." });
+                var command = new RemoveBookFromFavoritesCommand(userId, bookId);
+                var success = await sender.Send(command);
 
+                if (success)
+                {
+                    return Ok(new { message = "Đã xóa sách khỏi danh sách yêu thích." });
+                }
+                else
+                {
+                    // Trả về 404 nếu sách không có trong danh sách của user này
+                    return NotFound(new { message = "Sách này không có trong danh sách yêu thích của bạn." });
+                }
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
+            }
         }
+
+
     }
 
 

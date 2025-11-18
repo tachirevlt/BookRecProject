@@ -6,22 +6,41 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUserTables : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "Id",
-                table: "Books",
-                newName: "BookId");
+            migrationBuilder.CreateTable(
+                name: "Books",
+                columns: table => new
+                {
+                    BookId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    author = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    tag_name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    year = table.Column<double>(type: "float", nullable: true),
+                    books_count = table.Column<int>(type: "int", nullable: true),
+                    work_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    isbn = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    language_code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    average_rating = table.Column<decimal>(type: "decimal(3,2)", precision: 3, scale: 2, nullable: true),
+                    ratings = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Books", x => x.BookId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    userName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HashedPassword = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -65,12 +84,10 @@ namespace Infrastructure.Migrations
                 name: "UserFavoriteBooks");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Books");
 
-            migrationBuilder.RenameColumn(
-                name: "BookId",
-                table: "Books",
-                newName: "Id");
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

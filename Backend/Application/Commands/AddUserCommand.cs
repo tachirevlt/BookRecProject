@@ -1,26 +1,39 @@
+// Đã sửa: Application/Commands/AddUserCommand.cs
 using MediatR;
 using Application.Events;
 using Core.Entities;
-using Core.Interfaces; 
+using Core.Interfaces;
+using Core.Models; 
+using BCrypt.Net;
 
 namespace Application.Commands
 {
-    public record AddUserCommand(UserEntity User) : IRequest<UserEntity>;
-
+    public record AddUserCommand(UserRegistrationDto UserDto) : IRequest<UserEntity>;
 
     public class AddUserCommandHandler(IUserRepository userRepository, IPublisher mediator)
         : IRequestHandler<AddUserCommand, UserEntity>
     {
         public async Task<UserEntity> Handle(AddUserCommand request, CancellationToken cancellationToken)
         {
-            
-            if (request.User.UserId == Guid.Empty)
+            if (await userRepository.GetUserByUsernameAsync(request.UserDto.Username, cancellationToken) != null)
             {
-                request.User.UserId = Guid.NewGuid();
+                throw new InvalidOperationException("Tên đăng nhập đã tồn tại.");
             }
-            var createdUser = await userRepository.AddUserAsync(request.User);
+            
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.UserDto.Password);
 
-            await mediator.Publish(new BookCreatedEvent(createdUser.UserId), cancellationToken); 
+            var newUser = new UserEntity
+            {
+                UserId = Guid.NewGuid(),
+                Username = request.UserDto.Username,
+                Email = request.UserDto.Email,
+                HashedPassword = hashedPassword, 
+                Role = "User" // <-- GÁN VAI TRÒ MẶC ĐỊNH (Không để người dùng tự chọn)
+            };
+
+            var createdUser = await userRepository.AddUserAsync(newUser, cancellationToken);
+
+            await mediator.Publish(new UserCreatedEvent(createdUser.UserId), cancellationToken); 
 
             return createdUser;
         }

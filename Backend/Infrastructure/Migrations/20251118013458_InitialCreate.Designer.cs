@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251103075707_InitialCreateClean")]
-    partial class InitialCreateClean
+    [Migration("20251118013458_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,8 +27,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Core.Entities.BookEntity", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("BookId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("author")
@@ -68,9 +67,66 @@ namespace Infrastructure.Migrations
                     b.Property<double?>("year")
                         .HasColumnType("float");
 
-                    b.HasKey("Id");
+                    b.HasKey("BookId");
 
                     b.ToTable("Books");
+                });
+
+            modelBuilder.Entity("Core.Entities.UserEntity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HashedPassword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("UserFavoriteBooks", b =>
+                {
+                    b.Property<Guid>("FavoriteBooksBookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserEntityUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("FavoriteBooksBookId", "UserEntityUserId");
+
+                    b.HasIndex("UserEntityUserId");
+
+                    b.ToTable("UserFavoriteBooks");
+                });
+
+            modelBuilder.Entity("UserFavoriteBooks", b =>
+                {
+                    b.HasOne("Core.Entities.BookEntity", null)
+                        .WithMany()
+                        .HasForeignKey("FavoriteBooksBookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserEntityUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
