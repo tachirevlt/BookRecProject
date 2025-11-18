@@ -29,7 +29,7 @@ namespace Application.Queries
 
         public async Task<string> Handle(LoginQuery request, CancellationToken cancellationToken)
         {
-            // 1. Tìm User bằng Username (Cần thêm phương thức này vào IUserRepository)
+
             var user = await _userRepository.GetUserByUsernameAsync(request.LoginData.Username, cancellationToken);
 
             if (user == null)
@@ -38,16 +38,13 @@ namespace Application.Queries
                 throw new KeyNotFoundException("Tên đăng nhập hoặc mật khẩu không đúng.");
             }
 
-            // 2. Xác minh mật khẩu
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.LoginData.Password, user.HashedPassword);
 
             if (!isPasswordValid)
             {
-                // Sai mật khẩu
                 throw new KeyNotFoundException("Tên đăng nhập hoặc mật khẩu không đúng.");
             }
 
-            // 3. Nếu ĐÚNG: Tạo Token
             return GenerateJwtToken(user);
         }
 
@@ -65,10 +62,10 @@ namespace Application.Queries
             }
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()), // ID của User
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Name, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role) // <-- Đây là phần Phân quyền (Role)
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
 

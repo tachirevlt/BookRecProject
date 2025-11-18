@@ -149,9 +149,6 @@ E:\CodeFolder\Cs_project\BookRecBackend\Api\obj\Debug\net8.0\refint\Api.dll
 E:\CodeFolder\Cs_project\BookRecBackend\Api\obj\Debug\net8.0\Api.pdb
 E:\CodeFolder\Cs_project\BookRecBackend\Api\obj\Debug\net8.0\Api.genruntimeconfig.cache
 E:\CodeFolder\Cs_project\BookRecBackend\Api\obj\Debug\net8.0\ref\Api.dll
-E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.dll
-E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\refint\Api.dll
-E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.pdb
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\appsettings.Development.json
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\appsettings.json
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Api.exe
@@ -161,12 +158,15 @@ E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Api.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Api.pdb
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Azure.Core.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Azure.Identity.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\BCrypt.Net-Next.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Humanizer.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\MediatR.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\MediatR.Contracts.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\MediatR.Extensions.Microsoft.DependencyInjection.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.AspNetCore.OpenApi.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.Bcl.TimeProvider.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.dll
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
@@ -298,8 +298,8 @@ E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\staticw
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\staticwebassets.pack.json
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\scopedcss\bundle\Api.styles.css
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.csproj.Up2Date
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\refint\Api.dll
+E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.pdb
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\Api.genruntimeconfig.cache
 E:\CodeFolder\Github_project\BookRecProject\Backend\Api\obj\Debug\net8.0\ref\Api.dll
-E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\BCrypt.Net-Next.dll
-E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
-E:\CodeFolder\Github_project\BookRecProject\Backend\Api\bin\Debug\net8.0\Microsoft.Bcl.TimeProvider.dll

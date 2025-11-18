@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "vhn45ldiybo=",
+  "dgSpecHash": "KvAAhlhLEzU=",
   "success": true,
   "projectFilePath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj",
   "expectedPackageFiles": [
@@ -21,26 +21,5 @@
     "C:\\Users\\Admin\\.nuget\\packages\\microsoft.identitymodel.tokens\\8.1.0\\microsoft.identitymodel.tokens.8.1.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.1.0\\system.identitymodel.tokens.jwt.8.1.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Application depends on Microsoft.IdentityModel.Tokens (>= 8.0.7) but Microsoft.IdentityModel.Tokens 8.0.7 was not found. An approximate best match of Microsoft.IdentityModel.Tokens 8.1.0 was resolved.",
-      "libraryId": "Microsoft.IdentityModel.Tokens",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    },
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Application depends on System.IdentityModel.Tokens.Jwt (>= 8.0.7) but System.IdentityModel.Tokens.Jwt 8.0.7 was not found. An approximate best match of System.IdentityModel.Tokens.Jwt 8.1.0 was resolved.",
-      "libraryId": "System.IdentityModel.Tokens.Jwt",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  "logs": []
 }

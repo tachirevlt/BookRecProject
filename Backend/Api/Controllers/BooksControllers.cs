@@ -5,6 +5,7 @@ using Application.Commands;
 using Application.Queries;
 using Core.Entities;
 using Core.Models;
+using Microsoft.AspNetCore.Authorization;
 namespace Api.Controllers
 {
     [Route("api/[controller]")]
@@ -14,6 +15,7 @@ namespace Api.Controllers
     {
 
         [HttpPost("")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddBookAsync([FromBody] BookEntity book)
         { 
             var result = await sender.Send(new AddBookCommand(book));
@@ -21,6 +23,7 @@ namespace Api.Controllers
         }
 
         [HttpPut("{BookId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateBookAsync([FromRoute] Guid BookId, [FromBody] BookEntity Book)
         {
             var result = await sender.Send(new UpdateBookCommand(BookId, Book));
@@ -31,7 +34,21 @@ namespace Api.Controllers
             return Ok(result);
         }
 
+        [HttpDelete("{BookId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteBookAsync([FromRoute] Guid BookId)
+        {
+            var success = await sender.Send(new DeleteBookCommand(BookId));
+            if (!success)
+            {
+                return NotFound($"Không tìm thấy sách với ID: {BookId} để xóa.");
+            }
+            return Ok(new { message = "Xóa sách thành công." });
+
+        }
+        
         [HttpGet("{BookId}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetBookByIdAsync([FromRoute] Guid BookId)
         {
             var result = await sender.Send(new GetBookByIdQuery(BookId));
@@ -43,6 +60,7 @@ namespace Api.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(PagedList<BookEntity>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllBooks(
             [FromQuery] PaginationParams pagination,
@@ -51,23 +69,11 @@ namespace Api.Controllers
         {
             var query = new GetAllBooksQuery(pagination, filters);
 
-            // ĐÃ SỬA: Sử dụng 'sender' thay vì '_mediator'
             var result = await sender.Send(query, cancellationToken);
 
             return Ok(result);
         }
-        
-        [HttpDelete("{BookId}")]
-        public async Task<IActionResult> DeleteBookAsync([FromRoute] Guid BookId)
-        {
-            var success = await sender.Send(new DeleteBookCommand(BookId));
-            if (!success)
-            {
-                return NotFound($"Không tìm thấy sách với ID: {BookId} để xóa."); 
-            }
-            return Ok(new { message = "Xóa sách thành công." });
 
-        }
     }
 
 

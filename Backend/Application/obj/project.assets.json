@@ -721,8 +721,8 @@
       "Core >= 1.0.0",
       "MediatR >= 11.1.0",
       "MediatR.Extensions.Microsoft.DependencyInjection >= 11.1.0",
-      "Microsoft.IdentityModel.Tokens >= 8.0.7",
-      "System.IdentityModel.Tokens.Jwt >= 8.0.7"
+      "Microsoft.IdentityModel.Tokens >= 8.1.0",
+      "System.IdentityModel.Tokens.Jwt >= 8.1.0"
     ]
   },
   "packageFolders": {
@@ -785,11 +785,11 @@
           },
           "Microsoft.IdentityModel.Tokens": {
             "target": "Package",
-            "version": "[8.0.7, )"
+            "version": "[8.1.0, )"
           },
           "System.IdentityModel.Tokens.Jwt": {
             "target": "Package",
-            "version": "[8.0.7, )"
+            "version": "[8.1.0, )"
           }
         },
         "imports": [
@@ -811,27 +811,5 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.414/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Application depends on Microsoft.IdentityModel.Tokens (>= 8.0.7) but Microsoft.IdentityModel.Tokens 8.0.7 was not found. An approximate best match of Microsoft.IdentityModel.Tokens 8.1.0 was resolved.",
-      "libraryId": "Microsoft.IdentityModel.Tokens",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    },
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Application depends on System.IdentityModel.Tokens.Jwt (>= 8.0.7) but System.IdentityModel.Tokens.Jwt 8.0.7 was not found. An approximate best match of System.IdentityModel.Tokens.Jwt 8.1.0 was resolved.",
-      "libraryId": "System.IdentityModel.Tokens.Jwt",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  }
 }

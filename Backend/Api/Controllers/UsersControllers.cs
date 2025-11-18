@@ -38,6 +38,7 @@ namespace Api.Controllers
             }
         }
         [HttpPost("{userId}/favorites/{bookId}")]
+        [Authorize]
         public async Task<IActionResult> AddFavoriteBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
         {
             try
@@ -68,6 +69,7 @@ namespace Api.Controllers
             }
         }
         [HttpGet("{UserId}")]
+        [Authorize]// <-- Yêu cầu đăng nhập để xem thông tin
         public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
         {
             var result = await sender.Send(new GetUserByIdQuery(UserId));
@@ -80,6 +82,7 @@ namespace Api.Controllers
 
 
         [HttpPut("{UserId}")]
+        [Authorize]
         public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserEntity User)
         {
             var result = await sender.Send(new UpdateUserCommand(UserId, User));
@@ -91,6 +94,7 @@ namespace Api.Controllers
         }
 
         [HttpDelete("{UserId}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid UserId)
         {
             var success = await sender.Send(new DeleteUserCommand(UserId));
