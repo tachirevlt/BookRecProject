@@ -66,5 +66,9 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
             return true; // Xóa thành công
         }
+        public async Task SaveChangesAsync(CancellationToken ct = default)
+        {
+            await _db.SaveChangesAsync(ct);
+        }
     }
 }

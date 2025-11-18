@@ -100,9 +100,9 @@ namespace Api.Controllers
             var success = await sender.Send(new DeleteUserCommand(UserId));
             if (!success)
             {
-                return NotFound($"Không tìm thấy sách với ID: {UserId} để xóa.");
+                return NotFound($"Không tìm thấy người dùng với ID: {UserId} để xóa.");
             }
-            return Ok(new { message = "Xóa sách thành công." });
+            return Ok(new { message = "Xóa người dùng thành công." });
 
         }
 

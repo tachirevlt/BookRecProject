@@ -49,7 +49,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Nhập 'Bearer' [dấu cách] và sau đó là token của bạn.\n\nVí dụ: 'Bearer 12345abcdef'"
+        Description = "Nhập token của bạn.\n\nVí dụ: '12345abcdef'"
     });
 
     // Yêu cầu token cho các endpoint
