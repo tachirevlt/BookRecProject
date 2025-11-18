@@ -6,6 +6,7 @@ using Application.Queries;
 using Core.Entities;
 using Core.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Api.Controllers
 {
@@ -14,6 +15,21 @@ namespace Api.Controllers
     
     public class UsersController(ISender sender) : ControllerBase
     {
+        private bool IsUserOwnerOrAdmin(Guid resourceId)
+        {
+            // 1. Lấy ID từ Token (Claim "sub" hoặc NameIdentifier)
+            var userIdFromToken = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                               ?? User.FindFirstValue("sub");
+
+            if (string.IsNullOrEmpty(userIdFromToken)) return false;
+
+            // 2. Kiểm tra xem User có phải là Admin không?
+            if (User.IsInRole("Admin")) return true;
+
+            // 3. So sánh ID trong token với ID cần thao tác
+            return userIdFromToken.Equals(resourceId.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
+
         /// Endpoint để Đăng ký (Tạo User mới)
         [HttpPost("register")]
         [AllowAnonymous]
@@ -65,6 +81,10 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserEntity User)
         {
+            if (!IsUserOwnerOrAdmin(UserId))
+            {
+                return Forbid(); // Trả về 403 Forbidden
+            }
             try 
             {
                 var result = await sender.Send(new UpdateUserCommand(UserId, User));
@@ -93,11 +113,15 @@ namespace Api.Controllers
 
         }
 
-        
+
         [HttpPost("{userId}/favorites/{bookId}")]
         [Authorize]
         public async Task<IActionResult> AddFavoriteBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
         {
+            if (!IsUserOwnerOrAdmin(userId))
+            {
+                return Forbid(); // Trả về 403 Forbidden
+            }
             try
             {
                 var command = new AddBookToFavoritesCommand(userId, bookId);
@@ -130,6 +154,10 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> RemoveFavoriteBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
         {
+            if (!IsUserOwnerOrAdmin(userId))
+            {
+                return Forbid(); // Trả về 403 Forbidden
+            }
             try
             {
                 var command = new RemoveBookFromFavoritesCommand(userId, bookId);
