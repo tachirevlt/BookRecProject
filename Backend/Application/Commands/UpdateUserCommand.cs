@@ -1,13 +1,14 @@
 using MediatR;
 using Core.Entities;
 using Core.Interfaces;
+using Core.Models; 
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Application.Commands
 {
-    public record UpdateUserCommand(Guid UserId, UserEntity User)
+    public record UpdateUserCommand(Guid UserId, UserUpdateDto UpdateData)
         : IRequest<UserEntity>;
 
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserEntity>
@@ -21,12 +22,22 @@ namespace Application.Commands
 
         public async Task<UserEntity> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(request.User.HashedPassword))
+            var userEntityUpdates = new UserEntity
             {
-                request.User.HashedPassword = BCrypt.Net.BCrypt.HashPassword(request.User.HashedPassword);
+                Username = request.UpdateData.Username,
+                Email = request.UpdateData.Email,
+            };
+
+            if (!string.IsNullOrEmpty(request.UpdateData.Password))
+            {
+                userEntityUpdates.HashedPassword = BCrypt.Net.BCrypt.HashPassword(request.UpdateData.Password);
+            }
+            else
+            {
+                userEntityUpdates.HashedPassword = string.Empty;
             }
 
-            return await _userRepository.UpdateUserAsync(request.UserId, request.User, cancellationToken);
+            return await _userRepository.UpdateUserAsync(request.UserId, userEntityUpdates, cancellationToken);
         }
     }
 }

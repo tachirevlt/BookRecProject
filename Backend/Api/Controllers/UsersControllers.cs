@@ -30,16 +30,6 @@ namespace Api.Controllers
             return userIdFromToken.Equals(resourceId.ToString(), StringComparison.OrdinalIgnoreCase);
         }
 
-        /// Endpoint để Đăng ký (Tạo User mới)
-        [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<IActionResult> RegisterAsync([FromBody] UserRegistrationDto userDto)
-        {
-            var command = new AddUserCommand(userDto);
-            var result = await sender.Send(command);
-            return Ok(result);
-        }
-
         /// Endpoint để Đăng nhập
         [HttpPost("login")]
         [AllowAnonymous]
@@ -64,30 +54,59 @@ namespace Api.Controllers
             }
         }
 
+        /// Endpoint để Đăng ký (Tạo User mới)
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RegisterAsync([FromBody] UserRegistrationDto userDto)
+        {
+            var command = new AddUserCommand(userDto);
+            var result = await sender.Send(command);
+            return Ok(result);
+        }
+
+
         [HttpGet("{UserId}")]
-        [Authorize]// <-- Yêu cầu đăng nhập để xem thông tin
+        [Authorize]
         public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
         {
-            var result = await sender.Send(new GetUserByIdQuery(UserId));
+            // Lấy ID của người đang gửi Request (từ Token)
+            var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+                                   ?? User.FindFirstValue("sub");
+            
+            Guid? currentUserId = null;
+            if (Guid.TryParse(currentUserIdString, out var parsedId))
+            {
+                currentUserId = parsedId;
+            }
+
+            bool isAdmin = User.IsInRole("Admin");
+            var query = new GetUserByIdQuery(UserId, currentUserId, isAdmin);
+            var result = await sender.Send(query);
+
             if (result == null)
             {
-                return NotFound($"Không tìm thấy sách với ID: {UserId}"); 
+                return NotFound(new { message = $"Không tìm thấy user với ID: {UserId}" });
             }
+
             return Ok(result);
         }
 
 
         [HttpPut("{UserId}")]
         [Authorize]
-        public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserEntity User)
+        // Đổi [FromBody] UserEntity -> [FromBody] UserUpdateDto
+        public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserUpdateDto updateData)
         {
+            // Kiểm tra bảo mật (như bài trước)
             if (!IsUserOwnerOrAdmin(UserId))
             {
-                return Forbid(); // Trả về 403 Forbidden
+                return Forbid();
             }
-            try 
+
+            try
             {
-                var result = await sender.Send(new UpdateUserCommand(UserId, User));
+                // Truyền DTO vào Command
+                var result = await sender.Send(new UpdateUserCommand(UserId, updateData));
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)
