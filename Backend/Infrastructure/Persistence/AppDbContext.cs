@@ -40,6 +40,7 @@ namespace Infrastructure.Persistence
     }
         public DbSet<BookEntity> Books { get; set; } = null!;
         public DbSet<UserEntity> Users { get; set; } = null!;
+        public DbSet<ReviewEntity> Reviews { get; set; }
     }
 }
 
