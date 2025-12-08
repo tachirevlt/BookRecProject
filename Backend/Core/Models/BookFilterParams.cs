@@ -1,9 +1,10 @@
 namespace Core.Models;
 
 public record BookFilterParams(
+    string? SearchTerm,
     string? Title,
     string? Author,
-    string? Genre, // Sẽ được map tới tag_name
+    string? Genre, 
     string? SortBy,
     string? SortOrder,
     decimal? MinRating,

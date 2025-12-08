@@ -109,18 +109,15 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserUpdateDto updateData)
         {
-            // Kiểm tra quyền sở hữu
-            if (!IsUserOwnerOrAdmin(UserId))
-            {
-                return Forbid();
-            }
+            if (!IsUserOwnerOrAdmin(UserId)) return Forbid();
 
             try
             {
-                // Command này chỉ xử lý Username và Email
+                // Command này gọi Handler để cập nhật Username/Email trong DB
                 var command = new UpdateUserCommand(UserId, updateData);
                 var result = await sender.Send(command);
 
+                // Trả về thông tin mới nhất
                 var responseDto = new UserDto
                 {
                     UserId = result.UserId,
@@ -136,7 +133,7 @@ namespace Api.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (ArgumentException ex) // Bắt lỗi trùng email/username
+            catch (ArgumentException ex) // Lỗi trùng Email/Username
             {
                 return Conflict(new { message = ex.Message });
             }
@@ -150,24 +147,18 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> ChangePasswordAsync([FromRoute] Guid UserId, [FromBody] ChangePasswordDto passwordData)
         {
-            // Kiểm tra quyền sở hữu
-            if (!IsUserOwnerOrAdmin(UserId))
-            {
-                return Forbid();
-            }
+            if (!IsUserOwnerOrAdmin(UserId)) return Forbid();
 
-            // Kiểm tra Validate DTO (nếu API Controller không tự check)
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
+            // Lưu ý: [ApiController] sẽ tự động check ModelState (Validation DTO) và trả về 400 nếu sai.
+            
             try
             {
-                // Tạo Command đổi mật khẩu (Bạn cần tạo class Command này bên Application Layer)
+                // Command này gọi Handler để:
+                // 1. Lấy User từ DB.
+                // 2. Hash password cũ gửi lên -> so sánh với Hash trong DB.
+                // 3. Nếu khớp -> Hash password mới -> Lưu vào DB.
                 var command = new ChangePasswordCommand(UserId, passwordData.CurrentPassword, passwordData.NewPassword);
                 
-                // Gửi sang Handler để xử lý (Logic check pass cũ, hash pass mới nằm ở Handler)
                 await sender.Send(command);
 
                 return Ok(new { message = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại." });
@@ -176,8 +167,9 @@ namespace Api.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (ArgumentException ex) // Pass cũ sai hoặc validation lỗi logic
+            catch (ArgumentException ex) // Sai mật khẩu cũ hoặc logic nghiệp vụ
             {
+                // Trả về BadRequest (400) vì lỗi input từ phía client (sai pass)
                 return BadRequest(new { message = ex.Message }); 
             }
             catch (Exception ex)
@@ -185,7 +177,6 @@ namespace Api.Controllers
                 return StatusCode(500, new { message = "Lỗi khi đổi mật khẩu.", error = ex.Message });
             }
         }
-
 
 
         [HttpDelete("{UserId}")]

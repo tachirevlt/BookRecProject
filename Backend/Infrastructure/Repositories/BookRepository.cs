@@ -28,6 +28,14 @@ namespace Infrastructure.Repositories
                 CancellationToken cancellationToken)
             {
                 IQueryable<BookEntity> query = _db.Books.AsNoTracking();
+                if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
+                {
+                    var term = filters.SearchTerm.Trim().ToLower(); // Chuẩn hóa chuỗi
+                    
+                    // Tìm Title chứa term HOẶC Author chứa term
+                    query = query.Where(b => b.title.ToLower().Contains(term) || 
+                                            b.author.ToLower().Contains(term));
+                }
 
                 if (!string.IsNullOrWhiteSpace(filters.Title))
                 {

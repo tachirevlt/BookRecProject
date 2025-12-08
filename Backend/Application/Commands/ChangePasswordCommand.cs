@@ -1,16 +1,12 @@
 using MediatR;
-using Microsoft.AspNetCore.Identity; // Giữ dòng này lại nếu UserManager báo đỏ
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Core.Entities;
+using Core.Interfaces;
+using BCrypt.Net;
 
-// 👇 QUAN TRỌNG: Thay dòng này bằng namespace chứa class AppUser thực tế trong dự án của bạn
-// Ví dụ: BookRecProject.Domain.Entities hoặc BookRecProject.Core.Entities
-using Core.Entities; 
-
-namespace Application.commands // Hoặc namespace đúng của file này
+namespace Application.Commands
 {
     // Command
     public record ChangePasswordCommand(Guid UserId, string CurrentPassword, string NewPassword) : IRequest<Unit>;
@@ -18,32 +14,40 @@ namespace Application.commands // Hoặc namespace đúng của file này
     // Handler
     public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, Unit>
     {
-        private readonly UserManager<AppUser> _userManager;
+        private readonly IUserRepository _userRepository;
 
-        public ChangePasswordCommandHandler(UserManager<AppUser> userManager)
+        public ChangePasswordCommandHandler(IUserRepository userRepository)
         {
-            _userManager = userManager;
+            _userRepository = userRepository;
         }
 
         public async Task<Unit> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
         {
-            // 1. Tìm user
-            var user = await _userManager.FindByIdAsync(request.UserId.ToString());
+            // 1. SỬA LỖI: Dùng hàm GetUserByIdAsync
+            var user = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
             
             if (user == null)
             {
                 throw new KeyNotFoundException("Không tìm thấy người dùng.");
             }
 
-            // 2. Đổi mật khẩu
-            var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            // 2. Kiểm tra mật khẩu cũ
+            bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.HashedPassword);
 
-            if (!result.Succeeded)
+            if (!isPasswordCorrect)
             {
-                // Gom lỗi trả về
-                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new ArgumentException(errors);
+                throw new ArgumentException("Mật khẩu hiện tại không chính xác.");
             }
+
+            // 3. Mã hóa mật khẩu mới
+            string newPasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            // 4. Cập nhật thông tin
+            user.HashedPassword = newPasswordHash;
+            // user.SecurityStamp = Guid.NewGuid().ToString(); // Bỏ comment dòng này nếu bạn đã thêm trường SecurityStamp vào UserEntity
+
+            // 5. SỬA LỖI: Dùng hàm UpdateUserAsync (truyền cả ID và User)
+            await _userRepository.UpdateUserAsync(user.UserId, user, cancellationToken);
 
             return Unit.Value;
         }
