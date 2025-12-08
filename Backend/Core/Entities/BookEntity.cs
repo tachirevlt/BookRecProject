@@ -11,7 +11,7 @@ namespace Core.Entities
         public Guid BookId { get; set; }
         public string title { get; set; } = null!;
         public string author { get; set; } = null!;
-        public string tag_name { get; set; } = null!;
+        public List<string> tag_name { get; set; } = new List<string>();
         public double? year { get; set; } = null!;
         public int? books_count { get; set; } = null!;
         public string work_id { get; set; } = null!;

@@ -30,11 +30,11 @@ namespace Infrastructure.Repositories
                 IQueryable<BookEntity> query = _db.Books.AsNoTracking();
                 if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
                 {
-                    var term = filters.SearchTerm.Trim().ToLower(); // Chuẩn hóa chuỗi
-                    
-                    // Tìm Title chứa term HOẶC Author chứa term
+                    var term = filters.SearchTerm.Trim().ToLower();
                     query = query.Where(b => b.title.ToLower().Contains(term) || 
-                                            b.author.ToLower().Contains(term));
+                                            b.author.ToLower().Contains(term) ||
+                                            // 👇 Logic tìm trong List<string>
+                                            b.genres.Any(g => g.ToLower().Contains(term)));
                 }
 
                 if (!string.IsNullOrWhiteSpace(filters.Title))
@@ -49,7 +49,8 @@ namespace Infrastructure.Repositories
 
                 if (!string.IsNullOrWhiteSpace(filters.Genre))
                 {
-                    query = query.Where(b => b.tag_name != null && b.tag_name.Contains(filters.Genre));
+                    var genreTerm = filters.Genre.Trim();
+                    query = query.Where(b => b.Genres.Contains(filters.Genre));
                 }
                 
                 if (filters.MinRating.HasValue)

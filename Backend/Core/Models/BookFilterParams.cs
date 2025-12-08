@@ -4,7 +4,7 @@ public record BookFilterParams(
     string? SearchTerm,
     string? Title,
     string? Author,
-    string? Genre, 
+    List<string>? Genre, 
     string? SortBy,
     string? SortOrder,
     decimal? MinRating,
