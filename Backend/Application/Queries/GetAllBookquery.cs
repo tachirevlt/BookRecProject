@@ -20,14 +20,12 @@ namespace Application.Queries
     {
         public async Task<PagedList<BookEntity>> Handle(GetAllBooksQuery request, CancellationToken cancellationToken)
         {
-            // Gọi phương thức mới trong Repository để xử lý phân trang và lọc
             var (books, totalCount) = await bookRepository.GetAllBooksWithPaginationAndFilteringAsync(
                 request.Pagination,
                 request.Filters,
                 cancellationToken
             );
 
-            // Trả về danh sách đã được đóng gói trong mô hình PagedList
             return new PagedList<BookEntity>(
                 books, 
                 totalCount, 

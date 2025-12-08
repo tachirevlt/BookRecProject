@@ -41,7 +41,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    // Định nghĩa "Bearer"
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -52,7 +51,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Nhập token của bạn.\n\nVí dụ: '12345abcdef'"
     });
 
-    // Yêu cầu token cho các endpoint
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -60,7 +58,6 @@ builder.Services.AddSwaggerGen(options =>
             {
                 Reference = new OpenApiReference
                 {
-                    // DÒNG ĐÚNG LÀ ĐÂY:
                     Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
@@ -87,12 +84,10 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
         
-        // Dùng biến "keyBytes" đã được kiểm tra an toàn
         IssuerSigningKey = new SymmetricSecurityKey(keyBytes) 
     };
 });
 
-// Thêm dịch vụ Phân quyền (để dùng [Authorize])
 builder.Services.AddAuthorization();
 
 var app = builder.Build();

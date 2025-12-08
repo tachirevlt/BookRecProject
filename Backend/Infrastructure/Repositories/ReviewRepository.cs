@@ -34,7 +34,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Reviews
                 .Where(r => r.BookId == bookId)
-                .Include(r => r.User) // Giữ lại nếu muốn hiện tên người chấm điểm
+                .Include(r => r.User)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
@@ -42,7 +42,6 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> DeleteReviewByBookIdAsync(Guid bookId, Guid userId)
         {
-            // Tìm review khớp cả BookId và UserId
             var review = await _context.Reviews
                 .FirstOrDefaultAsync(r => r.BookId == bookId && r.UserId == userId);
 

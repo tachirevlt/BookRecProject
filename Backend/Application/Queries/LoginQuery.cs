@@ -14,7 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Queries
 {
-    public record LoginQuery(UserLoginDto LoginData) : IRequest<string>; // Trả về string (token)
+    public record LoginQuery(UserLoginDto LoginData) : IRequest<string>;
 
     public class LoginQueryHandler : IRequestHandler<LoginQuery, string>
     {
@@ -34,7 +34,6 @@ namespace Application.Queries
 
             if (user == null)
             {
-                // Không tìm thấy User
                 throw new KeyNotFoundException("Tên đăng nhập hoặc mật khẩu không đúng.");
             }
 

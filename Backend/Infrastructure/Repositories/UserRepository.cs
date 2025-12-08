@@ -28,11 +28,10 @@ namespace Infrastructure.Repositories
         {
             await _db.Users.AddAsync(user, ct);
             await _db.SaveChangesAsync(ct);
-            return user; // Trả về entity đã được thêm (EF Core sẽ cập nhật ID)
+            return user;
         }
         public async Task<UserEntity?> GetUserByUsernameAsync(string username, CancellationToken ct = default)
         {
-            // Dùng FirstOrDefaultAsync để tìm user theo tên
             return await _db.Users
                 .FirstOrDefaultAsync(u => u.Username == username, ct);
         }
@@ -62,11 +61,11 @@ namespace Infrastructure.Repositories
             var entity = await _db.Users.FindAsync(new object?[] { id }, ct);
             if (entity is null)
             {
-                return false; // Không tìm thấy để xóa
+                return false;
             }
             _db.Users.Remove(entity);
             await _db.SaveChangesAsync(ct);
-            return true; // Xóa thành công
+            return true;
         }
         public async Task SaveChangesAsync(CancellationToken ct = default)
         {
@@ -74,7 +73,6 @@ namespace Infrastructure.Repositories
         }
         public async Task<bool> IsEmailExistsAsync(string email, Guid? excludeUserId = null, CancellationToken ct = default)
         {
-            // Kiểm tra xem có user nào KHÁC (người có ID != excludeUserId) đang dùng email này không
             return await _db.Users
                 .AnyAsync(u => u.Email == email && (!excludeUserId.HasValue || u.UserId != excludeUserId), ct);
         }

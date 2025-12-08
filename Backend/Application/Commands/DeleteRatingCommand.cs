@@ -19,7 +19,6 @@ namespace Application.Commands
 
         public async Task<bool> Handle(DeleteRatingCommand request, CancellationToken cancellationToken)
         {
-            // Gọi Repository để xóa
             return await _reviewRepository.DeleteReviewByBookIdAsync(request.BookId, request.UserId);
         }
     }

@@ -5,7 +5,6 @@ using System.IO;
 
 namespace Infrastructure.Persistence
 {
-    // Lớp này CHỈ dùng cho lệnh "dotnet ef"
     public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
         public AppDbContext CreateDbContext(string[] args)
@@ -18,10 +17,8 @@ namespace Infrastructure.Persistence
                 .AddJsonFile("appsettings.Development.json", optional: true)
                 .Build();
 
-            // Lấy chuỗi kết nối
             var connectionString = configuration.GetSection("ConnectionStringOptions:DefaultConnection").Value;
 
-            // Tạo DbContext
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connectionString);
 

@@ -17,20 +17,16 @@ namespace Api.Controllers
     {
         private bool IsUserOwnerOrAdmin(Guid resourceId)
         {
-            // 1. Lấy ID từ Token (Claim "sub" hoặc NameIdentifier)
             var userIdFromToken = User.FindFirstValue(ClaimTypes.NameIdentifier) 
                                ?? User.FindFirstValue("sub");
 
             if (string.IsNullOrEmpty(userIdFromToken)) return false;
 
-            // 2. Kiểm tra xem User có phải là Admin không?
             if (User.IsInRole("Admin")) return true;
 
-            // 3. So sánh ID trong token với ID cần thao tác
             return userIdFromToken.Equals(resourceId.ToString(), StringComparison.OrdinalIgnoreCase);
         }
 
-        /// Endpoint để Đăng nhập
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> LoginAsync([FromBody] UserLoginDto loginDto)
@@ -40,12 +36,10 @@ namespace Api.Controllers
                 var query = new LoginQuery(loginDto);
                 var token = await sender.Send(query);
 
-                // Trả về 200 OK với Token
                 return Ok(new { Token = token });
             }
             catch (KeyNotFoundException ex)
             {
-                // Trả về 401 Unauthorized (Không được phép) nếu sai tên hoặc mật khẩu
                 return Unauthorized(new { message = ex.Message });
             }
             catch (Exception ex)
@@ -54,7 +48,6 @@ namespace Api.Controllers
             }
         }
 
-        /// Endpoint để Đăng ký (Tạo User mới)
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> RegisterAsync([FromBody] UserRegistrationDto userDto)
@@ -90,7 +83,6 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
         {
-            // Lấy ID của người đang gửi Request (từ Token)
             var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier) 
                                    ?? User.FindFirstValue("sub");
             
@@ -115,10 +107,9 @@ namespace Api.Controllers
 
         [HttpPut("{UserId}")]
         [Authorize]
-        // Đổi [FromBody] UserEntity -> [FromBody] UserUpdateDto
         public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserUpdateDto updateData)
         {
-            // Kiểm tra bảo mật (như bài trước)
+            // Kiểm tra quyền sở hữu
             if (!IsUserOwnerOrAdmin(UserId))
             {
                 return Forbid();
@@ -126,10 +117,10 @@ namespace Api.Controllers
 
             try
             {
+                // Command này chỉ xử lý Username và Email
                 var command = new UpdateUserCommand(UserId, updateData);
-                var result = await sender.Send(command); // result là UserEntity (chứa pass)
+                var result = await sender.Send(command);
 
-                // 2. FIX LỖI BẢO MẬT: Map sang DTO trước khi trả về
                 var responseDto = new UserDto
                 {
                     UserId = result.UserId,
@@ -145,16 +136,57 @@ namespace Api.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException ex) // Bắt lỗi trùng email/username
             {
-                // Bắt lỗi trùng lặp hoặc sai định dạng email
                 return Conflict(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi cập nhật.", error = ex.Message });
+                return StatusCode(500, new { message = "Lỗi khi cập nhật thông tin.", error = ex.Message });
             }
         }
+
+        [HttpPut("{UserId}/change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePasswordAsync([FromRoute] Guid UserId, [FromBody] ChangePasswordDto passwordData)
+        {
+            // Kiểm tra quyền sở hữu
+            if (!IsUserOwnerOrAdmin(UserId))
+            {
+                return Forbid();
+            }
+
+            // Kiểm tra Validate DTO (nếu API Controller không tự check)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                // Tạo Command đổi mật khẩu (Bạn cần tạo class Command này bên Application Layer)
+                var command = new ChangePasswordCommand(UserId, passwordData.CurrentPassword, passwordData.NewPassword);
+                
+                // Gửi sang Handler để xử lý (Logic check pass cũ, hash pass mới nằm ở Handler)
+                await sender.Send(command);
+
+                return Ok(new { message = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentException ex) // Pass cũ sai hoặc validation lỗi logic
+            {
+                return BadRequest(new { message = ex.Message }); 
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi đổi mật khẩu.", error = ex.Message });
+            }
+        }
+
+
 
         [HttpDelete("{UserId}")]
         [Authorize(Roles = "Admin")]
@@ -176,7 +208,7 @@ namespace Api.Controllers
         {
             if (!IsUserOwnerOrAdmin(userId))
             {
-                return Forbid(); // Trả về 403 Forbidden
+                return Forbid(); 
             }
             try
             {
@@ -185,23 +217,19 @@ namespace Api.Controllers
 
                 if (success)
                 {
-                    // Trả về 200 OK nếu thêm thành công
                     return Ok(new { message = "Đã thêm sách vào danh sách yêu thích." });
                 }
                 else
                 {
-                    // Trả về 409 Conflict nếu sách đã tồn tại
                     return Conflict(new { message = "Sách này đã có trong danh sách yêu thích của bạn." });
                 }
             }
             catch (KeyNotFoundException ex)
             {
-                // Trả về 404 Not Found nếu User hoặc Book không tồn tại
                 return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                // Trả về 500 Internal Server Error cho các lỗi khác
                 return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
             }
         }
@@ -212,7 +240,7 @@ namespace Api.Controllers
         {
             if (!IsUserOwnerOrAdmin(userId))
             {
-                return Forbid(); // Trả về 403 Forbidden
+                return Forbid();
             }
             try
             {
@@ -225,7 +253,6 @@ namespace Api.Controllers
                 }
                 else
                 {
-                    // Trả về 404 nếu sách không có trong danh sách của user này
                     return NotFound(new { message = "Sách này không có trong danh sách yêu thích của bạn." });
                 }
             }

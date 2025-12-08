@@ -15,24 +15,19 @@ namespace Infrastructure.Persistence
 
         modelBuilder.Entity<BookEntity>(entity =>
         {
-            // 1. (FIX LỖI) Chỉ định rõ ràng BookId là Khóa chính
             entity.HasKey(b => b.BookId);
 
-            // 2. Cấu hình HasPrecision (code cũ của bạn)
             entity.Property(b => b.average_rating)
                 .HasPrecision(3, 2);
 
-            // 3. Cấu hình C# tự tạo Guid (đã dùng BookId - đúng)
             entity.Property(b => b.BookId)
                 .ValueGeneratedNever();
         });
 
         modelBuilder.Entity<UserEntity>(entity =>
         {
-            // 1. (FIX LỖI) Chỉ định rõ ràng Id là Khóa chính
             entity.HasKey(u => u.UserId);
 
-            // 2. Cấu hình Favorites (code cũ của bạn)
             entity.HasMany(u => u.FavoriteBooks)
                 .WithMany()
                 .UsingEntity("UserFavoriteBooks");

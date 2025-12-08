@@ -11,7 +11,6 @@ namespace Application.Queries
 {
     public record GetRatingsByBookIdQuery(Guid BookId) : IRequest<BookRatingResponse>;
 
-    // Handler
     public class GetRatingsByBookIdQueryHandler : IRequestHandler<GetRatingsByBookIdQuery, BookRatingResponse>
     {
         private readonly IReviewRepository _reviewRepository;

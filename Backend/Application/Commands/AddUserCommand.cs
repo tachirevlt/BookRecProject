@@ -49,10 +49,8 @@ namespace Application.Commands
                 Role = "User"
             };
 
-            // 6. Lưu vào DB
             var createdUser = await userRepository.AddUserAsync(newUser, cancellationToken);
 
-            // 7. Bắn sự kiện
             await mediator.Publish(new UserCreatedEvent(createdUser.UserId), cancellationToken); 
 
             return createdUser;

@@ -13,7 +13,6 @@ namespace Core.Entities
         public string Email { get; set; } = null!;
         public string HashedPassword { get; set; } = null!;
         public string Role { get; set; } = null!;
-
         public virtual ICollection<BookEntity> FavoriteBooks { get; set; } = new List<BookEntity>();
     }
 }

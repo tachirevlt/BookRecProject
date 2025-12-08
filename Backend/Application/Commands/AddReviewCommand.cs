@@ -3,7 +3,6 @@ using System;
 
 namespace Application.Commands
 {
-    // SỬA: UserId và BookId chuyển từ int sang Guid
     public record AddReviewCommand(Guid UserId, Guid BookId, int Rating) : IRequest<bool>;
 
     // Handler
@@ -20,7 +19,6 @@ namespace Application.Commands
         {
             var review = new Core.Entities.ReviewEntity
             {
-                // Bây giờ request.UserId là Guid, gán vào ReviewEntity.UserId (cũng là Guid) sẽ OK
                 UserId = request.UserId, 
                 BookId = request.BookId,
                 Rating = request.Rating
