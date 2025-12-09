@@ -2,7 +2,7 @@ export interface Book {
   bookId: string;
   title: string;
   author: string;
-  tag_name: string;
+  genres: string[];
   year: number;
   books_count: number;
   work_id: string;

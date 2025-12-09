@@ -11,7 +11,7 @@ export const BookFormPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     author: '',
-    tag_name: 'classic', // Giá trị mặc định
+    genres: ['classic'], // Giá trị mặc định
     year: new Date().getFullYear(),
     average_rating: 0,
     ratings: 0,
@@ -30,7 +30,7 @@ export const BookFormPage = () => {
         setFormData({
             title: data.title,
             author: data.author,
-            tag_name: data.tag_name,
+            genres: data.genres,
             year: data.year,
             average_rating: data.average_rating,
             ratings: data.ratings,
@@ -115,16 +115,28 @@ export const BookFormPage = () => {
               />
             </div>
 
-             {/* Thể loại (Tag) */}
-            <div style={{ flex: 1 }}>
-              <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Thể loại</label>
-              <input 
-                type="text"
-                value={formData.tag_name}
-                onChange={e => setFormData({...formData, tag_name: e.target.value})}
-                style={styles.input}
-              />
-            </div>
+              <div style={{ flex: 1 }}>
+                <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>
+                    Thể loại (cách nhau dấu phẩy)
+                </label>
+                <input 
+                  type="text"
+                  // 1. HIỂN THỊ: Nối mảng ["A", "B"] thành chuỗi "A, B"
+                  value={formData.genres.join(', ')} 
+                  
+                  // 2. CẬP NHẬT: Cắt chuỗi "A, B" ngược lại thành mảng ["A", "B"]
+                  onChange={e => {
+                      const value = e.target.value;
+                      // Nếu xóa hết thì để mảng rỗng, ngược lại thì cắt dấu phẩy và xóa khoảng trắng thừa
+                      const arrayValues = value ? value.split(',').map(item => item.trim()) : []; //
+                      
+                      setFormData({...formData, genres: arrayValues});
+                  }}
+                  
+                  style={styles.input}
+                  placeholder="Ví dụ: Classic, Fiction"
+                />
+              </div>
           </div>
 
           {/* Đánh giá */}

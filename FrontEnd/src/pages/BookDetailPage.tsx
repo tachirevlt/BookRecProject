@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { bookService } from '../services/bookService';
 import { authService } from '../services/authService';
-import { userService } from '../services/userService'; // Import UserService
+import { userService } from '../services/userService';
 import type { Book } from '../types/Book';
 
 export const BookDetailPage = () => {
@@ -12,10 +12,9 @@ export const BookDetailPage = () => {
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // State quản lý nút Tim
   const [isLiked, setIsLiked] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // State kiểm tra quyền Admin
   
-  // Lấy User hiện tại
   const user = authService.getCurrentUser();
 
   useEffect(() => {
@@ -25,22 +24,22 @@ export const BookDetailPage = () => {
       try {
         // 1. Tải thông tin sách
         const data = await bookService.getById(id);
-        console.log("Chi tiết sách:", data);
         setBook(data);
 
-        // 2. Kiểm tra xem User đã like cuốn này chưa (Nếu đã đăng nhập)
+        // 2. Nếu đã đăng nhập: Kiểm tra Like và Role Admin
         if (user && user.userId) {
           const profile = await userService.getProfile(user.userId);
           
-          // Tìm xem ID sách hiện tại có trong danh sách yêu thích không
-          // (Dùng some để trả về true/false)
+          // Check Admin
+          if (profile.role === 'Admin') {
+              setIsAdmin(true);
+          }
+
+          // Check Like
           const found = profile.favoriteBooks.some((b: any) => {
              const favId = b.bookId || b.BookId || b.id;
-             // So sánh ID sách yêu thích với ID sách hiện tại (id từ URL)
-             // Lưu ý: ép kiểu String để so sánh cho chắc ăn (vì có khi 1 cái là số, 1 cái là chữ)
              return String(favId).toLowerCase() === String(id).toLowerCase();
           });
-          
           setIsLiked(found);
         }
 
@@ -52,25 +51,21 @@ export const BookDetailPage = () => {
     };
 
     loadData();
-  }, [id]);
+  }, [id, user]);
 
-  // Hàm xử lý bấm Tim
   const handleToggleLike = async () => {
     if (!user || !user.userId) {
       alert("Bạn cần đăng nhập để thêm vào yêu thích!");
       navigate('/login');
       return;
     }
-
     if (!id) return;
 
     try {
       if (isLiked) {
-        // Đang thích -> Bấm là XÓA
         await userService.removeFavorite(user.userId, id);
         setIsLiked(false);
       } else {
-        // Chưa thích -> Bấm là THÊM
         await userService.addFavorite(user.userId, id);
         setIsLiked(true);
       }
@@ -79,84 +74,157 @@ export const BookDetailPage = () => {
     }
   };
 
-  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>⏳ Đang tải...</div>;
-  if (!book) return <div style={{padding: '50px', textAlign: 'center'}}>❌ Không tìm thấy sách</div>;
+  if (loading) return <div style={{padding: '100px', textAlign: 'center', color: '#666'}}>⏳ Đang tải thông tin sách...</div>;
+  if (!book) return <div style={{padding: '100px', textAlign: 'center', color: 'red'}}>❌ Không tìm thấy sách hoặc sách đã bị xóa.</div>;
 
   return (
-    <div style={{ padding: '40px', maxWidth: '900px', margin: '0 auto', fontFamily: 'Arial' }}>
+    <div style={{ background: '#F4F7FF', minHeight: '100vh', padding: '40px 20px' }}>
       
-      {/* Nút quay lại */}
-      <button onClick={() => navigate('/')} style={{ marginBottom: '20px', cursor: 'pointer', padding: '8px 15px', background: '#eee', border: 'none', borderRadius: '5px' }}>
-        ⬅ Quay lại danh sách
-      </button>
-
-      <div style={{ 
-        border: '1px solid #ddd', padding: '40px', borderRadius: '15px', 
-        backgroundColor: '#fff', boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
-        position: 'relative' // Để đặt nút Tim
-      }}>
+      {/* Container giới hạn 1440px giống HomePage */}
+      <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
         
-        {/* --- NÚT TIM (GÓC TRÊN PHẢI) --- */}
+        {/* Breadcrumb / Back Button */}
         <button 
-            onClick={handleToggleLike}
-            title={isLiked ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+            onClick={() => navigate(-1)} 
             style={{ 
-              position: 'absolute', top: '30px', right: '30px',
-              background: isLiked ? '#ffebee' : '#f5f5f5', 
-              border: isLiked ? '1px solid #ffcdd2' : '1px solid #ddd',
-              borderRadius: '50%', width: '50px', height: '50px',
-              cursor: 'pointer', fontSize: '24px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.2s'
+                marginBottom: '20px', cursor: 'pointer', 
+                padding: '10px 20px', background: 'white', 
+                border: '1px solid #ddd', borderRadius: '8px',
+                display: 'flex', alignItems: 'center', gap: '5px',
+                fontWeight: '600', color: '#555'
             }}
         >
-            {isLiked ? '❤️' : '🤍'}
+            ⬅ Quay lại
         </button>
 
-        {/* Header: Tag và Năm */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-          <span style={{ background: '#e3f2fd', color: '#0d47a1', padding: '5px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold' }}>
-            {book.tag_name || "Book"}
-          </span>
-          <span style={{ background: '#f3e5f5', color: '#7b1fa2', padding: '5px 12px', borderRadius: '20px', fontSize: '14px' }}>
-            Năm: {book.year}
-          </span>
-        </div>
+        <div style={{ 
+            display: 'flex', gap: '40px', 
+            background: 'white', padding: '40px', borderRadius: '20px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            flexWrap: 'wrap'
+        }}>
+            
+            {/* CỘT TRÁI: ẢNH BÌA (Placeholder) */}
+            <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ 
+                    width: '100%', height: '450px', 
+                    background: '#eee', borderRadius: '12px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '60px', color: '#ccc', overflow: 'hidden'
+                }}>
+                    {/* Nếu có link ảnh thật thì dùng thẻ img ở đây */}
+                    {/* {book.coverImage ? (
+                        <img src={book.coverImage} alt={book.title} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                    ) : (
+                        <span>📖</span>
+                    )} */}
+                </div>
 
-        {/* Tiêu đề & Tác giả */}
-        <h1 style={{ fontSize: '36px', color: '#2c3e50', margin: '10px 0', paddingRight: '60px' }}>
-            {book.title}
-        </h1>
-        <h3 style={{ color: '#555', fontWeight: 'normal', fontSize: '20px' }}>
-            Tác giả: <strong style={{color: '#333'}}>{book.author}</strong>
-        </h3>
-
-        <hr style={{ border: '0', borderTop: '1px solid #eee', margin: '30px 0' }} />
-
-        {/* Thông tin chi tiết */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-          <div style={{ background: '#fafafa', padding: '20px', borderRadius: '10px' }}>
-            <p style={{ margin: '10px 0' }}><strong>⭐ Đánh giá:</strong> {book.average_rating} / 5</p>
-            <p style={{ margin: '10px 0' }}><strong>👥 Lượt đánh giá:</strong> {book.ratings?.toLocaleString()}</p>
-          </div>
-          <div style={{ background: '#fafafa', padding: '20px', borderRadius: '10px' }}>
-             <p style={{ margin: '10px 0' }}><strong>🔢 Mã ISBN:</strong> {book.isbn || '---'}</p>
-             <p style={{ margin: '10px 0' }}><strong>🌐 Ngôn ngữ:</strong> {book.language_code || '---'}</p>
-          </div>
-        </div>
-
-        {/* Nút hành động */}
-        {user && (
-            <div style={{ marginTop: '40px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '15px' }}>
-            <button 
-                onClick={() => navigate(`/edit/${id}`)} 
-                style={{ padding: '12px 24px', backgroundColor: '#ffc107', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', color: '#333' }}
-            >
-                ✏️ Chỉnh sửa thông tin
-            </button>
+                {/* Nút hành động */}
+                <button 
+                    onClick={handleToggleLike}
+                    style={{ 
+                        width: '100%', padding: '15px', 
+                        borderRadius: '10px', cursor: 'pointer',
+                        fontWeight: 'bold', fontSize: '16px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                        background: isLiked ? '#FFF0F1' : '#F4F7FF',
+                        color: isLiked ? '#D9534F' : '#3056D3',
+                        border: isLiked ? '1px solid #FFCDD2' : '1px solid #E0E7FF',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    {isLiked ? '❤️ Đã yêu thích' : '🤍 Thêm vào yêu thích'}
+                </button>
             </div>
-        )}
 
+            {/* CỘT PHẢI: THÔNG TIN CHI TIẾT */}
+            <div style={{ flex: 1, minWidth: '300px' }}>
+                
+                {/* Genres Tags */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '15px' }}>
+                    {book.genres && book.genres.length > 0 ? (
+                        book.genres.map((g, index) => (
+                            <span key={index} style={{ 
+                                background: '#E0E7FF', color: '#3056D3', 
+                                padding: '6px 14px', borderRadius: '20px', 
+                                fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase' 
+                            }}>
+                                {g}
+                            </span>
+                        ))
+                    ) : (
+                        <span style={{ background: '#eee', color: '#666', padding: '6px 14px', borderRadius: '20px', fontSize: '13px' }}>
+                            Unknown Genre
+                        </span>
+                    )}
+                </div>
+
+                <h1 style={{ fontSize: '42px', color: '#090E34', margin: '0 0 10px 0', lineHeight: '1.2' }}>
+                    {book.title}
+                </h1>
+                
+                <h3 style={{ fontSize: '20px', color: '#637381', margin: '0 0 30px 0', fontWeight: '500' }}>
+                    by <span style={{ color: '#090E34', fontWeight: 'bold' }}>{book.author}</span> • {book.year}
+                </h3>
+
+                {/* Chỉ số Rating */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '30px', padding: '20px', background: '#FAFAFA', borderRadius: '12px', marginBottom: '30px' }}>
+                    <div>
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#F59E0B' }}>
+                            {book.average_rating} <span style={{fontSize:'16px', color:'#ccc'}}>/ 5</span>
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#637381' }}>Average Rating</div>
+                    </div>
+                    <div style={{ width: '1px', height: '40px', background: '#ddd' }}></div>
+                    <div>
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#090E34' }}>
+                            {book.ratings?.toLocaleString() || 0}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#637381' }}>Total Ratings</div>
+                    </div>
+                    <div style={{ width: '1px', height: '40px', background: '#ddd' }}></div>
+                    <div>
+                        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#090E34' }}>
+                            {book.language_code?.toUpperCase() || 'ENG'}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#637381' }}>Language</div>
+                    </div>
+                </div>
+
+                {/* Mô tả */}
+                <div style={{ marginBottom: '40px' }}>
+                    <h4 style={{ fontSize: '18px', fontWeight: 'bold', color: '#090E34', marginBottom: '10px' }}>About this book</h4>
+                    <p style={{ lineHeight: '1.8', color: '#555', fontSize: '16px' }}>
+                        {/* {book.description || "Chưa có mô tả cho cuốn sách này."} */}
+                        { "Chưa có mô tả cho cuốn sách này."}
+                    </p>
+                </div>
+
+                {/* ISBN */}
+                <div style={{ fontSize: '14px', color: '#999' }}>
+                    ISBN: {book.isbn || 'N/A'} • Work ID: {book.work_id || 'N/A'}
+                </div>
+
+                {/* NÚT SỬA (CHỈ HIỆN CHO ADMIN) */}
+                {isAdmin && (
+                    <div style={{ marginTop: '40px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                        <Link to={`/edit/${id}`} style={{ textDecoration: 'none' }}>
+                            <button style={{ 
+                                background: '#090E34', color: 'white', 
+                                padding: '12px 24px', borderRadius: '8px', 
+                                border: 'none', cursor: 'pointer',
+                                fontWeight: 'bold', fontSize: '15px',
+                                display: 'inline-flex', alignItems: 'center', gap: '8px'
+                            }}>
+                                ✏️ Admin: Chỉnh sửa thông tin
+                            </button>
+                        </Link>
+                    </div>
+                )}
+
+            </div>
+        </div>
       </div>
     </div>
   );
