@@ -11,13 +11,18 @@ namespace Core.Entities
         public Guid BookId { get; set; }
         public string title { get; set; } = null!;
         public string author { get; set; } = null!;
-        public List<string> tag_name { get; set; } = new List<string>();
+        public List<string> Genres { get; set; } = new List<string>();
         public double? year { get; set; } = null!;
         public int? books_count { get; set; } = null!;
         public string work_id { get; set; } = null!;
         public string isbn { get; set; } = null!;
         public string language_code { get; set; } = null!;
         public decimal? average_rating { get; set; } = null!;
-        public int? ratings { get; set; } = null!;
+        public int? ratings_1 { get; set; } = null!;
+        public int? ratings_2 { get; set; } = null!;
+        public int? ratings_3 { get; set; } = null!;
+        public int? ratings_4 { get; set; } = null!;
+        public int? ratings_5 { get; set; } = null!;
+
     }
 }

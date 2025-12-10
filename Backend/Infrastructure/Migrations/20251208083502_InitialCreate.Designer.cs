@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251125062221_InitialCreate")]
+    [Migration("20251208083502_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -29,6 +29,10 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<Guid>("BookId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Genres")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("author")
                         .IsRequired()
@@ -51,10 +55,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<int?>("ratings")
                         .HasColumnType("int");
-
-                    b.Property<string>("tag_name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("title")
                         .IsRequired()

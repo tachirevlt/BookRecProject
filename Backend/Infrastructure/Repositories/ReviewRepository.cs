@@ -17,12 +17,7 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<double> GetAverageRatingAsync(Guid bookId)
-        {
-             var ratings = await _context.Reviews.Where(r => r.BookId == bookId).Select(r => r.Rating).ToListAsync();
-             if (!ratings.Any()) return 0;
-             return ratings.Average();
-        }
+
         public async Task<ReviewEntity> AddReviewAsync(ReviewEntity review)
         {
             _context.Reviews.Add(review);
@@ -40,19 +35,19 @@ namespace Infrastructure.Repositories
         }
 
 
-        public async Task<bool> DeleteReviewByBookIdAsync(Guid bookId, Guid userId)
+
+        
+        public async Task<ReviewEntity?> GetReviewByUserAndBookAsync(Guid userId, Guid bookId)
         {
-            var review = await _context.Reviews
-                .FirstOrDefaultAsync(r => r.BookId == bookId && r.UserId == userId);
+            return await _context.Reviews
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.BookId == bookId);
+        }
 
-            if (review == null)
-            {
-                return false; 
-            }
-
-            _context.Reviews.Remove(review);
+        public async Task UpdateReviewAsync(ReviewEntity review)
+        {
+            _context.Reviews.Update(review);
+            
             await _context.SaveChangesAsync();
-            return true;
         }
     }
 }

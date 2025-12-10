@@ -27,6 +27,10 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("BookId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Genres")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("author")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -48,10 +52,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<int?>("ratings")
                         .HasColumnType("int");
-
-                    b.Property<string>("tag_name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("title")
                         .IsRequired()

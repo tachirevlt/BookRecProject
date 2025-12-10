@@ -34,7 +34,7 @@ namespace Infrastructure.Repositories
                     query = query.Where(b => b.title.ToLower().Contains(term) || 
                                             b.author.ToLower().Contains(term) ||
                                             // 👇 Logic tìm trong List<string>
-                                            b.genres.Any(g => g.ToLower().Contains(term)));
+                                            b.Genres.Any(g => g.ToLower().Contains(term)));
                 }
 
                 if (!string.IsNullOrWhiteSpace(filters.Title))
@@ -50,18 +50,9 @@ namespace Infrastructure.Repositories
                 if (!string.IsNullOrWhiteSpace(filters.Genre))
                 {
                     var genreTerm = filters.Genre.Trim();
-                    query = query.Where(b => b.Genres.Contains(filters.Genre));
+                    query = query.Where(b => b.Genres.Contains(genreTerm));
                 }
                 
-                if (filters.MinRating.HasValue)
-                {
-                    query = query.Where(b => b.average_rating >= filters.MinRating.Value);
-                }
-
-                if (filters.MaxRating.HasValue)
-                {
-                    query = query.Where(b => b.average_rating <= filters.MaxRating.Value);
-                }
                 
                 if (filters.MinYear.HasValue)
                 {
@@ -87,7 +78,6 @@ namespace Infrastructure.Repositories
                         "title" => isDescending ? query.OrderByDescending(b => b.title) : query.OrderBy(b => b.title),
                         "author" => isDescending ? query.OrderByDescending(b => b.author) : query.OrderBy(b => b.author),
                         "year" => isDescending ? query.OrderByDescending(b => b.year) : query.OrderBy(b => b.year),
-                        "average_rating" => isDescending ? query.OrderByDescending(b => b.average_rating) : query.OrderBy(b => b.average_rating),
                         _ => query 
                     };
                 }
@@ -117,14 +107,18 @@ namespace Infrastructure.Repositories
 
             existingBook.title = updatedBookData.title;
             existingBook.author = updatedBookData.author;
-            existingBook.tag_name = updatedBookData.tag_name;
+            existingBook.Genres = updatedBookData.Genres;
             existingBook.year = updatedBookData.year;
             existingBook.books_count = updatedBookData.books_count;
             existingBook.work_id = updatedBookData.work_id;
             existingBook.isbn = updatedBookData.isbn;
             existingBook.language_code = updatedBookData.language_code;
             existingBook.average_rating = updatedBookData.average_rating;
-            existingBook.ratings = updatedBookData.ratings;
+            existingBook.ratings_1 = updatedBookData.ratings_1;
+            existingBook.ratings_2 = updatedBookData.ratings_2;
+            existingBook.ratings_3 = updatedBookData.ratings_3;
+            existingBook.ratings_4 = updatedBookData.ratings_4;
+            existingBook.ratings_5 = updatedBookData.ratings_5;
 
             _db.Books.Update(existingBook);
             await _db.SaveChangesAsync(ct);
