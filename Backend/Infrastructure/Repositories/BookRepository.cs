@@ -136,5 +136,69 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
             return true;
         }
+        public async Task IncrementRatingCountAsync(Guid bookId, int rating, CancellationToken ct = default)
+        {
+            var book = await _db.Books.FindAsync(new object?[] { bookId }, ct);
+            
+            if (book is null)
+            {
+                throw new KeyNotFoundException($"Không tìm thấy sách với ID: {bookId} để cập nhật đánh giá.");
+            }
+
+            // 1. Tăng số lượng đánh giá tương ứng (ratings_1 đến ratings_5)
+            switch (rating)
+            {
+                case 1:
+                    book.ratings_1 = (book.ratings_1 ?? 0) + 1;
+                    break;
+                case 2:
+                    book.ratings_2 = (book.ratings_2 ?? 0) + 1;
+                    break;
+                case 3:
+                    book.ratings_3 = (book.ratings_3 ?? 0) + 1;
+                    break;
+                case 4:
+                    book.ratings_4 = (book.ratings_4 ?? 0) + 1;
+                    break;
+                case 5:
+                    book.ratings_5 = (book.ratings_5 ?? 0) + 1;
+                    break;
+                default:
+                    // Bỏ qua nếu rating không hợp lệ (mặc dù AddReviewRequest đã validate từ 1-5)
+                    return; 
+            }
+
+            // 2. Tính toán lại tổng số lượt vote và điểm trung bình
+            
+            // Đếm lại tổng số votes (books_count)
+            long totalVotes = (book.ratings_1 ?? 0) + 
+                              (book.ratings_2 ?? 0) + 
+                              (book.ratings_3 ?? 0) + 
+                              (book.ratings_4 ?? 0) + 
+                              (book.ratings_5 ?? 0);
+            
+            book.books_count = (int)totalVotes; // Cập nhật tổng số lượt vote
+
+            // Tính tổng điểm
+            decimal totalScore = (decimal)((book.ratings_1 ?? 0) * 1) +
+                                   (decimal)((book.ratings_2 ?? 0) * 2) +
+                                   (decimal)((book.ratings_3 ?? 0) * 3) +
+                                   (decimal)((book.ratings_4 ?? 0) * 4) +
+                                   (decimal)((book.ratings_5 ?? 0) * 5);
+
+            // Tính điểm trung bình
+            if (totalVotes > 0)
+            {
+                // Sử dụng decimal và làm tròn 2 chữ số thập phân cho độ chính xác
+                book.average_rating = Math.Round(totalScore / (decimal)totalVotes, 2); 
+            }
+            else
+            {
+                book.average_rating = null;
+            }
+            
+            // 3. Lưu thay đổi vào Database
+            await _db.SaveChangesAsync(ct);
+        }
     }
 }
