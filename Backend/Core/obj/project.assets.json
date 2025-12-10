@@ -337,11 +337,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj",
+      "projectUniqueName": "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Core\\Core.csproj",
       "projectName": "Core",
-      "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj",
+      "projectPath": "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Core\\Core.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\obj\\",
+      "outputPath": "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Core\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"

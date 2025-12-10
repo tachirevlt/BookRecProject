@@ -33,7 +33,6 @@ namespace Infrastructure.Repositories
                     var term = filters.SearchTerm.Trim().ToLower();
                     query = query.Where(b => b.title.ToLower().Contains(term) || 
                                             b.author.ToLower().Contains(term) ||
-                                            // 👇 Logic tìm trong List<string>
                                             b.Genres.Any(g => g.ToLower().Contains(term)));
                 }
 
@@ -49,10 +48,20 @@ namespace Infrastructure.Repositories
 
                 if (!string.IsNullOrWhiteSpace(filters.Genre))
                 {
-                    var genreTerm = filters.Genre.Trim();
-                    query = query.Where(b => b.Genres.Contains(genreTerm));
+                     var genreTerm = filters.Genre.Trim().ToLower(); 
+                    
+                     query = query.Where(b => b.Genres.Any(g => g.ToLower().Contains(genreTerm))); 
                 }
                 
+                if (filters.MinRating.HasValue)
+                {
+                    query = query.Where(b => b.average_rating >= filters.MinRating.Value);
+                }
+
+                if (filters.MaxRating.HasValue)
+                {
+                    query = query.Where(b => b.average_rating <= filters.MaxRating.Value);
+                }
                 
                 if (filters.MinYear.HasValue)
                 {
@@ -78,6 +87,7 @@ namespace Infrastructure.Repositories
                         "title" => isDescending ? query.OrderByDescending(b => b.title) : query.OrderBy(b => b.title),
                         "author" => isDescending ? query.OrderByDescending(b => b.author) : query.OrderBy(b => b.author),
                         "year" => isDescending ? query.OrderByDescending(b => b.year) : query.OrderBy(b => b.year),
+                        "average_rating" => isDescending ? query.OrderByDescending(b => b.average_rating) : query.OrderBy(b => b.average_rating),
                         _ => query 
                     };
                 }
@@ -114,11 +124,7 @@ namespace Infrastructure.Repositories
             existingBook.isbn = updatedBookData.isbn;
             existingBook.language_code = updatedBookData.language_code;
             existingBook.average_rating = updatedBookData.average_rating;
-            existingBook.ratings_1 = updatedBookData.ratings_1;
-            existingBook.ratings_2 = updatedBookData.ratings_2;
-            existingBook.ratings_3 = updatedBookData.ratings_3;
-            existingBook.ratings_4 = updatedBookData.ratings_4;
-            existingBook.ratings_5 = updatedBookData.ratings_5;
+            existingBook.ratings = updatedBookData.ratings;
 
             _db.Books.Update(existingBook);
             await _db.SaveChangesAsync(ct);
@@ -135,70 +141,6 @@ namespace Infrastructure.Repositories
             _db.Books.Remove(entity);
             await _db.SaveChangesAsync(ct);
             return true;
-        }
-        public async Task IncrementRatingCountAsync(Guid bookId, int rating, CancellationToken ct = default)
-        {
-            var book = await _db.Books.FindAsync(new object?[] { bookId }, ct);
-            
-            if (book is null)
-            {
-                throw new KeyNotFoundException($"Không tìm thấy sách với ID: {bookId} để cập nhật đánh giá.");
-            }
-
-            // 1. Tăng số lượng đánh giá tương ứng (ratings_1 đến ratings_5)
-            switch (rating)
-            {
-                case 1:
-                    book.ratings_1 = (book.ratings_1 ?? 0) + 1;
-                    break;
-                case 2:
-                    book.ratings_2 = (book.ratings_2 ?? 0) + 1;
-                    break;
-                case 3:
-                    book.ratings_3 = (book.ratings_3 ?? 0) + 1;
-                    break;
-                case 4:
-                    book.ratings_4 = (book.ratings_4 ?? 0) + 1;
-                    break;
-                case 5:
-                    book.ratings_5 = (book.ratings_5 ?? 0) + 1;
-                    break;
-                default:
-                    // Bỏ qua nếu rating không hợp lệ (mặc dù AddReviewRequest đã validate từ 1-5)
-                    return; 
-            }
-
-            // 2. Tính toán lại tổng số lượt vote và điểm trung bình
-            
-            // Đếm lại tổng số votes (books_count)
-            long totalVotes = (book.ratings_1 ?? 0) + 
-                              (book.ratings_2 ?? 0) + 
-                              (book.ratings_3 ?? 0) + 
-                              (book.ratings_4 ?? 0) + 
-                              (book.ratings_5 ?? 0);
-            
-            book.books_count = (int)totalVotes; // Cập nhật tổng số lượt vote
-
-            // Tính tổng điểm
-            decimal totalScore = (decimal)((book.ratings_1 ?? 0) * 1) +
-                                   (decimal)((book.ratings_2 ?? 0) * 2) +
-                                   (decimal)((book.ratings_3 ?? 0) * 3) +
-                                   (decimal)((book.ratings_4 ?? 0) * 4) +
-                                   (decimal)((book.ratings_5 ?? 0) * 5);
-
-            // Tính điểm trung bình
-            if (totalVotes > 0)
-            {
-                // Sử dụng decimal và làm tròn 2 chữ số thập phân cho độ chính xác
-                book.average_rating = Math.Round(totalScore / (decimal)totalVotes, 2); 
-            }
-            else
-            {
-                book.average_rating = null;
-            }
-            
-            // 3. Lưu thay đổi vào Database
-            await _db.SaveChangesAsync(ct);
         }
     }
 }

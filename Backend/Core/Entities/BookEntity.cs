@@ -18,11 +18,6 @@ namespace Core.Entities
         public string isbn { get; set; } = null!;
         public string language_code { get; set; } = null!;
         public decimal? average_rating { get; set; } = null!;
-        public int? ratings_1 { get; set; } = null!;
-        public int? ratings_2 { get; set; } = null!;
-        public int? ratings_3 { get; set; } = null!;
-        public int? ratings_4 { get; set; } = null!;
-        public int? ratings_5 { get; set; } = null!;
-
+        public int? ratings { get; set; } = null!;
     }
 }

@@ -16,7 +16,8 @@ namespace Core.Entities
         public Guid BookId { get; set; }
         [ForeignKey("BookId")]
         public BookEntity? Book { get; set; }
-        public string? Comment { get; set; } // Giữ lại Comment
+        [Range(1, 5)]
+        public int Rating { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

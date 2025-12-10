@@ -18,7 +18,7 @@ namespace Infrastructure.Migrations
                     BookId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     author = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Genres = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    tag_name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     year = table.Column<double>(type: "float", nullable: true),
                     books_count = table.Column<int>(type: "int", nullable: true),
                     work_id = table.Column<string>(type: "nvarchar(max)", nullable: false),
