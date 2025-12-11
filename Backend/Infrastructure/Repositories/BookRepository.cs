@@ -26,80 +26,91 @@ namespace Infrastructure.Repositories
                 PaginationParams pagination,
                 BookFilterParams filters,
                 CancellationToken cancellationToken)
+        {
+            IQueryable<BookEntity> query = _db.Books.AsNoTracking();
+
+            // 1. Logic tìm kiếm tổng hợp (SearchTerm)
+            if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
             {
-                IQueryable<BookEntity> query = _db.Books.AsNoTracking();
-                if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
-                {
-                    var term = filters.SearchTerm.Trim().ToLower();
-                    query = query.Where(b => b.title.ToLower().Contains(term) || 
-                                            b.author.ToLower().Contains(term) ||
-                                            b.Genres.Any(g => g.ToLower().Contains(term)));
-                }
-
-                if (!string.IsNullOrWhiteSpace(filters.Title))
-                {
-                    query = query.Where(b => b.title.Contains(filters.Title));
-                }
-
-                if (!string.IsNullOrWhiteSpace(filters.Author))
-                {
-                    query = query.Where(b => b.author.Contains(filters.Author));
-                }
-
-                if (!string.IsNullOrWhiteSpace(filters.Genre))
-                {
-                     var genreTerm = filters.Genre.Trim().ToLower(); 
-                    
-                     query = query.Where(b => b.Genres.Any(g => g.ToLower().Contains(genreTerm))); 
-                }
-                
-                if (filters.MinRating.HasValue)
-                {
-                    query = query.Where(b => b.average_rating >= filters.MinRating.Value);
-                }
-
-                if (filters.MaxRating.HasValue)
-                {
-                    query = query.Where(b => b.average_rating <= filters.MaxRating.Value);
-                }
-                
-                if (filters.MinYear.HasValue)
-                {
-                    query = query.Where(b => b.year >= filters.MinYear.Value);
-                }
-                
-                if (filters.MaxYear.HasValue)
-                {
-                    query = query.Where(b => b.year <= filters.MaxYear.Value);
-                }
-                
-                
-                query = query.OrderBy(b => b.BookId); 
-
-                if (!string.IsNullOrWhiteSpace(filters.SortBy))
-                {
-                    string sortBy = filters.SortBy.ToLowerInvariant();
-                    
-                    bool isDescending = filters.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
-
-                    query = sortBy switch
-                    {
-                        "title" => isDescending ? query.OrderByDescending(b => b.title) : query.OrderBy(b => b.title),
-                        "author" => isDescending ? query.OrderByDescending(b => b.author) : query.OrderBy(b => b.author),
-                        "year" => isDescending ? query.OrderByDescending(b => b.year) : query.OrderBy(b => b.year),
-                        "average_rating" => isDescending ? query.OrderByDescending(b => b.average_rating) : query.OrderBy(b => b.average_rating),
-                        _ => query 
-                    };
-                }
-                int totalCount = await query.CountAsync(cancellationToken);
-
-                var books = await query
-                    .Skip((pagination.PageNumber - 1) * pagination.PageSize) 
-                    .Take(pagination.PageSize) 
-                    .ToListAsync(cancellationToken);
-
-                return (books, totalCount);
+                var term = filters.SearchTerm.Trim().ToLower();
+                // Tìm trong Title, Author HOẶC bất kỳ Genre nào chứa từ khoá
+                query = query.Where(b => b.title.ToLower().Contains(term) || 
+                                         b.author.ToLower().Contains(term) ||
+                                         b.Genres.Any(g => g.ToLower().Contains(term)));
             }
+
+            // 2. Các bộ lọc cụ thể
+            if (!string.IsNullOrWhiteSpace(filters.Title))
+            {
+                var titleFilter = filters.Title.Trim().ToLower();
+                query = query.Where(b => b.title.ToLower().Contains(titleFilter));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Author))
+            {
+                var authorFilter = filters.Author.Trim().ToLower();
+                query = query.Where(b => b.author.ToLower().Contains(authorFilter));
+            }
+
+            // 3. Logic lọc Genre chuẩn xác
+            if (!string.IsNullOrWhiteSpace(filters.Genre))
+            {
+                var genreFilter = filters.Genre.Trim().ToLower();
+                // Dùng Any() để kiểm tra danh sách Genres của sách có chứa thể loại cần tìm không
+                // So sánh chính xác (Equals) hoặc chứa (Contains) tuỳ nhu cầu, ở đây dùng Contains cho linh hoạt
+                query = query.Where(b => b.Genres.Any(g => g.ToLower() == genreFilter));
+            }
+            
+            // Các bộ lọc số (Rating, Year)
+            if (filters.MinRating.HasValue)
+            {
+                query = query.Where(b => b.average_rating >= filters.MinRating.Value);
+            }
+
+            if (filters.MaxRating.HasValue)
+            {
+                query = query.Where(b => b.average_rating <= filters.MaxRating.Value);
+            }
+            
+            if (filters.MinYear.HasValue)
+            {
+                query = query.Where(b => b.year >= filters.MinYear.Value);
+            }
+            
+            if (filters.MaxYear.HasValue)
+            {
+                query = query.Where(b => b.year <= filters.MaxYear.Value);
+            }
+            
+            // 4. Sắp xếp (Sorting)
+            // Mặc định sắp xếp theo BookId để đảm bảo thứ tự phân trang ổn định
+            query = query.OrderBy(b => b.BookId); 
+
+            if (!string.IsNullOrWhiteSpace(filters.SortBy))
+            {
+                string sortBy = filters.SortBy.Trim().ToLower(); // Trim ở đây cho chắc chắn
+                bool isDescending = filters.SortOrder?.Trim().ToLower() == "desc";
+
+                query = sortBy switch
+                {
+                    "title" => isDescending ? query.OrderByDescending(b => b.title) : query.OrderBy(b => b.title),
+                    "author" => isDescending ? query.OrderByDescending(b => b.author) : query.OrderBy(b => b.author),
+                    "year" => isDescending ? query.OrderByDescending(b => b.year) : query.OrderBy(b => b.year),
+                    "average_rating" => isDescending ? query.OrderByDescending(b => b.average_rating) : query.OrderBy(b => b.average_rating),
+                    _ => query 
+                };
+            }
+
+            int totalCount = await query.CountAsync(cancellationToken);
+
+            var books = await query
+                .Skip((pagination.PageNumber - 1) * pagination.PageSize) 
+                .Take(pagination.PageSize) 
+                .ToListAsync(cancellationToken);
+
+            return (books, totalCount);
+        }
+
         public async Task<BookEntity> AddBookAsync(BookEntity book, CancellationToken ct = default)
         {
             await _db.Books.AddAsync(book, ct);

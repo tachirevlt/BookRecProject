@@ -731,11 +731,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Application\\Application.csproj",
+      "projectUniqueName": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj",
       "projectName": "Application",
-      "projectPath": "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Application\\Application.csproj",
+      "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\Application.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Application\\obj\\",
+      "outputPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -750,8 +750,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Core\\Core.csproj": {
-              "projectPath": "E:\\CodeFolder\\Github_project\\test\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\BookRecProject-f69aff5d9dfba6ebd2a7ea89d7d130a86287c46c\\Backend\\Core\\Core.csproj"
+            "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj": {
+              "projectPath": "E:\\CodeFolder\\Github_project\\BookRecProject\\Backend\\Core\\Core.csproj"
             }
           }
         }
