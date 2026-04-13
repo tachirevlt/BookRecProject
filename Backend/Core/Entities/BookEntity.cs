@@ -21,3 +21,6 @@ namespace Core.Entities
         public int? ratings { get; set; } = null!;
     }
 }
+// 'id', 'book_id', 'authors', 'original_publication_year',
+//        'original_title', 'language_code', 'ratings_1', 'ratings_2',
+//        'ratings_3', 'ratings_4', 'ratings_5', 'image_url', 'small_image_url'

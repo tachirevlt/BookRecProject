@@ -34,9 +34,9 @@ namespace Infrastructure.Repositories
             {
                 var term = filters.SearchTerm.Trim().ToLower();
                 // Tìm trong Title, Author HOẶC bất kỳ Genre nào chứa từ khoá
-                query = query.Where(b => b.title.ToLower().Contains(term) || 
-                                         b.author.ToLower().Contains(term) ||
-                                         b.Genres.Any(g => g.ToLower().Contains(term)));
+                query = query.Where(b => b.title.Contains(term) || 
+                                         b.author.Contains(term) ||
+                                         b.Genres.Contains(term));
             }
 
             // 2. Các bộ lọc cụ thể
@@ -58,7 +58,7 @@ namespace Infrastructure.Repositories
                 var genreFilter = filters.Genre.Trim().ToLower();
                 // Dùng Any() để kiểm tra danh sách Genres của sách có chứa thể loại cần tìm không
                 // So sánh chính xác (Equals) hoặc chứa (Contains) tuỳ nhu cầu, ở đây dùng Contains cho linh hoạt
-                query = query.Where(b => b.Genres.Any(g => g.ToLower() == genreFilter));
+                query = query.Where(b => b.Genres.Contains(genreFilter));
             }
             
             // Các bộ lọc số (Rating, Year)
@@ -152,6 +152,15 @@ namespace Infrastructure.Repositories
             _db.Books.Remove(entity);
             await _db.SaveChangesAsync(ct);
             return true;
+        }
+        public async Task<IReadOnlyList<BookEntity>> GetRecommendedBooksAsync(Guid excludeBookId, int count, CancellationToken ct = default)
+        {
+            // Logic vẫn giữ nguyên: Lấy ngẫu nhiên
+            return await _db.Books.AsNoTracking()
+                .Where(b => b.BookId != excludeBookId) 
+                .OrderBy(x => Guid.NewGuid())          
+                .Take(count)                           
+                .ToListAsync(ct);
         }
     }
 }

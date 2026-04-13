@@ -15,5 +15,6 @@ namespace Core.Interfaces
         Task<BookEntity> AddBookAsync(BookEntity entity, CancellationToken ct = default);
         Task<BookEntity> UpdateBookAsync(Guid bookId, BookEntity entity, CancellationToken ct = default); 
         Task<bool> DeleteBookAsync(Guid bookId, CancellationToken ct = default); 
+        Task<IReadOnlyList<BookEntity>> GetRecommendedBooksAsync(Guid excludeBookId, int count, CancellationToken ct = default);
     }
 }
