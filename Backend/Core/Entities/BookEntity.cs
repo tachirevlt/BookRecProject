@@ -1,26 +1,26 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core.Entities
 {
     public class BookEntity
     {
-        public Guid BookId { get; set; }
-        public string title { get; set; } = null!;
-        public string author { get; set; } = null!;
-        public List<string> Genres { get; set; } = new List<string>();
-        public double? year { get; set; } = null!;
-        public int? books_count { get; set; } = null!;
-        public string work_id { get; set; } = null!;
-        public string isbn { get; set; } = null!;
+        public Guid book_id { get; set; }
+        public string authors { get; set; } = null!;
+        public double? original_publication_year { get; set; }
+        public string original_title { get; set; } = null!;
         public string language_code { get; set; } = null!;
-        public decimal? average_rating { get; set; } = null!;
-        public int? ratings { get; set; } = null!;
+        
+        public List<string> tags { get; set; } = new List<string>();
+
+        // Thống kê số lượng rating
+        public int ratings_1 { get; set; } = 0;
+        public int ratings_2 { get; set; } = 0;
+        public int ratings_3 { get; set; } = 0;
+        public int ratings_4 { get; set; } = 0;
+        public int ratings_5 { get; set; } = 0;
+
+        public string image_url { get; set; } = null!;
+        public string small_image_url { get; set; } = null!;
     }
 }
-// 'id', 'book_id', 'authors', 'original_publication_year',
-//        'original_title', 'language_code', 'ratings_1', 'ratings_2',
-//        'ratings_3', 'ratings_4', 'ratings_5', 'image_url', 'small_image_url'

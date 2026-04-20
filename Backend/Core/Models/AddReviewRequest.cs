@@ -1,14 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Models.Dtos
+namespace Models.Dtos // Bạn có thể đổi namespace thành Core.Models tùy hệ thống
 {
     public class AddReviewRequest
     {
         [Required]
         public Guid BookId { get; set; }
 
-        [Range(1, 5, ErrorMessage = "Điểm đánh giá phải từ 1 đến 5 sao.")]
-        public int Rating { get; set; }
+        [Required(ErrorMessage = "Vui lòng nhập nội dung bình luận.")]
+        public string Review { get; set; } = null!;
     }
 }

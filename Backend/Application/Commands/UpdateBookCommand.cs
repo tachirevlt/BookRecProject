@@ -1,17 +1,20 @@
 using MediatR;
 using Core.Entities;
 using Core.Interfaces;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Application.Commands
 {
-    public record UpdateBookCommand(Guid BookId, BookEntity Book)
-        : IRequest<BookEntity>;
+    public record UpdateBookCommand(Guid BookId, BookEntity Book) : IRequest<BookEntity>;
+
     public class UpdateBookCommandHandler(IBookRepository bookRepository)
         : IRequestHandler<UpdateBookCommand, BookEntity>
     {
         public async Task<BookEntity> Handle(UpdateBookCommand request, CancellationToken cancellationToken)
         {
-            return await bookRepository.UpdateBookAsync(request.BookId, request.Book);
+            return await bookRepository.UpdateBookAsync(request.BookId, request.Book, cancellationToken);
         }
     }
 }

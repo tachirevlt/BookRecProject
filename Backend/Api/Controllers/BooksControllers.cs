@@ -6,14 +6,16 @@ using Application.Queries;
 using Core.Entities;
 using Core.Models;
 using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class BooksController(ISender sender) : ControllerBase
     {
-
         [HttpPost("")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddBookAsync([FromBody] BookEntity book)
@@ -27,10 +29,7 @@ namespace Api.Controllers
         public async Task<IActionResult> UpdateBookAsync([FromRoute] Guid BookId, [FromBody] BookEntity Book)
         {
             var result = await sender.Send(new UpdateBookCommand(BookId, Book));
-            if (result == null)
-            {
-                return NotFound();
-            }
+            if (result == null) return NotFound();
             return Ok(result);
         }
 
@@ -39,12 +38,9 @@ namespace Api.Controllers
         public async Task<IActionResult> DeleteBookAsync([FromRoute] Guid BookId)
         {
             var success = await sender.Send(new DeleteBookCommand(BookId));
-            if (!success)
-            {
-                return NotFound($"Không tìm thấy sách với ID: {BookId} để xóa.");
-            }
+            if (!success) return NotFound($"Không tìm thấy sách với ID: {BookId} để xóa.");
+            
             return Ok(new { message = "Xóa sách thành công." });
-
         }
         
         [HttpGet("{BookId}")]
@@ -52,10 +48,8 @@ namespace Api.Controllers
         public async Task<IActionResult> GetBookByIdAsync([FromRoute] Guid BookId)
         {
             var result = await sender.Send(new GetBookByIdQuery(BookId));
-            if (result == null)
-            {
-                return NotFound($"Không tìm thấy sách với ID: {BookId}"); 
-            }
+            if (result == null) return NotFound($"Không tìm thấy sách với ID: {BookId}"); 
+            
             return Ok(result);
         }
 
@@ -68,9 +62,7 @@ namespace Api.Controllers
             CancellationToken cancellationToken)
         {
             var query = new GetAllBooksQuery(pagination, filters);
-
             var result = await sender.Send(query, cancellationToken);
-
             return Ok(result);
         }
         
@@ -79,17 +71,10 @@ namespace Api.Controllers
         public async Task<IActionResult> GetRecommendedBooks([FromRoute] Guid BookId)
         {
             var bookExists = await sender.Send(new GetBookByIdQuery(BookId));
-            if (bookExists == null)
-            {
-                 return NotFound($"Không tìm thấy sách gốc với ID: {BookId}");
-            }
+            if (bookExists == null) return NotFound($"Không tìm thấy sách gốc với ID: {BookId}");
 
-            // Gọi Query đã đổi tên
             var result = await sender.Send(new GetRecommendedBooksQuery(BookId));
             return Ok(result);
         }
-
     }
-
-
 }

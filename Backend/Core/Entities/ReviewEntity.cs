@@ -7,17 +7,21 @@ namespace Core.Entities
     public class ReviewEntity
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
+
         [Required]
-        public Guid UserId { get; set; }
-        [ForeignKey("UserId")]
+        public Guid user_id { get; set; }
+        [ForeignKey("user_id")]
         public UserEntity? User { get; set; }
+
         [Required]
-        public Guid BookId { get; set; }
-        [ForeignKey("BookId")]
+        public Guid book_id { get; set; }
+        [ForeignKey("book_id")]
         public BookEntity? Book { get; set; }
-        [Range(1, 5)]
-        public int Rating { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public string review { get; set; } = null!;
+
+        public DateTime time { get; set; } = DateTime.UtcNow;
     }
 }

@@ -1,11 +1,10 @@
 using MediatR;
-using Core.Interfaces;
-using Core.Entities;
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Core.Interfaces; 
 using System.Collections.Generic;
+using System.Linq; // Bắt buộc phải có using này để dùng FirstOrDefault()
 
 namespace Application.Commands
 {
@@ -23,17 +22,14 @@ namespace Application.Commands
         public async Task<bool> Handle(RemoveBookFromFavoritesCommand request, CancellationToken cancellationToken)
         {
             var user = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
+            if (user == null) throw new KeyNotFoundException($"Không tìm thấy User: {request.UserId}");
 
-            if (user == null)
-            {
-                throw new KeyNotFoundException($"Không tìm thấy User với ID: {request.UserId}");
-            }
-
-            var bookToRemove = user.FavoriteBooks.FirstOrDefault(b => b.BookId == request.BookId);
-
+            // Đã sửa b.BookId thành b.book_id
+            var bookToRemove = user.FavoriteBooks.FirstOrDefault(b => b.book_id == request.BookId);
+            
             if (bookToRemove == null)
             {
-                return false;
+                return false; // Sách không có trong danh sách yêu thích
             }
 
             user.FavoriteBooks.Remove(bookToRemove);

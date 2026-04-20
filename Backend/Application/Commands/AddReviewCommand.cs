@@ -1,30 +1,40 @@
 using MediatR;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Core.Entities;
+using Core.Interfaces;
 
 namespace Application.Commands
 {
-    public record AddReviewCommand(Guid UserId, Guid BookId, int Rating) : IRequest<bool>;
+    public class AddReviewCommand : IRequest<bool>
+    {
+        public Guid user_id { get; set; }
+        public Guid book_id { get; set; }
+        public string review { get; set; } = null!;
+    }
 
-    // Handler
     public class AddReviewCommandHandler : IRequestHandler<AddReviewCommand, bool>
     {
-        private readonly Core.Interfaces.IReviewRepository _reviewRepository;
+        private readonly IReviewRepository _reviewRepository;
 
-        public AddReviewCommandHandler(Core.Interfaces.IReviewRepository reviewRepository)
+        public AddReviewCommandHandler(IReviewRepository reviewRepository)
         {
             _reviewRepository = reviewRepository;
         }
 
         public async Task<bool> Handle(AddReviewCommand request, CancellationToken cancellationToken)
         {
-            var review = new Core.Entities.ReviewEntity
+            var newReview = new ReviewEntity
             {
-                UserId = request.UserId, 
-                BookId = request.BookId,
-                Rating = request.Rating
+                Id = Guid.NewGuid(),
+                user_id = request.user_id,
+                book_id = request.book_id,
+                review = request.review,
+                time = DateTime.UtcNow
             };
 
-            await _reviewRepository.AddReviewAsync(review);
+            await _reviewRepository.AddReviewAsync(newReview);
             return true;
         }
     }

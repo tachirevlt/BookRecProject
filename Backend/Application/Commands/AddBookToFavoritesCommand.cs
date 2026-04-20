@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using Core.Interfaces; 
 using System.Collections.Generic;
 using Core.Entities;
+using System.Linq; // Cần thêm dòng này để dùng được hàm Any()
 
 namespace Application.Commands
 {
-
     public record AddBookToFavoritesCommand(Guid UserId, Guid BookId) : IRequest<bool>;
 
     public class AddBookToFavoritesCommandHandler : IRequestHandler<AddBookToFavoritesCommand, bool>
@@ -30,7 +30,8 @@ namespace Application.Commands
             var book = await _bookRepository.GetBookByIdAsync(request.BookId, cancellationToken);
             if (book == null) throw new KeyNotFoundException($"Không tìm thấy Book: {request.BookId}");
 
-            if (user.FavoriteBooks.Any(b => b.BookId == request.BookId))
+            // Đã sửa b.BookId thành b.book_id
+            if (user.FavoriteBooks.Any(b => b.book_id == request.BookId))
             {
                 return false;
             }
