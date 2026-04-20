@@ -37,8 +37,11 @@ namespace Application.Queries
                 UserId = user.UserId,
                 Username = user.Username,
                 Role = user.Role,
+                Sex = user.Sex,
                 FavoriteBooks = user.FavoriteBooks,
-                Email = canViewPrivateInfo ? user.Email : null 
+                Email = canViewPrivateInfo ? user.Email : null ,
+                CurrentBalance = canViewPrivateInfo ? user.CurrentBalance : (decimal?)null,
+                PurchasedBooks = canViewPrivateInfo ? user.PurchasedBooks : null
             };
         }
     }

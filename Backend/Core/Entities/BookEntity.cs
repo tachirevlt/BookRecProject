@@ -13,7 +13,6 @@ namespace Core.Entities
         
         public List<string> tags { get; set; } = new List<string>();
 
-        // Thống kê số lượng rating
         public int ratings_1 { get; set; } = 0;
         public int ratings_2 { get; set; } = 0;
         public int ratings_3 { get; set; } = 0;
@@ -22,5 +21,8 @@ namespace Core.Entities
 
         public string image_url { get; set; } = null!;
         public string small_image_url { get; set; } = null!;
+
+        // Thuộc tính mới: Giá sách
+        public decimal cost { get; set; } = 0; 
     }
 }

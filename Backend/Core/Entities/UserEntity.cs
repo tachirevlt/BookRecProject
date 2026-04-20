@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core.Entities
 {
@@ -13,6 +10,13 @@ namespace Core.Entities
         public string Email { get; set; } = null!;
         public string HashedPassword { get; set; } = null!;
         public string Role { get; set; } = null!;
+        
+        public string? Sex { get; set; } 
+        public decimal CurrentBalance { get; set; } = 0;
+
         public virtual ICollection<BookEntity> FavoriteBooks { get; set; } = new List<BookEntity>();
+        
+        // Danh sách sách đã mua
+        public virtual ICollection<BookEntity> PurchasedBooks { get; set; } = new List<BookEntity>();
     }
 }

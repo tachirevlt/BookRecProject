@@ -31,6 +31,10 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("cost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("image_url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -129,6 +133,10 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("CurrentBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -139,6 +147,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Sex")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
@@ -163,6 +174,21 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UserEntityUserId");
 
                     b.ToTable("UserFavoriteBooks");
+                });
+
+            modelBuilder.Entity("UserPurchasedBooks", b =>
+                {
+                    b.Property<Guid>("PurchasedBooksbook_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserEntity1UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PurchasedBooksbook_id", "UserEntity1UserId");
+
+                    b.HasIndex("UserEntity1UserId");
+
+                    b.ToTable("UserPurchasedBooks");
                 });
 
             modelBuilder.Entity("Core.Entities.RatingEntity", b =>
@@ -214,6 +240,21 @@ namespace Infrastructure.Migrations
                     b.HasOne("Core.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserEntityUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UserPurchasedBooks", b =>
+                {
+                    b.HasOne("Core.Entities.BookEntity", null)
+                        .WithMany()
+                        .HasForeignKey("PurchasedBooksbook_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("UserEntity1UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

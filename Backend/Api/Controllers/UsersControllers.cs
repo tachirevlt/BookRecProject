@@ -5,6 +5,7 @@ using Application.Commands;
 using Application.Queries;
 using Core.Entities;
 using Core.Models;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -13,7 +14,7 @@ namespace Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     
-    public class UsersController(ISender sender) : ControllerBase
+    public class UsersController(ISender sender, IUserRepository userRepository) : ControllerBase
     {
         private bool IsUserOwnerOrAdmin(Guid resourceId)
         {
@@ -63,6 +64,7 @@ namespace Api.Controllers
                     Username = result.Username,
                     Email = result.Email,
                     Role = result.Role,
+                    Sex = result.Sex,
                     FavoriteBooks = result.FavoriteBooks
                 };
                 
@@ -83,9 +85,9 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
         {
-            var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier) 
+            var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier)
                                    ?? User.FindFirstValue("sub");
-            
+           
             Guid? currentUserId = null;
             if (Guid.TryParse(currentUserIdString, out var parsedId))
             {
@@ -102,6 +104,7 @@ namespace Api.Controllers
             }
 
             return Ok(result);
+
         }
 
 
@@ -123,6 +126,7 @@ namespace Api.Controllers
                     UserId = result.UserId,
                     Username = result.Username,
                     Email = result.Email,
+                    Sex = result.Sex,
                     Role = result.Role,
                     FavoriteBooks = result.FavoriteBooks
                 };
@@ -255,6 +259,44 @@ namespace Api.Controllers
             {
                 return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
             }
+        }
+        [HttpPost("admin/top-up")]
+        [Authorize(Roles = "Admin")] // Chỉ Admin mới có quyền
+        public async Task<IActionResult> TopUpBalanceAsync([FromBody] TopUpRequest request)
+        {
+            if (request.Amount <= 0) return BadRequest("Số tiền phải lớn hơn 0.");
+
+            var user = await userRepository.GetUserByUsernameAsync(request.Username);
+            if (user == null) return NotFound("Không tìm thấy người dùng.");
+
+            user.CurrentBalance += request.Amount;
+            await userRepository.SaveChangesAsync();
+
+            return Ok(new { message = $"Nạp thành công {request.Amount} cho {request.Username}. Số dư mới: {user.CurrentBalance}" });
+        }
+
+        [HttpPost("{userId}/purchase/{bookId}")]
+        [Authorize]
+        public async Task<IActionResult> PurchaseBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
+        {
+            if (!IsUserOwnerOrAdmin(userId)) return Forbid();
+
+            try
+            {
+                var success = await userRepository.PurchaseBookAsync(userId, bookId);
+                if (!success) return BadRequest("Số dư không đủ để mua cuốn sách này.");
+
+                return Ok(new { message = "Mua sách thành công. Sách đã được thêm vào bộ sưu tập của bạn." });
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (Exception ex) { return StatusCode(500, new { message = "Lỗi hệ thống.", error = ex.Message }); }
+        }
+
+        // Model phụ cho request nạp tiền
+        public class TopUpRequest
+        {
+            public string Username { get; set; } = null!;
+            public decimal Amount { get; set; }
         }
 
 

@@ -44,9 +44,13 @@ namespace Application.Commands
             {
                 UserId = Guid.NewGuid(),
                 Username = request.UserDto.Username,
-                Email = request.UserDto.Email,
+                Email = request.UserDto.Email,                
+                Sex = request.UserDto.Sex,
                 HashedPassword = hashedPassword, 
-                Role = "User"
+                Role = "User",                
+                CurrentBalance = 0,
+                FavoriteBooks = new List<BookEntity>(),
+                PurchasedBooks = new List<BookEntity>()
             };
 
             var createdUser = await userRepository.AddUserAsync(newUser, cancellationToken);

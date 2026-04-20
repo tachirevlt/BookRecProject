@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreateV2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,7 +27,8 @@ namespace Infrastructure.Migrations
                     ratings_4 = table.Column<int>(type: "int", nullable: false),
                     ratings_5 = table.Column<int>(type: "int", nullable: false),
                     image_url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    small_image_url = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    small_image_url = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    cost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -42,7 +43,9 @@ namespace Infrastructure.Migrations
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     HashedPassword = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Sex = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CurrentBalance = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -126,6 +129,30 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "UserPurchasedBooks",
+                columns: table => new
+                {
+                    PurchasedBooksbook_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserEntity1UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserPurchasedBooks", x => new { x.PurchasedBooksbook_id, x.UserEntity1UserId });
+                    table.ForeignKey(
+                        name: "FK_UserPurchasedBooks_Books_PurchasedBooksbook_id",
+                        column: x => x.PurchasedBooksbook_id,
+                        principalTable: "Books",
+                        principalColumn: "book_id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserPurchasedBooks_Users_UserEntity1UserId",
+                        column: x => x.UserEntity1UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Ratings_book_id",
                 table: "Ratings",
@@ -145,6 +172,11 @@ namespace Infrastructure.Migrations
                 name: "IX_UserFavoriteBooks_UserEntityUserId",
                 table: "UserFavoriteBooks",
                 column: "UserEntityUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPurchasedBooks_UserEntity1UserId",
+                table: "UserPurchasedBooks",
+                column: "UserEntity1UserId");
         }
 
         /// <inheritdoc />
@@ -158,6 +190,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserFavoriteBooks");
+
+            migrationBuilder.DropTable(
+                name: "UserPurchasedBooks");
 
             migrationBuilder.DropTable(
                 name: "Books");

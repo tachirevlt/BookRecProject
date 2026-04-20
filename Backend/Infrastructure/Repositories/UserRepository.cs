@@ -20,6 +20,7 @@ namespace Infrastructure.Repositories
 
             return await _db.Users
                 .Include(u => u.FavoriteBooks)
+                .Include(u => u.PurchasedBooks)
                 .FirstOrDefaultAsync(u => u.UserId == userId, ct);
         }
 
@@ -33,36 +34,43 @@ namespace Infrastructure.Repositories
         public async Task<UserEntity?> GetUserByUsernameAsync(string username, CancellationToken ct = default)
         {
             return await _db.Users
+                .Include(u => u.PurchasedBooks)
                 .FirstOrDefaultAsync(u => u.Username == username, ct);
         }
 
+        public async Task<bool> PurchaseBookAsync(Guid userId, Guid bookId, CancellationToken ct = default)
+        {
+            var user = await _db.Users.Include(u => u.PurchasedBooks).FirstOrDefaultAsync(u => u.UserId == userId, ct);
+            var book = await _db.Books.FindAsync(new object[] { bookId }, ct);
+
+            if (user == null || book == null) throw new KeyNotFoundException("User hoặc Sách không tồn tại.");
+
+            if (user.PurchasedBooks.Any(b => b.book_id == bookId)) return true; // Đã mua rồi
+
+            if (user.CurrentBalance < book.cost) return false; // Không đủ tiền
+
+            user.CurrentBalance -= book.cost;
+            user.PurchasedBooks.Add(book);
+            
+            await _db.SaveChangesAsync(ct);
+            return true;
+        }
         public async Task<UserEntity> UpdateUserAsync(Guid userId, UserEntity updatedUserData, CancellationToken ct = default)
         {
             var existingUser = await _db.Users.FindAsync(new object?[] { userId }, ct);
-            
-            if (existingUser is null)
-            {
-                throw new KeyNotFoundException($"Không tìm thấy user với ID: {userId}");
-            }
+            if (existingUser is null) throw new KeyNotFoundException($"Không tìm thấy user với ID: {userId}");
             existingUser.Username = updatedUserData.Username;
             existingUser.Email = updatedUserData.Email;
-
-            if (!string.IsNullOrEmpty(updatedUserData.HashedPassword))
-            {
-                existingUser.HashedPassword = updatedUserData.HashedPassword;
-            }
+            existingUser.Sex = updatedUserData.Sex;
+            if (!string.IsNullOrEmpty(updatedUserData.HashedPassword)) existingUser.HashedPassword = updatedUserData.HashedPassword;
             await _db.SaveChangesAsync(ct);
-            
             return existingUser;
         }
 
         public async Task<bool> DeleteUserAsync(Guid id, CancellationToken ct = default)
         {
             var entity = await _db.Users.FindAsync(new object?[] { id }, ct);
-            if (entity is null)
-            {
-                return false;
-            }
+            if (entity is null) return false;
             _db.Users.Remove(entity);
             await _db.SaveChangesAsync(ct);
             return true;
