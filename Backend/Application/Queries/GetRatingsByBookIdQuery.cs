@@ -1,7 +1,6 @@
 using MediatR;
-using Application.Models;
-using Core.Interfaces;
 using Core.Models;
+using Core.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

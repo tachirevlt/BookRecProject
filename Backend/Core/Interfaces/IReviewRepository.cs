@@ -9,6 +9,7 @@ namespace Core.Interfaces
     {
         Task<ReviewEntity> AddReviewAsync(ReviewEntity review);
         Task<IEnumerable<ReviewEntity>> GetReviewsByBookIdAsync(Guid bookId);
-        Task<bool> DeleteReviewByBookIdAsync(Guid bookId, Guid userId);
+        Task<ReviewEntity?> GetReviewByIdAsync(Guid reviewId);
+        Task<bool> DeleteReviewByIdAsync(Guid reviewId);
     }
 }

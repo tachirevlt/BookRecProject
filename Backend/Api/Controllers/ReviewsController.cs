@@ -6,7 +6,7 @@ using Application.Queries;
 using System.Security.Claims;
 using System;
 using System.Threading.Tasks;
-using Models.Dtos;
+using Core.Models;
 
 namespace Api.Controllers
 {
@@ -40,14 +40,59 @@ namespace Api.Controllers
                 return Unauthorized(new { message = "Không xác định được danh tính người dùng." });
             }
 
-            // Gọi Command AddReviewCommand (đã cập nhật ở lần trước)
             var command = new AddReviewCommand { user_id = userId, book_id = request.BookId, review = request.Review };
             var result = await _mediator.Send(command);
 
             return Ok(new { message = "Đăng bình luận thành công!" });
         }
 
-        // Lấy tất cả bình luận chữ của 1 sách (Có thể dùng API GetReviewsByBookIdQuery nếu bạn đã tạo, hoặc truy xuất trực tiếp)
-        // [HttpGet("book/{bookId}")] -> Nếu cần, bạn có thể triển khai thêm query cho nó.
+        [HttpGet("book/{bookId}")]
+        public async Task<IActionResult> GetReviewsByBookId(Guid bookId)
+        {
+            var query = new GetReviewsByBookIdQuery(bookId);
+            var result = await _mediator.Send(query); 
+            
+            return Ok(result);
+        }
+
+        [HttpDelete("{reviewId}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteReview([FromRoute] Guid reviewId)
+        {
+            try
+            {
+                // 1. Tìm bình luận để lấy thông tin user_id (Người đã viết nó)
+                var getQuery = new GetReviewByIdQuery(reviewId);
+                var review = await _mediator.Send(getQuery);
+
+                if (review == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy bình luận." });
+                }
+
+                // 2. Đưa user_id của tác giả bình luận vào hàm kiểm tra quyền
+                if (!IsUserOwnerOrAdmin(review.user_id))
+                {
+                    return Forbid();
+                }
+
+                // 3. Nếu qua được cửa bảo vệ, tiến hành xóa đích danh
+                var command = new DeleteReviewByIdCommand(reviewId);
+                var success = await _mediator.Send(command);
+
+                if (success)
+                {
+                    return Ok(new { message = "Đã xóa bình luận thành công." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Xóa bình luận thất bại do lỗi hệ thống." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Đã xảy ra lỗi không mong muốn.", error = ex.Message });
+            }
+        }
     }
 }

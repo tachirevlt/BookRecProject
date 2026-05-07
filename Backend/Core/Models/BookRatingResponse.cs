@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Application.Models
+namespace Core.Models
 {
     public class BookRatingResponse
     {

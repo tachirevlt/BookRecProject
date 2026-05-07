@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Models.Dtos // Bạn có thể đổi namespace thành Core.Models tùy hệ thống
+namespace Core.Models
 {
     public class AddReviewRequest
     {
