@@ -46,7 +46,7 @@ namespace Application.Queries
             // 3. Map sang ReviewDto
             var reviewDtos = reviewEntities.Select(r => new ReviewDto
             {
-                Id = r.Id,
+                id = r.id,
                 user_id = r.user_id,
                 review = r.review, // Dùng trường nội dung bình luận thay cho Rating cũ
                 time = r.time      // Dùng time thay cho CreatedAt

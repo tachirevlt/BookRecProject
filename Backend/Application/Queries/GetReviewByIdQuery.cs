@@ -24,7 +24,7 @@ namespace Application.Queries
 
             return new ReviewDto
             {
-                Id = review.Id,
+                id = review.id,
                 user_id = review.user_id,
                 book_id = review.book_id,
                 review = review.review,

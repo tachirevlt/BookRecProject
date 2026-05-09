@@ -21,7 +21,7 @@ namespace Infrastructure.Repositories
             return await _db.Users
                 .Include(u => u.FavoriteBooks)
                 .Include(u => u.PurchasedBooks)
-                .FirstOrDefaultAsync(u => u.UserId == userId, ct);
+                .FirstOrDefaultAsync(u => u.user_id == userId, ct);
         }
 
 
@@ -35,21 +35,21 @@ namespace Infrastructure.Repositories
         {
             return await _db.Users
                 .Include(u => u.PurchasedBooks)
-                .FirstOrDefaultAsync(u => u.Username == username, ct);
+                .FirstOrDefaultAsync(u => u.user_name == username, ct);
         }
 
         public async Task<bool> PurchaseBookAsync(Guid userId, Guid bookId, CancellationToken ct = default)
         {
-            var user = await _db.Users.Include(u => u.PurchasedBooks).FirstOrDefaultAsync(u => u.UserId == userId, ct);
+            var user = await _db.Users.Include(u => u.PurchasedBooks).FirstOrDefaultAsync(u => u.user_id == userId, ct);
             var book = await _db.Books.FindAsync(new object[] { bookId }, ct);
 
             if (user == null || book == null) throw new KeyNotFoundException("User hoặc Sách không tồn tại.");
 
             if (user.PurchasedBooks.Any(b => b.book_id == bookId)) return true; // Đã mua rồi
 
-            if (user.CurrentBalance < book.cost) return false; // Không đủ tiền
+            if (user.current_balance < book.cost) return false; // Không đủ tiền
 
-            user.CurrentBalance -= book.cost;
+            user.current_balance -= book.cost;
             user.PurchasedBooks.Add(book);
             
             await _db.SaveChangesAsync(ct);
@@ -59,10 +59,10 @@ namespace Infrastructure.Repositories
         {
             var existingUser = await _db.Users.FindAsync(new object?[] { userId }, ct);
             if (existingUser is null) throw new KeyNotFoundException($"Không tìm thấy user với ID: {userId}");
-            existingUser.Username = updatedUserData.Username;
-            existingUser.Email = updatedUserData.Email;
-            existingUser.Sex = updatedUserData.Sex;
-            if (!string.IsNullOrEmpty(updatedUserData.HashedPassword)) existingUser.HashedPassword = updatedUserData.HashedPassword;
+            existingUser.user_name = updatedUserData.user_name;
+            existingUser.email = updatedUserData.email;
+            existingUser.sex = updatedUserData.sex;
+            if (!string.IsNullOrEmpty(updatedUserData.hashed_password)) existingUser.hashed_password = updatedUserData.hashed_password;
             await _db.SaveChangesAsync(ct);
             return existingUser;
         }
@@ -79,15 +79,15 @@ namespace Infrastructure.Repositories
         {
             await _db.SaveChangesAsync(ct);
         }
-        public async Task<bool> IsEmailExistsAsync(string email, Guid? excludeUserId = null, CancellationToken ct = default)
+        public async Task<bool> IsEmailExistsAsync(string email, Guid? excludeuser_id = null, CancellationToken ct = default)
         {
             return await _db.Users
-                .AnyAsync(u => u.Email == email && (!excludeUserId.HasValue || u.UserId != excludeUserId), ct);
+                .AnyAsync(u => u.email == email && (!excludeuser_id.HasValue || u.user_id != excludeuser_id), ct);
         }
-        public async Task<bool> IsUsernameExistsAsync(string username, Guid? excludeUserId = null, CancellationToken ct = default)
+        public async Task<bool> IsUsernameExistsAsync(string username, Guid? excludeuser_id = null, CancellationToken ct = default)
         {
             return await _db.Users
-                .AnyAsync(u => u.Username == username && (!excludeUserId.HasValue || u.UserId != excludeUserId), ct);
+                .AnyAsync(u => u.user_name == username && (!excludeuser_id.HasValue || u.user_id != excludeuser_id), ct);
         }
     }
 }

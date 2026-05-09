@@ -8,7 +8,7 @@ using System.Linq; // Bắt buộc phải có using này để dùng FirstOrDefa
 
 namespace Application.Commands
 {
-    public record RemoveBookFromFavoritesCommand(Guid UserId, Guid BookId) : IRequest<bool>;
+    public record RemoveBookFromFavoritesCommand(Guid user_id, Guid BookId) : IRequest<bool>;
 
     public class RemoveBookFromFavoritesCommandHandler : IRequestHandler<RemoveBookFromFavoritesCommand, bool>
     {
@@ -21,8 +21,8 @@ namespace Application.Commands
 
         public async Task<bool> Handle(RemoveBookFromFavoritesCommand request, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
-            if (user == null) throw new KeyNotFoundException($"Không tìm thấy User: {request.UserId}");
+            var user = await _userRepository.GetUserByIdAsync(request.user_id, cancellationToken);
+            if (user == null) throw new KeyNotFoundException($"Không tìm thấy User: {request.user_id}");
 
             // Đã sửa b.BookId thành b.book_id
             var bookToRemove = user.FavoriteBooks.FirstOrDefault(b => b.book_id == request.BookId);

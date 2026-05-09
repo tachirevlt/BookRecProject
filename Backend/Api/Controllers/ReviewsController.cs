@@ -10,7 +10,7 @@ using Core.Models;
 
 namespace Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/reviews")]
     [ApiController]
     public class ReviewsController : ControllerBase
     {
@@ -35,34 +35,34 @@ namespace Api.Controllers
         public async Task<IActionResult> AddReview([FromBody] AddReviewRequest request)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var user_id))
             {
                 return Unauthorized(new { message = "Không xác định được danh tính người dùng." });
             }
 
-            var command = new AddReviewCommand { user_id = userId, book_id = request.BookId, review = request.Review };
+            var command = new AddReviewCommand { user_id = user_id, book_id = request.book_id, review = request.Review };
             var result = await _mediator.Send(command);
 
             return Ok(new { message = "Đăng bình luận thành công!" });
         }
 
-        [HttpGet("book/{bookId}")]
-        public async Task<IActionResult> GetReviewsByBookId(Guid bookId)
+        [HttpGet("book/{book_id}")]
+        public async Task<IActionResult> GetReviewsByBookId(Guid book_id)
         {
-            var query = new GetReviewsByBookIdQuery(bookId);
+            var query = new GetReviewsByBookIdQuery(book_id);
             var result = await _mediator.Send(query); 
             
             return Ok(result);
         }
 
-        [HttpDelete("{reviewId}")]
+        [HttpDelete("{review_id}")]
         [Authorize]
-        public async Task<IActionResult> DeleteReview([FromRoute] Guid reviewId)
+        public async Task<IActionResult> DeleteReview([FromRoute] Guid review_id)
         {
             try
             {
                 // 1. Tìm bình luận để lấy thông tin user_id (Người đã viết nó)
-                var getQuery = new GetReviewByIdQuery(reviewId);
+                var getQuery = new GetReviewByIdQuery(review_id);
                 var review = await _mediator.Send(getQuery);
 
                 if (review == null)
@@ -77,7 +77,7 @@ namespace Api.Controllers
                 }
 
                 // 3. Nếu qua được cửa bảo vệ, tiến hành xóa đích danh
-                var command = new DeleteReviewByIdCommand(reviewId);
+                var command = new DeleteReviewByIdCommand(review_id);
                 var success = await _mediator.Send(command);
 
                 if (success)

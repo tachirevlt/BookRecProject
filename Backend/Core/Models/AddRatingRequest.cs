@@ -6,7 +6,7 @@ namespace Models.Dtos
     public class AddRatingRequest
     {
         [Required]
-        public Guid BookId { get; set; }
+        public Guid book_id { get; set; }
 
         [Range(1, 5, ErrorMessage = "Điểm đánh giá phải từ 1 đến 5 sao.")]
         public int Rating { get; set; }

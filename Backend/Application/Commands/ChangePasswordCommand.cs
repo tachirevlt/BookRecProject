@@ -9,7 +9,7 @@ using BCrypt.Net;
 namespace Application.Commands
 {
     // Command
-    public record ChangePasswordCommand(Guid UserId, string CurrentPassword, string NewPassword) : IRequest<Unit>;
+    public record ChangePasswordCommand(Guid user_id, string CurrentPassword, string NewPassword) : IRequest<Unit>;
 
     // Handler
     public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, Unit>
@@ -24,7 +24,7 @@ namespace Application.Commands
         public async Task<Unit> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
         {
             // 1. SỬA LỖI: Dùng hàm GetUserByIdAsync
-            var user = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
+            var user = await _userRepository.GetUserByIdAsync(request.user_id, cancellationToken);
             
             if (user == null)
             {
@@ -32,7 +32,7 @@ namespace Application.Commands
             }
 
             // 2. Kiểm tra mật khẩu cũ
-            bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.HashedPassword);
+            bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.hashed_password);
 
             if (!isPasswordCorrect)
             {
@@ -43,11 +43,11 @@ namespace Application.Commands
             string newPasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
 
             // 4. Cập nhật thông tin
-            user.HashedPassword = newPasswordHash;
+            user.hashed_password = newPasswordHash;
             // user.SecurityStamp = Guid.NewGuid().ToString(); // Bỏ comment dòng này nếu bạn đã thêm trường SecurityStamp vào UserEntity
 
             // 5. SỬA LỖI: Dùng hàm UpdateUserAsync (truyền cả ID và User)
-            await _userRepository.UpdateUserAsync(user.UserId, user, cancellationToken);
+            await _userRepository.UpdateUserAsync(user.user_id, user, cancellationToken);
 
             return Unit.Value;
         }

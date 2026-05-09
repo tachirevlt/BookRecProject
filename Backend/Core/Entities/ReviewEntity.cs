@@ -7,7 +7,7 @@ namespace Core.Entities
     public class ReviewEntity
     {
         [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid id { get; set; } = Guid.NewGuid();
 
         [Required]
         public Guid user_id { get; set; }

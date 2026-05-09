@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Application.Queries
 {
-    public record GetUserByIdQuery(Guid TargetUserId, Guid? RequestingUserId, bool IsAdmin) : IRequest<UserDto?>;
+    public record GetUserByIdQuery(Guid Targetuser_id, Guid? Requestinguser_id, bool IsAdmin) : IRequest<UserDto?>;
 
     public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto?>
     {
@@ -22,25 +22,25 @@ namespace Application.Queries
         public async Task<UserDto?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
             // Lấy User từ DB
-            var user = await _userRepository.GetUserByIdAsync(request.TargetUserId, cancellationToken);
+            var user = await _userRepository.GetUserByIdAsync(request.Targetuser_id, cancellationToken);
             
             if (user == null) return null;
 
-            // Kiểm tra quyền xem thông tin nhạy cảm (Email)
+            // Kiểm tra quyền xem thông tin nhạy cảm (email)
             // Xem được nếu: Là Admin HOẶC Là chính chủ (ID người xem trùng ID user lấy ra)
             bool canViewPrivateInfo = request.IsAdmin || 
-                                      (request.RequestingUserId.HasValue && request.RequestingUserId == user.UserId);
+                                      (request.Requestinguser_id.HasValue && request.Requestinguser_id == user.user_id);
 
-            // Map từ Entity sang DTO (Loại bỏ HashedPassword)
+            // Map từ Entity sang DTO (Loại bỏ hashed_password)
             return new UserDto
             {
-                UserId = user.UserId,
-                Username = user.Username,
-                Role = user.Role,
-                Sex = user.Sex,
+                user_id = user.user_id,
+                user_name = user.user_name,
+                role = user.role,
+                sex = user.sex,
                 FavoriteBooks = user.FavoriteBooks,
-                Email = canViewPrivateInfo ? user.Email : null ,
-                CurrentBalance = canViewPrivateInfo ? user.CurrentBalance : (decimal?)null,
+                email = canViewPrivateInfo ? user.email : null ,
+                current_balance = canViewPrivateInfo ? user.current_balance : (decimal?)null,
                 PurchasedBooks = canViewPrivateInfo ? user.PurchasedBooks : null
             };
         }

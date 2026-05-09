@@ -27,7 +27,7 @@ namespace Application.Commands
         {
             var newReview = new ReviewEntity
             {
-                Id = Guid.NewGuid(),
+                id = Guid.NewGuid(),
                 user_id = request.user_id,
                 book_id = request.book_id,
                 review = request.review,

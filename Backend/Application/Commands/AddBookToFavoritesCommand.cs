@@ -9,7 +9,7 @@ using System.Linq; // Cần thêm dòng này để dùng được hàm Any()
 
 namespace Application.Commands
 {
-    public record AddBookToFavoritesCommand(Guid UserId, Guid BookId) : IRequest<bool>;
+    public record AddBookToFavoritesCommand(Guid user_id, Guid BookId) : IRequest<bool>;
 
     public class AddBookToFavoritesCommandHandler : IRequestHandler<AddBookToFavoritesCommand, bool>
     {
@@ -24,8 +24,8 @@ namespace Application.Commands
 
         public async Task<bool> Handle(AddBookToFavoritesCommand request, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
-            if (user == null) throw new KeyNotFoundException($"Không tìm thấy User: {request.UserId}");
+            var user = await _userRepository.GetUserByIdAsync(request.user_id, cancellationToken);
+            if (user == null) throw new KeyNotFoundException($"Không tìm thấy User: {request.user_id}");
 
             var book = await _bookRepository.GetBookByIdAsync(request.BookId, cancellationToken);
             if (book == null) throw new KeyNotFoundException($"Không tìm thấy Book: {request.BookId}");

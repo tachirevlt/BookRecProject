@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     
     public class UsersController(ISender sender, IUserRepository userRepository) : ControllerBase
@@ -60,15 +60,15 @@ namespace Api.Controllers
 
                 var responseDto = new UserDto
                 {
-                    UserId = result.UserId,
-                    Username = result.Username,
-                    Email = result.Email,
-                    Role = result.Role,
-                    Sex = result.Sex,
+                    user_id = result.user_id,
+                    user_name = result.user_name,
+                    email = result.email,
+                    role = result.role,
+                    sex = result.sex,
                     FavoriteBooks = result.FavoriteBooks
                 };
                 
-                return CreatedAtAction("GetUserById", new { UserId = result.UserId }, responseDto);
+                return CreatedAtAction("GetUserById", new { user_id = result.user_id }, responseDto);
             }
             catch (ArgumentException ex)
             {
@@ -81,26 +81,26 @@ namespace Api.Controllers
         }
 
 
-        [HttpGet("{UserId}")]
+        [HttpGet("{user_id}")]
         [Authorize]
-        public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid UserId)
+        public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid user_id)
         {
             var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier)
                                    ?? User.FindFirstValue("sub");
            
-            Guid? currentUserId = null;
+            Guid? currentuser_id = null;
             if (Guid.TryParse(currentUserIdString, out var parsedId))
             {
-                currentUserId = parsedId;
+                currentuser_id = parsedId;
             }
 
             bool isAdmin = User.IsInRole("Admin");
-            var query = new GetUserByIdQuery(UserId, currentUserId, isAdmin);
+            var query = new GetUserByIdQuery(user_id, currentuser_id, isAdmin);
             var result = await sender.Send(query);
 
             if (result == null)
             {
-                return NotFound(new { message = $"Không tìm thấy user với ID: {UserId}" });
+                return NotFound(new { message = $"Không tìm thấy user với ID: {user_id}" });
             }
 
             return Ok(result);
@@ -108,26 +108,26 @@ namespace Api.Controllers
         }
 
 
-        [HttpPut("{UserId}")]
+        [HttpPut("{user_id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid UserId, [FromBody] UserUpdateDto updateData)
+        public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid user_id, [FromBody] UserUpdateDto updateData)
         {
-            if (!IsUserOwnerOrAdmin(UserId)) return Forbid();
+            if (!IsUserOwnerOrAdmin(user_id)) return Forbid();
 
             try
             {
-                // Command này gọi Handler để cập nhật Username/Email trong DB
-                var command = new UpdateUserCommand(UserId, updateData);
+                // Command này gọi Handler để cập nhật Username/email trong DB
+                var command = new UpdateUserCommand(user_id, updateData);
                 var result = await sender.Send(command);
 
                 // Trả về thông tin mới nhất
                 var responseDto = new UserDto
                 {
-                    UserId = result.UserId,
-                    Username = result.Username,
-                    Email = result.Email,
-                    Sex = result.Sex,
-                    Role = result.Role,
+                    user_id = result.user_id,
+                    user_name = result.user_name,
+                    email = result.email,
+                    sex = result.sex,
+                    role = result.role,
                     FavoriteBooks = result.FavoriteBooks
                 };
 
@@ -137,7 +137,7 @@ namespace Api.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (ArgumentException ex) // Lỗi trùng Email/Username
+            catch (ArgumentException ex) // Lỗi trùng Email/user_name
             {
                 return Conflict(new { message = ex.Message });
             }
@@ -147,11 +147,11 @@ namespace Api.Controllers
             }
         }
 
-        [HttpPut("{UserId}/change-password")]
+        [HttpPut("{user_id}/change-password")]
         [Authorize]
-        public async Task<IActionResult> ChangePasswordAsync([FromRoute] Guid UserId, [FromBody] ChangePasswordDto passwordData)
+        public async Task<IActionResult> ChangePasswordAsync([FromRoute] Guid user_id, [FromBody] ChangePasswordDto passwordData)
         {
-            if (!IsUserOwnerOrAdmin(UserId)) return Forbid();
+            if (!IsUserOwnerOrAdmin(user_id)) return Forbid();
 
             // Lưu ý: [ApiController] sẽ tự động check ModelState (Validation DTO) và trả về 400 nếu sai.
             
@@ -161,7 +161,7 @@ namespace Api.Controllers
                 // 1. Lấy User từ DB.
                 // 2. Hash password cũ gửi lên -> so sánh với Hash trong DB.
                 // 3. Nếu khớp -> Hash password mới -> Lưu vào DB.
-                var command = new ChangePasswordCommand(UserId, passwordData.CurrentPassword, passwordData.NewPassword);
+                var command = new ChangePasswordCommand(user_id, passwordData.CurrentPassword, passwordData.NewPassword);
                 
                 await sender.Send(command);
 
@@ -183,31 +183,31 @@ namespace Api.Controllers
         }
 
 
-        [HttpDelete("{UserId}")]
+        [HttpDelete("{user_id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid UserId)
+        public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid user_id)
         {
-            var success = await sender.Send(new DeleteUserCommand(UserId));
+            var success = await sender.Send(new DeleteUserCommand(user_id));
             if (!success)
             {
-                return NotFound($"Không tìm thấy người dùng với ID: {UserId} để xóa.");
+                return NotFound($"Không tìm thấy người dùng với ID: {user_id} để xóa.");
             }
             return Ok(new { message = "Xóa người dùng thành công." });
 
         }
 
 
-        [HttpPost("{userId}/favorites/{bookId}")]
+        [HttpPost("{user_id}/favorites/{book_id}")]
         [Authorize]
-        public async Task<IActionResult> AddFavoriteBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
+        public async Task<IActionResult> AddFavoriteBookAsync([FromRoute] Guid user_id, [FromRoute] Guid book_id)
         {
-            if (!IsUserOwnerOrAdmin(userId))
+            if (!IsUserOwnerOrAdmin(user_id))
             {
                 return Forbid(); 
             }
             try
             {
-                var command = new AddBookToFavoritesCommand(userId, bookId);
+                var command = new AddBookToFavoritesCommand(user_id, book_id);
                 var success = await sender.Send(command);
 
                 if (success)
@@ -229,17 +229,17 @@ namespace Api.Controllers
             }
         }
         
-        [HttpDelete("{userId}/favorites/{bookId}")]
+        [HttpDelete("{user_id}/favorites/{book_id}")]
         [Authorize]
-        public async Task<IActionResult> RemoveFavoriteBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
+        public async Task<IActionResult> RemoveFavoriteBookAsync([FromRoute] Guid user_id, [FromRoute] Guid book_id)
         {
-            if (!IsUserOwnerOrAdmin(userId))
+            if (!IsUserOwnerOrAdmin(user_id))
             {
                 return Forbid();
             }
             try
             {
-                var command = new RemoveBookFromFavoritesCommand(userId, bookId);
+                var command = new RemoveBookFromFavoritesCommand(user_id, book_id);
                 var success = await sender.Send(command);
 
                 if (success)
@@ -266,24 +266,24 @@ namespace Api.Controllers
         {
             if (request.Amount <= 0) return BadRequest("Số tiền phải lớn hơn 0.");
 
-            var user = await userRepository.GetUserByUsernameAsync(request.Username);
+            var user = await userRepository.GetUserByUsernameAsync(request.user_name);
             if (user == null) return NotFound("Không tìm thấy người dùng.");
 
-            user.CurrentBalance += request.Amount;
+            user.current_balance += request.Amount;
             await userRepository.SaveChangesAsync();
 
-            return Ok(new { message = $"Nạp thành công {request.Amount} cho {request.Username}. Số dư mới: {user.CurrentBalance}" });
+            return Ok(new { message = $"Nạp thành công {request.Amount} cho {request.user_name}. Số dư mới: {user.current_balance}" });
         }
 
-        [HttpPost("{userId}/purchase/{bookId}")]
+        [HttpPost("{user_id}/purchase/{book_id}")]
         [Authorize]
-        public async Task<IActionResult> PurchaseBookAsync([FromRoute] Guid userId, [FromRoute] Guid bookId)
+        public async Task<IActionResult> PurchaseBookAsync([FromRoute] Guid user_id, [FromRoute] Guid book_id)
         {
-            if (!IsUserOwnerOrAdmin(userId)) return Forbid();
+            if (!IsUserOwnerOrAdmin(user_id)) return Forbid();
 
             try
             {
-                var success = await userRepository.PurchaseBookAsync(userId, bookId);
+                var success = await userRepository.PurchaseBookAsync(user_id, book_id);
                 if (!success) return BadRequest("Số dư không đủ để mua cuốn sách này.");
 
                 return Ok(new { message = "Mua sách thành công. Sách đã được thêm vào bộ sưu tập của bạn." });
@@ -295,7 +295,7 @@ namespace Api.Controllers
         // Model phụ cho request nạp tiền
         public class TopUpRequest
         {
-            public string Username { get; set; } = null!;
+            public string user_name { get; set; } = null!;
             public decimal Amount { get; set; }
         }
 

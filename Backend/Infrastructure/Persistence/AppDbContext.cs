@@ -20,16 +20,22 @@ namespace Infrastructure.Persistence
 
             modelBuilder.Entity<UserEntity>(entity =>
             {
-                entity.HasKey(u => u.UserId);
-                entity.Property(u => u.CurrentBalance).HasPrecision(18, 2);
+                entity.HasKey(u => u.user_id);
+                entity.Property(u => u.current_balance).HasPrecision(18, 2);
 
                 entity.HasMany(u => u.FavoriteBooks)
                     .WithMany()
-                    .UsingEntity("UserFavoriteBooks");
+                    .UsingEntity<Dictionary<string, object>>(
+                        "UserFavoriteBooks",
+                        j => j.HasOne<BookEntity>().WithMany().HasForeignKey("book_id"),
+                        j => j.HasOne<UserEntity>().WithMany().HasForeignKey("user_id"));
 
                 entity.HasMany(u => u.PurchasedBooks)
                     .WithMany()
-                    .UsingEntity("UserPurchasedBooks"); 
+                    .UsingEntity<Dictionary<string, object>>(
+                        "UserPurchasedBooks",
+                        j => j.HasOne<BookEntity>().WithMany().HasForeignKey("book_id"),
+                        j => j.HasOne<UserEntity>().WithMany().HasForeignKey("user_id")); 
             });
 
             modelBuilder.Entity<RatingEntity>(entity =>

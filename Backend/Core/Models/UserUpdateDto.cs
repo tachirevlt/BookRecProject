@@ -5,9 +5,9 @@ namespace Core.Models
     public class UserUpdateDto
     {
         [Required(ErrorMessage = "Tên đăng nhập không được để trống")]
-        public string Username { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Email không được để trống")]
-        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
-        public string Email { get; set; } = string.Empty;
+        public string user_name { get; set; } = string.Empty;
+        [Required(ErrorMessage = "email không được để trống")]
+        [EmailAddress(ErrorMessage = "email không hợp lệ")]
+        public string email { get; set; } = string.Empty;
     }
 }

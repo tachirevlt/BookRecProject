@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/books")]
     [ApiController]
     public class BooksController(ISender sender) : ControllerBase
     {
@@ -24,31 +24,31 @@ namespace Api.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{BookId}")]
+        [HttpPut("{book_id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateBookAsync([FromRoute] Guid BookId, [FromBody] BookEntity Book)
+        public async Task<IActionResult> UpdateBookAsync([FromRoute] Guid book_id, [FromBody] BookEntity Book)
         {
-            var result = await sender.Send(new UpdateBookCommand(BookId, Book));
+            var result = await sender.Send(new UpdateBookCommand(book_id, Book));
             if (result == null) return NotFound();
             return Ok(result);
         }
 
-        [HttpDelete("{BookId}")]
+        [HttpDelete("{book_id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteBookAsync([FromRoute] Guid BookId)
+        public async Task<IActionResult> DeleteBookAsync([FromRoute] Guid book_id)
         {
-            var success = await sender.Send(new DeleteBookCommand(BookId));
-            if (!success) return NotFound($"Không tìm thấy sách với ID: {BookId} để xóa.");
+            var success = await sender.Send(new DeleteBookCommand(book_id));
+            if (!success) return NotFound($"Không tìm thấy sách với ID: {book_id} để xóa.");
             
             return Ok(new { message = "Xóa sách thành công." });
         }
         
-        [HttpGet("{BookId}")]
+        [HttpGet("{book_id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetBookByIdAsync([FromRoute] Guid BookId)
+        public async Task<IActionResult> GetBookByIdAsync([FromRoute] Guid book_id)
         {
-            var result = await sender.Send(new GetBookByIdQuery(BookId));
-            if (result == null) return NotFound($"Không tìm thấy sách với ID: {BookId}"); 
+            var result = await sender.Send(new GetBookByIdQuery(book_id));
+            if (result == null) return NotFound($"Không tìm thấy sách với ID: {book_id}"); 
             
             return Ok(result);
         }
@@ -66,14 +66,14 @@ namespace Api.Controllers
             return Ok(result);
         }
         
-        [HttpGet("{BookId}/recommendations")]
+        [HttpGet("{book_id}/recommendations")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetRecommendedBooks([FromRoute] Guid BookId)
+        public async Task<IActionResult> GetRecommendedBooks([FromRoute] Guid book_id)
         {
-            var bookExists = await sender.Send(new GetBookByIdQuery(BookId));
-            if (bookExists == null) return NotFound($"Không tìm thấy sách gốc với ID: {BookId}");
+            var bookExists = await sender.Send(new GetBookByIdQuery(book_id));
+            if (bookExists == null) return NotFound($"Không tìm thấy sách gốc với ID: {book_id}");
 
-            var result = await sender.Send(new GetRecommendedBooksQuery(BookId));
+            var result = await sender.Send(new GetRecommendedBooksQuery(book_id));
             return Ok(result);
         }
     }

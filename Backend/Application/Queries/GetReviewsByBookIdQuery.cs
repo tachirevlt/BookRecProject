@@ -27,7 +27,7 @@ namespace Application.Queries
             // Map từ Entity sang Dto để loại bỏ các trường thừa/nhạy cảm
             return reviews.Select(r => new ReviewDto
             {
-                Id = r.Id,
+                id = r.id,
                 user_id = r.user_id,
                 book_id = r.book_id,
                 review = r.review,

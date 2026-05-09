@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace Application.Commands
 {
-    public record UpdateUserCommand(Guid UserId, UserUpdateDto UpdateData)
+    public record UpdateUserCommand(Guid user_id, UserUpdateDto UpdateData)
         : IRequest<UserEntity>;
 
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserEntity>
@@ -29,40 +29,40 @@ namespace Application.Commands
 
         public async Task<UserEntity> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
-            // 1. Validate Email Format
-            if (!EmailRegex.IsMatch(request.UpdateData.Email))
+            // 1. Validate email Format
+            if (!EmailRegex.IsMatch(request.UpdateData.email))
             {
                 throw new ArgumentException("Định dạng email không hợp lệ.");
             }
 
-            // 2. Validate trùng lặp Username/Email (loại trừ chính user đang update)
-            if (await _userRepository.IsUsernameExistsAsync(request.UpdateData.Username, request.UserId, cancellationToken))
+            // 2. Validate trùng lặp Username/email (loại trừ chính user đang update)
+            if (await _userRepository.IsUsernameExistsAsync(request.UpdateData.user_name, request.user_id, cancellationToken))
             {
                 throw new ArgumentException("Tên đăng nhập này đã được sử dụng bởi người khác.");
             }
 
-            if (await _userRepository.IsEmailExistsAsync(request.UpdateData.Email, request.UserId, cancellationToken))
+            if (await _userRepository.IsEmailExistsAsync(request.UpdateData.email, request.user_id, cancellationToken))
             {
-                throw new ArgumentException("Email này đã được sử dụng bởi tài khoản khác.");
+                throw new ArgumentException("email này đã được sử dụng bởi tài khoản khác.");
             }
 
             // 3. Lấy User hiện tại từ DB lên để cập nhật
             // QUAN TRỌNG: Phải lấy user cũ lên rồi mới gán giá trị mới, 
             // nếu new UserEntity() như cũ sẽ làm mất PasswordHash và các thông tin khác.
-            var existingUser = await _userRepository.GetUserByIdAsync(request.UserId, cancellationToken);
+            var existingUser = await _userRepository.GetUserByIdAsync(request.user_id, cancellationToken);
             
             if (existingUser == null)
             {
                 throw new KeyNotFoundException("Không tìm thấy người dùng.");
             }
 
-            // 4. Cập nhật các thông tin cho phép (Chỉ Username và Email)
-            existingUser.Username = request.UpdateData.Username;
-            existingUser.Email = request.UpdateData.Email;
+            // 4. Cập nhật các thông tin cho phép (Chỉ user_name và email)
+            existingUser.user_name = request.UpdateData.user_name;
+            existingUser.email = request.UpdateData.email;
 
             // 5. Lưu xuống DB
-            // (Lưu ý: Không đụng đến HashedPassword ở đây nữa)
-            return await _userRepository.UpdateUserAsync(request.UserId, existingUser, cancellationToken);
+            // (Lưu ý: Không đụng đến hashed_password ở đây nữa)
+            return await _userRepository.UpdateUserAsync(request.user_id, existingUser, cancellationToken);
         }
     }
 }

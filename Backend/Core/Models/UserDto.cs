@@ -6,12 +6,12 @@ namespace Core.Models
 {
     public class UserDto
     {
-        public Guid UserId { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string? Email { get; set; } 
-        public string Role { get; set; } = string.Empty;
-        public string? Sex { get; set; }
-        public decimal? CurrentBalance { get; set; }
+        public Guid user_id { get; set; }
+        public string user_name { get; set; } = string.Empty;
+        public string? email { get; set; } 
+        public string role { get; set; } = string.Empty;
+        public string? sex { get; set; }
+        public decimal? current_balance { get; set; }
         public ICollection<BookEntity> FavoriteBooks { get; set; } = new List<BookEntity>();
         public ICollection<BookEntity>? PurchasedBooks { get; set; } = new List<BookEntity>();
     }
