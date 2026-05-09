@@ -14,7 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Queries
 {
-    public record LoginQuery(UserLoginDto LoginData) : IRequest<string>; // Trả về string (token)
+    public record LoginQuery(UserLoginDto LoginData) : IRequest<string>;
 
     public class LoginQueryHandler : IRequestHandler<LoginQuery, string>
     {
@@ -30,15 +30,14 @@ namespace Application.Queries
         public async Task<string> Handle(LoginQuery request, CancellationToken cancellationToken)
         {
 
-            var user = await _userRepository.GetUserByUsernameAsync(request.LoginData.Username, cancellationToken);
+            var user = await _userRepository.GetUserByUsernameAsync(request.LoginData.user_name, cancellationToken);
 
             if (user == null)
             {
-                // Không tìm thấy User
                 throw new KeyNotFoundException("Tên đăng nhập hoặc mật khẩu không đúng.");
             }
 
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.LoginData.Password, user.HashedPassword);
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.LoginData.Password, user.hashed_password);
 
             if (!isPasswordValid)
             {
@@ -62,10 +61,10 @@ namespace Application.Queries
             }
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Name, user.Username),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(JwtRegisteredClaimNames.Sub, user.user_id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Name, user.user_name),
+                new Claim(JwtRegisteredClaimNames.Email, user.email),
+                new Claim(ClaimTypes.Role, user.role)
             };
 
 

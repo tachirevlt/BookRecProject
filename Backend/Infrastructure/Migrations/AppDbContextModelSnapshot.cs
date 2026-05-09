@@ -24,21 +24,18 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Core.Entities.BookEntity", b =>
                 {
-                    b.Property<Guid>("BookId")
+                    b.Property<Guid>("book_id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("author")
+                    b.Property<string>("authors")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("average_rating")
-                        .HasPrecision(3, 2)
-                        .HasColumnType("decimal(3,2)");
+                    b.Property<decimal>("cost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("books_count")
-                        .HasColumnType("int");
-
-                    b.Property<string>("isbn")
+                    b.Property<string>("image_url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -46,82 +43,218 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ratings")
-                        .HasColumnType("int");
-
-                    b.Property<string>("tag_name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("work_id")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double?>("year")
+                    b.Property<double?>("original_publication_year")
                         .HasColumnType("float");
 
-                    b.HasKey("BookId");
+                    b.Property<string>("original_title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ratings_1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ratings_2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ratings_3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ratings_4")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ratings_5")
+                        .HasColumnType("int");
+
+                    b.Property<string>("small_image_url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("tags")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("book_id");
 
                     b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("Core.Entities.UserEntity", b =>
+            modelBuilder.Entity("Core.Entities.RatingEntity", b =>
                 {
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("user_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("book_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("time")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("user_id", "book_id");
+
+                    b.HasIndex("book_id");
+
+                    b.ToTable("Ratings");
+                });
+
+            modelBuilder.Entity("Core.Entities.ReviewEntity", b =>
+                {
+                    b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Email")
+                    b.Property<Guid>("book_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("review")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("HashedPassword")
+                    b.Property<DateTime>("time")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("user_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("book_id");
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("Core.Entities.UserEntity", b =>
+                {
+                    b.Property<Guid>("user_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("current_balance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Role")
+                    b.Property<string>("hashed_password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Username")
+                    b.Property<string>("role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UserId");
+                    b.Property<string>("sex")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("user_name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("user_id");
 
                     b.ToTable("Users");
                 });
 
             modelBuilder.Entity("UserFavoriteBooks", b =>
                 {
-                    b.Property<Guid>("FavoriteBooksBookId")
+                    b.Property<Guid>("book_id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("UserEntityUserId")
+                    b.Property<Guid>("user_id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("FavoriteBooksBookId", "UserEntityUserId");
+                    b.HasKey("book_id", "user_id");
 
-                    b.HasIndex("UserEntityUserId");
+                    b.HasIndex("user_id");
 
                     b.ToTable("UserFavoriteBooks");
+                });
+
+            modelBuilder.Entity("UserPurchasedBooks", b =>
+                {
+                    b.Property<Guid>("book_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("user_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("book_id", "user_id");
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("UserPurchasedBooks");
+                });
+
+            modelBuilder.Entity("Core.Entities.RatingEntity", b =>
+                {
+                    b.HasOne("Core.Entities.BookEntity", "Book")
+                        .WithMany()
+                        .HasForeignKey("book_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Core.Entities.ReviewEntity", b =>
+                {
+                    b.HasOne("Core.Entities.BookEntity", "Book")
+                        .WithMany()
+                        .HasForeignKey("book_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("UserFavoriteBooks", b =>
                 {
                     b.HasOne("Core.Entities.BookEntity", null)
                         .WithMany()
-                        .HasForeignKey("FavoriteBooksBookId")
+                        .HasForeignKey("book_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Core.Entities.UserEntity", null)
                         .WithMany()
-                        .HasForeignKey("UserEntityUserId")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("UserPurchasedBooks", b =>
+                {
+                    b.HasOne("Core.Entities.BookEntity", null)
+                        .WithMany()
+                        .HasForeignKey("book_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.UserEntity", null)
+                        .WithMany()
+                        .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
