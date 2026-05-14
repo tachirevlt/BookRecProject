@@ -47,9 +47,9 @@ namespace Infrastructure.Repositories
 
             if (user.PurchasedBooks.Any(b => b.book_id == bookId)) return true; // Đã mua rồi
 
-            if (user.current_balance < book.cost) return false; // Không đủ tiền
+            if (user.current_balance < book.price) return false; // Không đủ tiền
 
-            user.current_balance -= book.cost;
+            user.current_balance -= book.price;
             user.PurchasedBooks.Add(book);
             
             await _db.SaveChangesAsync(ct);

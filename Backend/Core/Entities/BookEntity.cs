@@ -22,7 +22,19 @@ namespace Core.Entities
         public string image_url { get; set; } = null!;
         public string small_image_url { get; set; } = null!;
 
-        // Thuộc tính mới: Giá sách
-        public decimal cost { get; set; } = 0; 
+        // Giá sách (đổi tên từ cost → price cho khớp CSV)
+        public decimal price { get; set; } = 0;
+
+        // Các cột mới bổ sung
+        public string? mood { get; set; }
+        public string? badge { get; set; }
+        public string? description { get; set; }
+        public string? longDescription { get; set; }
+        public int pages { get; set; } = 0;
+        public int readTime { get; set; } = 0;
+        public string? status { get; set; }
+        public int chapters { get; set; } = 0;
+        public string? previewText { get; set; }
+        public string? accentColor { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260509170730_AddTrackingEvents")]
+    partial class AddTrackingEvents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,21 +30,13 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("book_id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("accentColor")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("authors")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("badge")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("chapters")
-                        .HasColumnType("int");
-
-                    b.Property<string>("description")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<decimal>("cost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("image_url")
                         .IsRequired()
@@ -51,28 +46,12 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("longDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("mood")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<double?>("original_publication_year")
                         .HasColumnType("float");
 
                     b.Property<string>("original_title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("pages")
-                        .HasColumnType("int");
-
-                    b.Property<string>("previewText")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ratings_1")
                         .HasColumnType("int");
@@ -89,14 +68,8 @@ namespace Infrastructure.Migrations
                     b.Property<int>("ratings_5")
                         .HasColumnType("int");
 
-                    b.Property<int>("readTime")
-                        .HasColumnType("int");
-
                     b.Property<string>("small_image_url")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("status")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("tags")

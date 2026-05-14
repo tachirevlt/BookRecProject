@@ -131,6 +131,17 @@ namespace Infrastructure.Repositories
             existingBook.language_code = updatedBookData.language_code;
             existingBook.image_url = updatedBookData.image_url;
             existingBook.small_image_url = updatedBookData.small_image_url;
+            existingBook.price = updatedBookData.price;
+            existingBook.mood = updatedBookData.mood;
+            existingBook.badge = updatedBookData.badge;
+            existingBook.description = updatedBookData.description;
+            existingBook.longDescription = updatedBookData.longDescription;
+            existingBook.pages = updatedBookData.pages;
+            existingBook.readTime = updatedBookData.readTime;
+            existingBook.status = updatedBookData.status;
+            existingBook.chapters = updatedBookData.chapters;
+            existingBook.previewText = updatedBookData.previewText;
+            existingBook.accentColor = updatedBookData.accentColor;
             // Không nên update trực tiếp ratings_1 -> 5 ở đây, vì rating cập nhật qua AddRatingCommand
 
             _db.Books.Update(existingBook);

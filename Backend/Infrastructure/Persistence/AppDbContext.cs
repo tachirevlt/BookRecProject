@@ -15,7 +15,7 @@ namespace Infrastructure.Persistence
             {
                 entity.HasKey(b => b.book_id);
                 entity.Property(b => b.book_id).ValueGeneratedNever();
-                entity.Property(b => b.cost).HasPrecision(18, 2);
+                entity.Property(b => b.price).HasPrecision(18, 2);
             });
 
             modelBuilder.Entity<UserEntity>(entity =>
@@ -42,11 +42,16 @@ namespace Infrastructure.Persistence
             {
                 entity.HasKey(r => new { r.user_id, r.book_id });
             });
+            modelBuilder.Entity<TrackingEventEntity>(entity =>
+            {
+                entity.HasKey(t => t.id);
+            });
         }
 
         public DbSet<BookEntity> Books { get; set; } = null!;
         public DbSet<UserEntity> Users { get; set; } = null!;
         public DbSet<ReviewEntity> Reviews { get; set; } = null!;
         public DbSet<RatingEntity> Ratings { get; set; } = null!;
+        public DbSet<TrackingEventEntity> TrackingEvents { get; set; } = null!;
     }
 }
