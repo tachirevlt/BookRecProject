@@ -62,6 +62,7 @@ namespace Api.Controllers
                 {
                     user_id = result.user_id,
                     user_name = result.user_name,
+                    full_name = result.full_name,
                     email = result.email,
                     role = result.role,
                     sex = result.sex,
@@ -125,6 +126,7 @@ namespace Api.Controllers
                 {
                     user_id = result.user_id,
                     user_name = result.user_name,
+                    full_name = result.full_name,
                     email = result.email,
                     sex = result.sex,
                     role = result.role,

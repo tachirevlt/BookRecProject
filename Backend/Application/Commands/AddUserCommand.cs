@@ -44,6 +44,7 @@ namespace Application.Commands
             {
                 user_id = Guid.NewGuid(),
                 user_name = request.UserDto.user_name,
+                full_name = request.UserDto.full_name,
                 email = request.UserDto.email,                
                 sex = request.UserDto.sex,
                 hashed_password = hashedPassword, 

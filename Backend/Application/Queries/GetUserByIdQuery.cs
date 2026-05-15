@@ -36,6 +36,7 @@ namespace Application.Queries
             {
                 user_id = user.user_id,
                 user_name = user.user_name,
+                full_name = user.full_name,
                 role = user.role,
                 sex = user.sex,
                 FavoriteBooks = user.FavoriteBooks,

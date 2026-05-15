@@ -12,6 +12,9 @@ namespace Core.Models
         [EmailAddress(ErrorMessage = "Định dạng email không hợp lệ.")]
         public string email { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Tên đầy đủ là bắt buộc.")]
+        public string full_name { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
         [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự.")]
         public string Password { get; set; } = string.Empty;

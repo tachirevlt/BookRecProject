@@ -58,6 +58,7 @@ namespace Application.Commands
 
             // 4. Cập nhật các thông tin cho phép (Chỉ user_name và email)
             existingUser.user_name = request.UpdateData.user_name;
+            existingUser.full_name = request.UpdateData.full_name;
             existingUser.email = request.UpdateData.email;
 
             // 5. Lưu xuống DB

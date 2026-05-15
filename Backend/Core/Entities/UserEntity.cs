@@ -9,6 +9,7 @@ namespace Core.Entities
         public string user_name { get; set; } = null!;
         public string email { get; set; } = null!;
         public string hashed_password { get; set; } = null!;
+        public string full_name { get; set; } = string.Empty;
         public string role { get; set; } = null!;
         
         public string? sex { get; set; } 
