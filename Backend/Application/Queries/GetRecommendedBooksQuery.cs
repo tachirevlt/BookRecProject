@@ -4,10 +4,9 @@ using Core.Interfaces;
 
 namespace Application.Queries
 {
-    // Đổi tên Query
-    public record GetRecommendedBooksQuery(Guid BookId) : IRequest<IReadOnlyList<BookEntity>>;
+    // Chỉ nhận tham số Count
+    public record GetRecommendedBooksQuery(int Count = 8) : IRequest<IReadOnlyList<BookEntity>>;
 
-    // Đổi tên Handler
     public class GetRecommendedBooksQueryHandler : IRequestHandler<GetRecommendedBooksQuery, IReadOnlyList<BookEntity>>
     {
         private readonly IBookRepository _bookRepository;
@@ -19,8 +18,8 @@ namespace Application.Queries
 
         public async Task<IReadOnlyList<BookEntity>> Handle(GetRecommendedBooksQuery request, CancellationToken cancellationToken)
         {
-            // Gọi phương thức Repository đã đổi tên
-            return await _bookRepository.GetRecommendedBooksAsync(request.BookId, 10, cancellationToken);
+            // Truyền request.Count xuống Repo
+            return await _bookRepository.GetRecommendedBooksAsync(request.Count, cancellationToken);
         }
     }
 }

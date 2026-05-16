@@ -66,14 +66,12 @@ namespace Api.Controllers
             return Ok(result);
         }
         
-        [HttpGet("{book_id}/recommendations")]
+        [HttpGet("recommendations")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetRecommendedBooks([FromRoute] Guid book_id)
+        public async Task<IActionResult> GetRecommendedBooks([FromQuery] int count = 8)
         {
-            var bookExists = await sender.Send(new GetBookByIdQuery(book_id));
-            if (bookExists == null) return NotFound($"Không tìm thấy sách gốc với ID: {book_id}");
-
-            var result = await sender.Send(new GetRecommendedBooksQuery(book_id));
+            // Gửi Query chỉ với tham số Count
+            var result = await sender.Send(new GetRecommendedBooksQuery(count));
             return Ok(result);
         }
     }
