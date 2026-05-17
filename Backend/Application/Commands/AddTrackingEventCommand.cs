@@ -25,9 +25,9 @@ namespace Application.Commands
 
         public async Task<bool> Handle(AddTrackingEventCommand request, CancellationToken cancellationToken)
         {
-            if (request.event_type != "product_click" && request.event_type != "purchase")
+            if (request.event_type != "view" && request.event_type != "purchase" && request.event_type != "add_favorite")
             {
-                throw new ArgumentException("Invalid event_type. Must be 'product_click' or 'purchase'.");
+                throw new ArgumentException("Invalid event_type. Must be 'product_click' or 'purchase' or 'add_favorite'.");
             }
 
             var trackingEvent = new TrackingEventEntity

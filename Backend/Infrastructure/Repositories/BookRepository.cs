@@ -101,6 +101,7 @@ namespace Infrastructure.Repositories
                     "year" => isDescending ? query.OrderByDescending(b => b.original_publication_year) : query.OrderBy(b => b.original_publication_year),
                     "rating" => isDescending ? query.OrderByDescending(b => b.ratings_5) : query.OrderBy(b => b.ratings_5), // Lọc theo điểm 5 sao
                     "popularity" => isDescending ? query.OrderByDescending(b => (b.ratings_1 + b.ratings_2 + b.ratings_3 + b.ratings_4 + b.ratings_5)) : query.OrderBy(b => (b.ratings_1 + b.ratings_2 + b.ratings_3 + b.ratings_4 + b.ratings_5)), // Nhiều người đánh giá nhất
+                    "price" => isDescending ? query.OrderByDescending(b => b.price) : query.OrderBy(b => b.price),
                     _ => query.OrderBy(b => b.book_id)
                 };
             }
