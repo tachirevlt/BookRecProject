@@ -49,9 +49,7 @@ namespace Application.Commands
                 sex = request.UserDto.sex,
                 hashed_password = hashedPassword, 
                 role = "User",                
-                current_balance = 0,
-                FavoriteBooks = new List<BookEntity>(),
-                PurchasedBooks = new List<BookEntity>()
+                current_balance = 0
             };
 
             var createdUser = await userRepository.AddUserAsync(newUser, cancellationToken);

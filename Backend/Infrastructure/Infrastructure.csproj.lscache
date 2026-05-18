@@ -67,6 +67,10 @@ Migrations/
  20260514053710_AddAccentColor.Designer.cs
  20260515073316_AddUserFullName.cs
  20260515073316_AddUserFullName.Designer.cs
+ 20260517084411_AddBookStatColumns.cs
+ 20260517084411_AddBookStatColumns.Designer.cs
+ 20260517105105_AddUserWishlistsAndUserBooks.cs
+ 20260517105105_AddUserWishlistsAndUserBooks.Designer.cs
  AppDbContextModelSnapshot.cs
 obj/Debug/net8.0/
  .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
@@ -80,7 +84,9 @@ Repositories/
  RatingRepository.cs
  ReviewRepository.cs
  TrackingRepository.cs
+ UserBookRepository.cs
  UserRepository.cs
+ WishlistRepository.cs
 
 [metadataReferences]
 ../

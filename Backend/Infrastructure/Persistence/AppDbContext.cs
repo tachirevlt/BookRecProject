@@ -22,26 +22,45 @@ namespace Infrastructure.Persistence
             {
                 entity.HasKey(u => u.user_id);
                 entity.Property(u => u.current_balance).HasPrecision(18, 2);
+            });
 
-                entity.HasMany(u => u.FavoriteBooks)
-                    .WithMany()
-                    .UsingEntity<Dictionary<string, object>>(
-                        "UserFavoriteBooks",
-                        j => j.HasOne<BookEntity>().WithMany().HasForeignKey("book_id"),
-                        j => j.HasOne<UserEntity>().WithMany().HasForeignKey("user_id"));
+            modelBuilder.Entity<UserWishlistEntity>(entity =>
+            {
+                entity.HasKey(w => w.id);
+                entity.Property(w => w.price_at_addition).HasPrecision(18, 2);
 
-                entity.HasMany(u => u.PurchasedBooks)
+                entity.HasOne(w => w.User)
+                    .WithMany(u => u.Wishlists)
+                    .HasForeignKey(w => w.user_id)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(w => w.Book)
                     .WithMany()
-                    .UsingEntity<Dictionary<string, object>>(
-                        "UserPurchasedBooks",
-                        j => j.HasOne<BookEntity>().WithMany().HasForeignKey("book_id"),
-                        j => j.HasOne<UserEntity>().WithMany().HasForeignKey("user_id")); 
+                    .HasForeignKey(w => w.book_id)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserBookEntity>(entity =>
+            {
+                entity.HasKey(ub => ub.id);
+                entity.Property(ub => ub.purchase_price).HasPrecision(18, 2);
+
+                entity.HasOne(ub => ub.User)
+                    .WithMany(u => u.UserBooks)
+                    .HasForeignKey(ub => ub.user_id)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ub => ub.Book)
+                    .WithMany()
+                    .HasForeignKey(ub => ub.book_id)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<RatingEntity>(entity =>
             {
                 entity.HasKey(r => new { r.user_id, r.book_id });
             });
+
             modelBuilder.Entity<TrackingEventEntity>(entity =>
             {
                 entity.HasKey(t => t.id);
@@ -53,5 +72,7 @@ namespace Infrastructure.Persistence
         public DbSet<ReviewEntity> Reviews { get; set; } = null!;
         public DbSet<RatingEntity> Ratings { get; set; } = null!;
         public DbSet<TrackingEventEntity> TrackingEvents { get; set; } = null!;
+        public DbSet<UserWishlistEntity> Wishlists { get; set; } = null!;
+        public DbSet<UserBookEntity> UserBooks { get; set; } = null!;
     }
 }

@@ -57,6 +57,10 @@ namespace Application.Commands
 
             // Cộng thêm đánh giá mới vào sách
             UpdateBookRatingCount(book, request.rating, 1);
+
+            // Tính lại total_ratings và average_rating
+            RecalculateRatingStats(book);
+
             await _bookRepository.UpdateBookAsync(book.book_id, book, cancellationToken);
 
             return true;
@@ -72,6 +76,15 @@ namespace Application.Commands
                 case 4: book.ratings_4 = Math.Max(0, book.ratings_4 + modifier); break;
                 case 5: book.ratings_5 = Math.Max(0, book.ratings_5 + modifier); break;
             }
+        }
+
+        private void RecalculateRatingStats(BookEntity book)
+        {
+            int total = book.ratings_1 + book.ratings_2 + book.ratings_3 + book.ratings_4 + book.ratings_5;
+            book.total_ratings = total;
+            book.average_rating = total > 0
+                ? (double)(book.ratings_1 * 1 + book.ratings_2 * 2 + book.ratings_3 * 3 + book.ratings_4 * 4 + book.ratings_5 * 5) / total
+                : 0.0;
         }
     }
 }

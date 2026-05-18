@@ -59,13 +59,17 @@ Entities/
  RatingEntity.cs
  ReviewEntity.cs
  TrackingEventEntity.cs
+ UserBookEntity.cs
  UserEntity.cs
+ UserWishlistEntity.cs
 Interfaces/
  IBookRepository.cs
  IRatingRepository.cs
  IReviewRepository.cs
  ITrackingRepository.cs
+ IUserBookRepository.cs
  IUserRepository.cs
+ IWishlistRepository.cs
 Models/
  AddRatingRequest.cs
  AddReviewRequest.cs

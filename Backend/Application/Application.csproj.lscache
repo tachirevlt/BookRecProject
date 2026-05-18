@@ -58,6 +58,7 @@ Commands/
  AddBookToFavoritesCommand.cs
  AddRatingCommand.cs
  AddReviewCommand.cs
+ AddToWishlistCommand.cs
  AddTrackingEventCommand.cs
  AddUserCommand.cs
  ChangePasswordCommand.cs
@@ -65,7 +66,9 @@ Commands/
  DeleteRatingCommand.cs
  DeleteReviewByIdCommand.cs.cs
  DeleteUserCommand.cs
+ PurchaseBookCommand.cs
  RemoveBookFromFavoritesCommand.cs
+ RemoveFromWishlistCommand.cs
  UpdateBookCommand.cs
  UpdateUserCommand.cs
 DependencyInjection.cs
@@ -83,7 +86,9 @@ Queries/
  GetRecommendedBooksQuery.cs
  GetReviewByIdQuery.cs
  GetReviewsByBookIdQuery.cs
+ GetUserBooksQuery.cs
  GetUserByIdQuery.cs
+ GetWishlistQuery.cs
  LoginQuery.cs
 
 [metadataReferences]

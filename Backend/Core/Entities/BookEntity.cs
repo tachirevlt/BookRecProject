@@ -36,5 +36,19 @@ namespace Core.Entities
         public int chapters { get; set; } = 0;
         public string? previewText { get; set; }
         public string? accentColor { get; set; }
+
+        // === THỐNG KÊ TƯƠNG TÁC (7 ngày) ===
+        public int views_7d { get; set; } = 0;
+        public int favorite_7d { get; set; } = 0;
+        public int purchases_7d { get; set; } = 0;
+
+        // === THỐNG KÊ TƯƠNG TÁC (30 ngày) ===
+        public int views_30d { get; set; } = 0;
+        public int favorite_30d { get; set; } = 0;
+        public int purchases_30d { get; set; } = 0;
+
+        // === THỐNG KÊ ĐÁNH GIÁ ===
+        public int total_ratings { get; set; } = 0;
+        public double average_rating { get; set; } = 0.0;
     }
 }

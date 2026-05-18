@@ -90,7 +90,6 @@ namespace Infrastructure.Repositories
             // 3. THUẬT TOÁN SẮP XẾP (SORTING)
             if (!string.IsNullOrWhiteSpace(filters.SortBy))
             {
-                // Khi người dùng chủ động chọn kiểu sắp xếp
                 string sortBy = filters.SortBy.Trim().ToLower();
                 bool isDescending = filters.SortOrder?.Trim().ToLower() == "desc";
 
@@ -99,31 +98,30 @@ namespace Infrastructure.Repositories
                     "title" => isDescending ? query.OrderByDescending(b => b.original_title) : query.OrderBy(b => b.original_title),
                     "author" => isDescending ? query.OrderByDescending(b => b.authors) : query.OrderBy(b => b.authors),
                     "year" => isDescending ? query.OrderByDescending(b => b.original_publication_year) : query.OrderBy(b => b.original_publication_year),
-                    "rating" => isDescending ? query.OrderByDescending(b => b.ratings_5) : query.OrderBy(b => b.ratings_5), // Lọc theo điểm 5 sao
-                    "popularity" => isDescending ? query.OrderByDescending(b => (b.ratings_1 + b.ratings_2 + b.ratings_3 + b.ratings_4 + b.ratings_5)) : query.OrderBy(b => (b.ratings_1 + b.ratings_2 + b.ratings_3 + b.ratings_4 + b.ratings_5)), // Nhiều người đánh giá nhất
+                    "rating" => isDescending ? query.OrderByDescending(b => b.ratings_5) : query.OrderBy(b => b.ratings_5),
+                    "popularity" => isDescending ? query.OrderByDescending(b => b.total_ratings) : query.OrderBy(b => b.total_ratings),
                     "price" => isDescending ? query.OrderByDescending(b => b.price) : query.OrderBy(b => b.price),
+                    
+                    "trending_7d" => isDescending 
+                        ? query.OrderByDescending(b => (b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d) 
+                        : query.OrderBy(b => (b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d),
+                    
+                    "trending_30d" => isDescending 
+                        ? query.OrderByDescending(b => (b.purchases_30d * 10) + (b.favorite_30d * 5) + b.views_30d) 
+                        : query.OrderBy(b => (b.purchases_30d * 10) + (b.favorite_30d * 5) + b.views_30d),
+
                     _ => query.OrderBy(b => b.book_id)
                 };
             }
             else
             {
                 // [TRÁI TIM CỦA BOOKSHELF - PHIÊN BẢN TỐI ƯU CÓ BADGE]
-                // Sử dụng sắp xếp đa tầng (Multi-level Sort) thay vì cộng dồn điểm ảo.
-                
                 query = query
-                    // Tầng 1: Tôn trọng Badge (SQL dịch thành CASE WHEN cực kỳ nhẹ và nhanh)
                     .OrderByDescending(b => b.badge == "Trending" ? 3 : 
                                             b.badge == "Hot" ? 2 : 
                                             b.badge == "New" ? 1 : 0)
-                    
-                    // Tầng 2: Trong cùng một nhóm Badge (hoặc nhóm không có Badge), ưu tiên sách mới
-                    // .ThenByDescending(b => b.original_publication_year)
-                    
-                    // Tầng 3: Cùng năm xuất bản, so kè xem cuốn nào có nhiều lượt 5 sao hơn (Chất lượng)
                     .ThenByDescending(b => b.ratings_5)
-                    
-                    // Tầng 4: Phân định thắng thua cuối cùng bằng tổng lượt tương tác
-                    .ThenByDescending(b => b.ratings_1 + b.ratings_2 + b.ratings_3 + b.ratings_4 + b.ratings_5);
+                    .ThenByDescending(b => b.total_ratings);
             }
             
 
@@ -207,8 +205,8 @@ namespace Infrastructure.Repositories
                         (b.ratings_5 * 10) + 
                         (b.ratings_4 * 4) + 
                         (b.ratings_3 * -2) - 
-                        (b.ratings_2 * -6) - 
-                        (b.ratings_1 * -12)
+                        (b.ratings_2 * 6) - 
+                        (b.ratings_1 * 12)
                     )
                 )
                 

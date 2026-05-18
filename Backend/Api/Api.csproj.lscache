@@ -59,6 +59,7 @@ Controllers/
  ReviewsController.cs
  TrackingController.cs
  UsersControllers.cs
+ WishlistController.cs
 obj/Debug/net8.0/
  .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
  Api.AssemblyInfo.cs

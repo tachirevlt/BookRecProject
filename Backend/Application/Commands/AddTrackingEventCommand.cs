@@ -3,7 +3,6 @@ using System;
 using System.Threading;
 using Core.Entities;
 using Core.Interfaces;
-using Core.Entities;
 
 namespace Application.Commands
 {
@@ -25,9 +24,10 @@ namespace Application.Commands
 
         public async Task<bool> Handle(AddTrackingEventCommand request, CancellationToken cancellationToken)
         {
-            if (request.event_type != "view" && request.event_type != "purchase" && request.event_type != "add_favorite")
+            // Tracking chỉ nhận "view" — favorite/purchase được xử lý qua API riêng
+            if (request.event_type != "view")
             {
-                throw new ArgumentException("Invalid event_type. Must be 'product_click' or 'purchase' or 'add_favorite'.");
+                throw new ArgumentException("Invalid event_type. Tracking chỉ chấp nhận 'view'.");
             }
 
             var trackingEvent = new TrackingEventEntity
@@ -39,6 +39,9 @@ namespace Application.Commands
             };
 
             await _trackingRepository.AddTrackingEventAsync(trackingEvent);
+
+            // Tăng bộ đếm views_7d và views_30d của sách
+            await _trackingRepository.IncrementBookStatsAsync(request.book_id, "view");
 
             return true;
         }
