@@ -59,5 +59,12 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
             return userBook;
         }
+        public async Task<List<Guid>> GetUsersWhoBoughtBookAsync(Guid bookId, CancellationToken ct = default)
+        {
+            return await _db.UserBooks
+                .Where(ub => ub.book_id == bookId)
+                .Select(ub => ub.user_id)
+                .ToListAsync(ct);
+        }
     }
 }

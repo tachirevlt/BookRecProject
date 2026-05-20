@@ -59,5 +59,23 @@ namespace Api.Controllers
             if (result) return Ok(new { message = "Xóa đánh giá thành công." });
             return BadRequest(new { message = "Xóa thất bại. Bạn chưa đánh giá sách này hoặc sách không tồn tại." });
         }
+        [HttpGet("book/{book_id}")]
+        [Authorize]
+        public async Task<IActionResult> GetMyRating([FromRoute] Guid book_id)
+        {
+            // 1. Lấy user_id từ token đăng nhập
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var user_id))
+            {
+                return Unauthorized();
+            }
+
+            // 2. Gọi query bạn vừa tối giản
+            var query = new GetRatingsByBookIdQuery(user_id, book_id);
+            var rating = await _mediator.Send(query);
+
+            // 3. Trả về đúng số sao đánh giá hoặc null
+            return Ok(new { rating = rating });
+        }
     }
 }

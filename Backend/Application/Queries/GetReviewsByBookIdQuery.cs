@@ -14,15 +14,21 @@ namespace Application.Queries
     public class GetReviewsByBookIdQueryHandler : IRequestHandler<GetReviewsByBookIdQuery, IEnumerable<ReviewDto>>
     {
         private readonly IReviewRepository _reviewRepository;
+        private readonly IUserBookRepository _userBookRepository;
 
-        public GetReviewsByBookIdQueryHandler(IReviewRepository reviewRepository)
+        public GetReviewsByBookIdQueryHandler(IReviewRepository reviewRepository, IUserBookRepository userBookRepository)
         {
             _reviewRepository = reviewRepository;
+            _userBookRepository = userBookRepository;
         }
 
         public async Task<IEnumerable<ReviewDto>> Handle(GetReviewsByBookIdQuery request, CancellationToken cancellationToken)
         {
             var reviews = await _reviewRepository.GetReviewsByBookIdAsync(request.BookId);
+            var purchasedUserIds = await _userBookRepository.GetUsersWhoBoughtBookAsync(request.BookId, cancellationToken);
+            
+            // Chuyển sang HashSet để tra cứu siêu tốc (O(1)) khi số lượng mua lớn
+            var purchasedSet = new HashSet<Guid>(purchasedUserIds);
 
             // Map từ Entity sang Dto để loại bỏ các trường thừa/nhạy cảm
             return reviews.Select(r => new ReviewDto
@@ -30,6 +36,8 @@ namespace Application.Queries
                 id = r.id,
                 user_id = r.user_id,
                 book_id = r.book_id,
+                full_name = r.User?.full_name,
+                is_purchased = purchasedSet.Contains(r.user_id),
                 review = r.review,
                 time = r.time
             });

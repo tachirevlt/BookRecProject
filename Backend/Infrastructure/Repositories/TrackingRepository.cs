@@ -45,5 +45,15 @@ namespace Infrastructure.Repositories
 
             await _context.SaveChangesAsync();
         }
+        public async Task DecrementBookStatsAsync(Guid bookId)
+        {
+            var book = await _context.Books.FindAsync(bookId);
+            if (book == null) return;
+
+            book.favorite_7d++;
+            book.favorite_30d++;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

@@ -13,5 +13,6 @@ namespace Core.Interfaces
         Task<UserBookEntity> AddUserBookAsync(UserBookEntity userBook, CancellationToken ct = default);
         Task<bool> HasPurchasedAsync(Guid userId, Guid bookId, CancellationToken ct = default);
         Task<UserBookEntity?> UpdateReadingProgressAsync(Guid userId, Guid bookId, int currentChapter, CancellationToken ct = default);
+        Task<List<Guid>> GetUsersWhoBoughtBookAsync(Guid bookId, CancellationToken ct = default);
     }
 }

@@ -1,16 +1,19 @@
 using MediatR;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Core.Entities;
 using Core.Interfaces;
+using Core.Models;
 
 namespace Application.Queries
 {
-    public record GetUserBooksQuery(Guid UserId) : IRequest<IReadOnlyList<UserBookEntity>>;
+    // Đổi thành UserBookDTO
+    public record GetUserBooksQuery(Guid UserId) : IRequest<IReadOnlyList<UserBookDTO>>;
 
-    public class GetUserBooksQueryHandler : IRequestHandler<GetUserBooksQuery, IReadOnlyList<UserBookEntity>>
+    public class GetUserBooksQueryHandler : IRequestHandler<GetUserBooksQuery, IReadOnlyList<UserBookDTO>>
     {
         private readonly IUserBookRepository _userBookRepository;
 
@@ -19,9 +22,12 @@ namespace Application.Queries
             _userBookRepository = userBookRepository;
         }
 
-        public async Task<IReadOnlyList<UserBookEntity>> Handle(GetUserBooksQuery request, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<UserBookDTO>> Handle(GetUserBooksQuery request, CancellationToken cancellationToken)
         {
-            return await _userBookRepository.GetUserBooksAsync(request.UserId, cancellationToken);
+            var userBooks = await _userBookRepository.GetUserBooksAsync(request.UserId, cancellationToken);
+            return userBooks.Select(ub => UserBookDTO.FromEntity(ub))
+                            .Where(dto => dto != null)
+                            .ToList()!;
         }
     }
 }

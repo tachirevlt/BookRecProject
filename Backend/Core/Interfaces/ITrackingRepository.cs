@@ -8,5 +8,6 @@ namespace Core.Interfaces
     {
         Task AddTrackingEventAsync(TrackingEventEntity trackingEvent);
         Task IncrementBookStatsAsync(Guid bookId, string eventType);
+        Task DecrementBookStatsAsync(Guid bookId);
     }
 }

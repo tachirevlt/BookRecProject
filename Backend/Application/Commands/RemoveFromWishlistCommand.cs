@@ -24,6 +24,7 @@ namespace Application.Commands
 
         public async Task<bool> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken)
         {
+            
             return await _wishlistRepository.RemoveFromWishlistAsync(request.user_id, request.book_id, cancellationToken);
         }
     }

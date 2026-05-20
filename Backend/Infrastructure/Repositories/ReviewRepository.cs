@@ -28,6 +28,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<ReviewEntity>> GetReviewsByBookIdAsync(Guid bookId)
         {
             return await _context.Reviews
+                .Include(r => r.User)
                 .Where(r => r.book_id == bookId)
                 .OrderByDescending(r => r.time)
                 .ToListAsync();

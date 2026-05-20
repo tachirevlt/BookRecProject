@@ -74,6 +74,7 @@ Models/
  AddRatingRequest.cs
  AddReviewRequest.cs
  AddTrackingEventRequest.cs
+ BookDTOs.cs
  BookFilterParams.cs
  BookRatingResponse.cs
  ChangePasswordDto.cs

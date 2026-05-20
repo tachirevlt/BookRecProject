@@ -1,16 +1,19 @@
 using MediatR;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Core.Entities;
 using Core.Interfaces;
+using Core.Models;
 
 namespace Application.Queries
 {
-    public record GetWishlistQuery(Guid UserId) : IRequest<IReadOnlyList<UserWishlistEntity>>;
+    // Đổi thành UserWishlistDTO
+    public record GetWishlistQuery(Guid UserId) : IRequest<IReadOnlyList<UserWishlistDTO>>;
 
-    public class GetWishlistQueryHandler : IRequestHandler<GetWishlistQuery, IReadOnlyList<UserWishlistEntity>>
+    public class GetWishlistQueryHandler : IRequestHandler<GetWishlistQuery, IReadOnlyList<UserWishlistDTO>>
     {
         private readonly IWishlistRepository _wishlistRepository;
 
@@ -19,9 +22,12 @@ namespace Application.Queries
             _wishlistRepository = wishlistRepository;
         }
 
-        public async Task<IReadOnlyList<UserWishlistEntity>> Handle(GetWishlistQuery request, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<UserWishlistDTO>> Handle(GetWishlistQuery request, CancellationToken cancellationToken)
         {
-            return await _wishlistRepository.GetUserWishlistAsync(request.UserId, cancellationToken);
+            var wishlists = await _wishlistRepository.GetUserWishlistAsync(request.UserId, cancellationToken);
+            return wishlists.Select(w => UserWishlistDTO.FromEntity(w))
+                            .Where(dto => dto != null)
+                            .ToList()!;
         }
     }
 }
