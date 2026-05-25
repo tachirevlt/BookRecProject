@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Api.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,7 @@ if (keyBytes.Length < 32)
 {
     throw new InvalidOperationException("Key bí mật (JwtSettings:Key) phải có ít nhất 32 ký tự (256-bit).");
 }
+builder.Services.AddHostedService<BadgeUpdateWorker>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

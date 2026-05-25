@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Core.Entities;
+using System.Text.Json;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Infrastructure.Persistence
 {
@@ -16,6 +20,25 @@ namespace Infrastructure.Persistence
                 entity.HasKey(b => b.book_id);
                 entity.Property(b => b.book_id).ValueGeneratedNever();
                 entity.Property(b => b.price).HasPrecision(18, 2);
+
+                // 1. CHỈ GIỮ LẠI BỘ SO SÁNH CHO BADGES
+                var stringListComparer = new ValueComparer<List<string>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => System.HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList());
+
+                // 2. CHỈ CẤU HÌNH CONVERSION CHO MÌNH BADGES
+                entity.Property(b => b.badges)
+                    .HasConversion(
+                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                        v => string.IsNullOrWhiteSpace(v) 
+                            ? new List<string>() 
+                            : (JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>())
+                    )
+                    .Metadata.SetValueComparer(stringListComparer);
+
+                // ĐÃ XÓA TOÀN BỘ CẤU HÌNH CỦA TAGS Ở ĐÂY.
+                // Trả tags về đúng nguyên bản ban đầu của EF Core.
             });
 
             modelBuilder.Entity<UserEntity>(entity =>
@@ -24,6 +47,7 @@ namespace Infrastructure.Persistence
                 entity.Property(u => u.current_balance).HasPrecision(18, 2);
             });
 
+            // ... (Phần còn lại của các bảng UserWishlistEntity, UserBookEntity... giữ nguyên 100%)
             modelBuilder.Entity<UserWishlistEntity>(entity =>
             {
                 entity.HasKey(w => w.id);

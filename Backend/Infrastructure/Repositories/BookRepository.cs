@@ -60,7 +60,16 @@ namespace Infrastructure.Repositories
                 var genreFilter = filters.Genre.Trim().ToLower();
                 query = query.Where(b => b.tags.Contains(genreFilter));
             }
-            
+            if (!string.IsNullOrWhiteSpace(filters.Badge))
+            {
+                // Tách các badge nếu client truyền vào nhiều nhãn cách nhau bằng dấu phẩy
+                var targetBadges = filters.Badge.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                .Select(b => b.Trim())
+                                                .ToList();
+
+                // Lọc ra sách mà mảng badges chứa ÍT NHẤT 1 nhãn nằm trong danh sách targetBadges
+                query = query.Where(b => b.badges.Any(dbBadge => targetBadges.Contains(dbBadge)));
+            }
             // 2. LỌC THEO SỐ ĐIỂM 
             if (filters.MinRating.HasValue || filters.MaxRating.HasValue)
             {
@@ -115,11 +124,17 @@ namespace Infrastructure.Repositories
             }
             else
             {
-                // [TRÁI TIM CỦA BOOKSHELF - PHIÊN BẢN TỐI ƯU CÓ BADGE]
                 query = query
-                    .OrderByDescending(b => b.badge == "Trending" ? 3 : 
-                                            b.badge == "Hot" ? 2 : 
-                                            b.badge == "New" ? 1 : 0)
+                    // 1. Ưu tiên sách bán chạy nhất tuần (Quyết định nhãn Best Seller)
+                    .OrderByDescending(b => b.purchases_7d)
+                    
+                    // 2. Nếu lượt mua bằng nhau, ưu tiên sách đang có gia tốc tương tác cao (Quyết định nhãn Trending)
+                    .ThenByDescending(b => (b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d)
+                    
+                    // 3. Nếu vẫn bằng, ưu tiên sách mới xuất bản (Quyết định nhãn New)
+                    .ThenByDescending(b => b.original_publication_year)
+                    
+                    // 4. Cuối cùng mới xét đến điểm đánh giá chất lượng
                     .ThenByDescending(b => b.ratings_5)
                     .ThenByDescending(b => b.total_ratings);
             }
@@ -218,6 +233,16 @@ namespace Infrastructure.Repositories
                 
                 .Take(count)
                 .ToListAsync(ct);
+        }
+        public async Task<List<BookEntity>> GetAllBooksAsync(CancellationToken ct = default)
+        {
+            // Không dùng AsNoTracking ở đây vì Worker cần Update lại danh sách này
+            return await _db.Books.ToListAsync(ct);
+        }
+
+        public async Task SaveChangesAsync(CancellationToken ct = default)
+        {
+            await _db.SaveChangesAsync(ct);
         }
     }
 }

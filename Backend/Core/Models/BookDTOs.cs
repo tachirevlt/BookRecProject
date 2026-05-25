@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -9,7 +8,6 @@ namespace Core.Models
     // 1. DTO chính cho Sách
     public class BookDTO
     {
-        // Bạn nhớ đổi tên biến cho khớp với BookEntity (ví dụ: book_id hay Id)
         public Guid book_id { get; set; }
         public string? authors { get; set; }
         public double? original_publication_year { get; set; }
@@ -27,10 +25,8 @@ namespace Core.Models
         public string image_url { get; set; } = null!;
         public string small_image_url { get; set; } = null!;
 
-        // Giá sách (đổi tên từ cost → price cho khớp CSV)
         public decimal price { get; set; } = 0;
 
-        // Các cột mới bổ sung
         public string? mood { get; set; }
         [JsonIgnore]
         public string? badge { get; set; }
@@ -43,7 +39,6 @@ namespace Core.Models
         public string? previewText { get; set; }
         public string? accentColor { get; set; }
 
-        // === THỐNG KÊ TƯƠNG TÁC (7 ngày) ===
         [JsonIgnore]
         public int views_7d { get; set; } 
         [JsonIgnore]
@@ -51,7 +46,6 @@ namespace Core.Models
         [JsonIgnore]
         public int purchases_7d { get; set; } 
 
-        // === THỐNG KÊ TƯƠNG TÁC (30 ngày) ===
         [JsonIgnore]
         public int views_30d { get; set; } 
         [JsonIgnore]
@@ -59,43 +53,11 @@ namespace Core.Models
         [JsonIgnore]
         public int purchases_30d { get; set; } 
 
-        // === THỐNG KÊ ĐÁNH GIÁ ===
         public int total_ratings { get; set; } 
         public double average_rating { get; set; } 
         
         // === CÁC TRƯỜNG TÍNH TOÁN THÊM ===
-        public List<string> badges
-        {
-            get
-            {
-                var badges = new List<string>();
-
-                double trendingScore = (purchases_7d * 10) + (favorite_7d * 5) + (views_7d * 1);
-                
-                if (trendingScore > 350 ) 
-                {
-                    badges.Add("Trending");
-                }
-
-                if (purchases_7d > 10 && badges.Count < 2)
-                {
-                    badges.Add("Best Seller");
-                }
-
-                if (!string.IsNullOrWhiteSpace(badge)&& badges.Count < 2)
-                {
-                    badges.Add(badge);
-                }
-
-                int currentYear = DateTime.UtcNow.Year;
-                if (currentYear - original_publication_year <= 2 && badges.Count < 2) 
-                {
-                    badges.Add("New");
-                }
-
-                return badges;
-            }
-        }
+        public List<string> badges { get; set; } = new List<string>();
 
         // Hàm tiện ích để Map từ Entity sang DTO
         public static BookDTO? FromEntity(BookEntity? book)
@@ -132,7 +94,8 @@ namespace Core.Models
                 favorite_7d = book.favorite_7d,
                 purchases_7d = book.purchases_7d,
                 favorite_30d = book.favorite_30d,
-                purchases_30d = book.purchases_30d
+                purchases_30d = book.purchases_30d,                
+                badges = book.badges 
             };
         }
     }
@@ -143,7 +106,7 @@ namespace Core.Models
         public Guid user_id { get; set; }
         public Guid book_id { get; set; }
         
-        public BookDTO? Book { get; set; } // Lồng toàn bộ thông tin sách vào
+        public BookDTO? Book { get; set; } 
 
         public static UserWishlistDTO? FromEntity(UserWishlistEntity? entity)
         {
@@ -152,7 +115,7 @@ namespace Core.Models
             {
                 user_id = entity.user_id,
                 book_id = entity.book_id,
-                Book = BookDTO.FromEntity(entity.Book) // Lưu ý: Repository phải có .Include(w => w.Book)
+                Book = BookDTO.FromEntity(entity.Book) 
             };
         }
     }
@@ -162,9 +125,8 @@ namespace Core.Models
     {
         public Guid user_id { get; set; }
         public Guid book_id { get; set; }
-        // public string Status { get; set; } // Ví dụ: "Đang đọc", "Đã xong"
         
-        public BookDTO? Book { get; set; } // Lồng toàn bộ thông tin sách vào
+        public BookDTO? Book { get; set; } 
 
         public static UserBookDTO? FromEntity(UserBookEntity? entity)
         {
@@ -173,7 +135,6 @@ namespace Core.Models
             {
                 user_id = entity.user_id,
                 book_id = entity.book_id,
-                // Status = entity.Status,
                 Book = BookDTO.FromEntity(entity.Book)
             };
         }

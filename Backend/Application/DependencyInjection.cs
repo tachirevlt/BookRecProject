@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using Application.Services;
 
 namespace Application
 {
@@ -15,6 +16,8 @@ namespace Application
         public static IServiceCollection AddApplicationDI(this IServiceCollection services)
         {
             services.AddMediatR(Assembly.GetExecutingAssembly());
+            // Đăng ký dạng Scoped hoặc Transient đều được
+            services.AddScoped<IBadgeService, BadgeService>();
 
             return services;
         }

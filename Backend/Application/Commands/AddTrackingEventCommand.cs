@@ -25,9 +25,9 @@ namespace Application.Commands
         public async Task<bool> Handle(AddTrackingEventCommand request, CancellationToken cancellationToken)
         {
             // Tracking chỉ nhận "view" — favorite/purchase được xử lý qua API riêng
-            if (request.event_type != "view")
+            if (request.event_type != "popup_view" && request.event_type != "deltail_view" )
             {
-                throw new ArgumentException("Invalid event_type. Tracking chỉ chấp nhận 'view'.");
+                throw new ArgumentException("Invalid event_type. Tracking chỉ chấp nhận 'popup_view' hoặc 'detail_view'.");
             }
 
             var trackingEvent = new TrackingEventEntity

@@ -36,6 +36,7 @@ namespace Core.Entities
         public int chapters { get; set; } = 0;
         public string? previewText { get; set; }
         public string? accentColor { get; set; }
+        public List<string> badges { get; set; } = new List<string>();
 
         // === THỐNG KÊ TƯƠNG TÁC (7 ngày) ===
         public int views_7d { get; set; } = 0;
