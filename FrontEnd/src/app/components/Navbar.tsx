@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { NavLink, useLocation } from 'react-router';
+import { NavLink, useLocation, useNavigate } from 'react-router';
 import {
   Search, BookOpen, Wallet, Sun, Moon, Menu, X,
   ChevronDown, Bell, Flame, User, Settings, ShoppingBag, LogOut
@@ -21,10 +21,11 @@ const navLinks = [
   { label: 'Xu hướng', href: '/trending' },
 ];
 
-const genres = ['Fantasy', 'Sci-Fi', 'Romance', 'Mystery', 'Self-Help', 'Biography', 'Philosophy', 'Adventure', 'Tech'];
+const genres = ['Fantasy', 'Science-Fiction', 'Romance', 'Mystery', 'Classics', 'Biography', 'Magic', 'Adventure', 'Thriller', 'Horror'];
 
 export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { scrollDir, scrollY } = useScrollDirection();
   const isLoggedIn = userService.isLoggedIn();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -56,6 +57,20 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
   const isHidden = scrollDir === 'down' && scrollY > 80;
   const isScrolled = scrollY > 20;
 
+  // HÀM CHUYỂN HƯỚNG TÌM KIẾM CHUYÊN SÂU
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchVal.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchVal.trim())}`);
+    }
+  };
+
+  // HÀM RESET DỮ LIỆU KHI VỀ TRANG CHỦ
+  const handleGoHome = () => {
+    setSearchVal('');
+    onSearch('');
+  };
+
   return (
     <motion.header
       animate={{ y: isHidden ? '-100%' : 0 }}
@@ -70,7 +85,7 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
         <div className="flex items-center justify-between h-24 gap-6">
 
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-3 shrink-0 group">
+          <NavLink to="/" onClick={handleGoHome} className="flex items-center gap-3 shrink-0 group">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-indigo-900/40 group-hover:scale-105 transition-transform">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
@@ -116,6 +131,7 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
                 <NavLink
                   key={link.label}
                   to={link.href}
+                  onClick={link.href === '/' ? handleGoHome : undefined}
                   className="px-4 py-2 rounded-lg text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/8 transition-all"
                 >
                   {link.label}
@@ -137,20 +153,24 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
                   transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="flex items-center gap-3 bg-gray-100 dark:bg-white/10 rounded-xl px-3 py-2">
+                  <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 bg-gray-100 dark:bg-white/10 rounded-xl px-3 py-2">
                     <Search className="w-4 h-4 text-gray-400 shrink-0" />
                     <input
                       autoFocus
                       value={searchVal}
                       onChange={e => { setSearchVal(e.target.value); onSearch(e.target.value); }}
-                      onBlur={() => { if (!searchVal) setSearchOpen(false); }}
                       placeholder="Tìm sách..."
                       className="bg-transparent text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 outline-none w-full"
                     />
-                    <button onClick={() => { setSearchOpen(false); setSearchVal(''); onSearch(''); }}>
-                      <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                    {searchVal && (
+                      <button type="button" onClick={() => { setSearchVal(''); onSearch(''); }} className="shrink-0 mr-1">
+                        <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                      </button>
+                    )}
+                    <button type="submit" className="shrink-0 p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                      <Search className="w-3 h-3" />
                     </button>
-                  </div>
+                  </form>
                 </motion.div>
               ) : (
                 <motion.button
@@ -175,25 +195,21 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
 
             {isLoggedIn ? (
               <>
-                {/* Notifications */}
                 <button className="hidden sm:flex w-[44px] h-[44px] items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/8 transition-colors relative">
                   <Bell className="w-5 h-5" />
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-[#0D0C14]"></span>
                 </button>
 
-                {/* Wallet */}
                 <button className="hidden sm:flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm hover:bg-emerald-100 dark:hover:bg-emerald-500/25 transition-colors">
                   <Wallet className="w-4 h-4" />
                   <span className="font-medium">{balance !== null ? `${balance.toLocaleString('vi-VN')}₫` : '...'}</span>
                 </button>
 
-                {/* Streak badge */}
                 <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-orange-50 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 rounded-xl text-xs">
                   <Flame className="w-4 h-4" />
                   <span className="font-semibold">12</span>
                 </div>
 
-                {/* Profile Avatar with Dropdown */}
                 <div className="relative">
                   <button
                     onMouseEnter={() => setUserMenuOpen(true)}
@@ -213,26 +229,14 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
                         onMouseLeave={() => setUserMenuOpen(false)}
                         className="absolute top-full right-0 mt-2 w-44 bg-white dark:bg-[#1A1A2E] rounded-2xl shadow-xl border border-gray-100 dark:border-white/8 overflow-hidden p-1"
                       >
-                        <NavLink
-                          to="/profile"
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/8 rounded-xl transition-colors"
-                        >
-                          <User className="w-4 h-4" />
-                          Trang cá nhân
+                        <NavLink to="/profile" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/8 rounded-xl transition-colors">
+                          <User className="w-4 h-4" /> Trang cá nhân
                         </NavLink>
-                        <NavLink
-                          to="/purchases"
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/8 rounded-xl transition-colors"
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                          Lịch sử mua hàng
+                        <NavLink to="/purchases" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/8 rounded-xl transition-colors">
+                          <ShoppingBag className="w-4 h-4" /> Lịch sử mua hàng
                         </NavLink>
-                        <NavLink
-                          to="/settings"
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/8 rounded-xl transition-colors"
-                        >
-                          <Settings className="w-4 h-4" />
-                          Cài đặt
+                        <NavLink to="/settings" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/8 rounded-xl transition-colors">
+                          <Settings className="w-4 h-4" /> Cài đặt
                         </NavLink>
                         <div className="border-t border-gray-100 dark:border-white/8 my-1" />
                         <button
@@ -242,8 +246,7 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
                           }}
                           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-colors"
                         >
-                          <LogOut className="w-4 h-4" />
-                          Đăng xuất
+                          <LogOut className="w-4 h-4" /> Đăng xuất
                         </button>
                       </motion.div>
                     )}
@@ -261,7 +264,6 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
               </>
             )}
 
-            {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden w-[52px] h-[52px] flex items-center justify-center rounded-2xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
@@ -272,7 +274,6 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -284,23 +285,25 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
           >
             <div className="px-4 py-4 space-y-1">
               {navLinks.map(link => (
-                <NavLink key={link.label} to={link.href} className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition-colors text-sm">
+                <NavLink key={link.label} to={link.href}
+                  onClick={() => {
+                    if (link.href === '/') handleGoHome();
+                    setMobileOpen(false);
+                  }}
+                  className="block px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition-colors text-sm">
                   {link.label}
                 </NavLink>
               ))}
               {isLoggedIn ? (
                 <>
                   <NavLink to="/profile" className="flex items-center gap-2 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition-colors text-sm">
-                    <User className="w-4 h-4" />
-                    Trang cá nhân
+                    <User className="w-4 h-4" /> Trang cá nhân
                   </NavLink>
                   <NavLink to="/purchases" className="flex items-center gap-2 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition-colors text-sm">
-                    <ShoppingBag className="w-4 h-4" />
-                    Lịch sử mua hàng
+                    <ShoppingBag className="w-4 h-4" /> Lịch sử mua hàng
                   </NavLink>
                   <NavLink to="/settings" className="flex items-center gap-2 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/8 transition-colors text-sm">
-                    <Settings className="w-4 h-4" />
-                    Cài đặt
+                    <Settings className="w-4 h-4" /> Cài đặt
                   </NavLink>
                   <div className="flex items-center gap-3 px-4 py-3">
                     <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm">
@@ -319,8 +322,7 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
                     }}
                     className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors text-sm"
                   >
-                    <LogOut className="w-4 h-4" />
-                    Đăng xuất
+                    <LogOut className="w-4 h-4" /> Đăng xuất
                   </button>
                 </>
               ) : (

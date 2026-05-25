@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { useOutletContext } from 'react-router';
 import { HeroCarousel } from '../components/HeroCarousel';
 import { FeaturedSection } from '../components/FeaturedSection';
@@ -6,22 +7,113 @@ import { TrendingSection } from '../components/TrendingSection';
 import { MoodSection } from '../components/MoodSection';
 import { ReadingStreak } from '../components/ReadingStreak';
 import { useBooks, useBookCollections } from '../hooks/useBooks';
-import type { Book } from '../data/books';
+import { genreInfo } from '../data/books'; 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import type { OutletContextType } from '../components/RootLayout';
 
 export function Home() {
   const { books, isLoading } = useBooks();
-  const { fantasyBooks, classicsBooks, mysteryRomanceBooks } = useBookCollections();
+  
+  // Lấy các mảng sách đã được phân loại chính xác từ hook mới
+  const { 
+    fantasyBooks, 
+    sciFiBooks, 
+    classicsBooks, 
+    mysteryBooks, 
+    romanceBooks 
+  } = useBookCollections();
+  
   const { searchQuery, onOpenBook } = useOutletContext<OutletContextType>();
   
-  const filtered = searchQuery
-    ? books.filter(b =>
-        b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.genres?.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : null;
+  // 1. Tối ưu hóa việc lọc tìm kiếm để không chạy lại vô nghĩa
+  const filtered = useMemo(() => {
+    if (!searchQuery) return null;
+    const lowerQuery = searchQuery.toLowerCase();
+    return books.filter(b =>
+      b.title.toLowerCase().includes(lowerQuery) ||
+      b.author.toLowerCase().includes(lowerQuery) ||
+      b.genres?.some(g => g.toLowerCase().includes(lowerQuery))
+    );
+  }, [books, searchQuery]);
+
+  // 2. KỸ THUẬT MEMOIZATION: "Đóng băng" toàn bộ giao diện tĩnh của trang chủ
+  // Điều này ngăn React vẽ lại hàng trăm thẻ sách khi bạn mở Modal chi tiết sách.
+  const homeContent = useMemo(() => (
+    <>
+      {/* Hero */}
+      <HeroCarousel onOpenBook={onOpenBook} />
+
+      {/* Sections */}
+      <div className="space-y-16 py-14">
+        <FeaturedSection onOpenBook={onOpenBook} />
+        <ReadingStreak />
+        <MoodSection onOpenBook={onOpenBook} />
+
+        {/* Fantasy shelf */}
+        <BookShelf
+          title="Thế giới Giả tưởng"
+          subtitle={genreInfo['fantasy'].description}
+          emoji={genreInfo['fantasy'].emoji}
+          genre="Fantasy"
+          onOpenBook={onOpenBook}
+          accentColor={genreInfo['fantasy'].accentColor}
+        />
+
+        {/* Trending */}
+        <TrendingSection onOpenBook={onOpenBook} />
+
+        {/* Khoa học Viễn tưởng */}
+        <BookShelf
+          title="Khoa học Viễn tưởng"
+          subtitle={genreInfo['science-fiction'].description}
+          emoji={genreInfo['science-fiction'].emoji}
+          genre="Science-Fiction"
+          onOpenBook={onOpenBook}
+          accentColor={genreInfo['science-fiction'].accentColor}
+        />
+
+        {/* Classics shelf */}
+        <BookShelf
+          title="Tác phẩm Kinh điển"
+          subtitle={genreInfo['classics'].description}
+          emoji={genreInfo['classics'].emoji}
+          genre="Classics"
+          onOpenBook={onOpenBook}
+          accentColor={genreInfo['classics'].accentColor}
+        />
+        
+        {/* Advanture shelf */}
+        {/* <BookShelf
+          title="Phiêu lưu & Thám hiểm"
+          subtitle={genreInfo['advanture'].description}
+          emoji={genreInfo['advanture'].emoji}
+          genre="Advanture"
+          onOpenBook={onOpenBook}
+          accentColor={genreInfo['advanture'].accentColor}
+        /> */}
+
+        {/* Mystery shelf */}
+        <BookShelf
+          title="Bí ẩn & Trinh thám"
+          subtitle={genreInfo['mystery'].description}
+          emoji={genreInfo['mystery'].emoji}
+          genre="Mystery"
+          onOpenBook={onOpenBook}
+          accentColor={genreInfo['mystery'].accentColor}
+        />
+
+        {/* Romance shelf */}
+        <BookShelf
+          title="Tiểu thuyết Lãng mạn"
+          subtitle={genreInfo['romance'].description}
+          emoji={genreInfo['romance'].emoji}
+          genre="Romance"
+          onOpenBook={onOpenBook}
+          accentColor={genreInfo['romance'].accentColor}
+        />
+      </div>
+    </>
+  ), [books, onOpenBook]); // Chỉ cập nhật giao diện khi mảng sách hoặc hàm mở sách thay đổi
 
   if (filtered) {
     return (
@@ -58,57 +150,8 @@ export function Home() {
 
   return (
     <main className="bg-[#F8F7F4] dark:bg-[#0D0C14]">
-      {/* Hero */}
-      <HeroCarousel onOpenBook={(id) => {
-        const b = books.find(bk => bk.id === id);
-        if (b) onOpenBook(b);
-      }} />
-
-      {/* Sections */}
-      <div className="space-y-16 py-14">
-
-        {/* Featured mosaic */}
-        <FeaturedSection onOpenBook={onOpenBook} />
-
-        {/* Reading streak */}
-        <ReadingStreak />
-
-        {/* Mood recommendations */}
-        <MoodSection onOpenBook={onOpenBook} />
-
-        {/* Fantasy shelf */}
-        <BookShelf
-          title="Thế giới Giả tưởng"
-          subtitle="Phiêu lưu qua những vũ trụ chưa từng khám phá"
-          emoji="🧙‍♂️"
-          books={fantasyBooks}
-          onOpenBook={onOpenBook}
-          accentColor="#7C3AED"
-        />
-
-        {/* Trending */}
-        <TrendingSection onOpenBook={onOpenBook} />
-
-        {/* Classics shelf */}
-        <BookShelf
-          title="Tác phẩm kinh điển"
-          subtitle="Vượt thời gian, định hình văn học nhân loại"
-          emoji="🏛️"
-          books={classicsBooks}
-          onOpenBook={onOpenBook}
-          accentColor="#57534E"
-        />
-
-        {/* Mystery & Romance shelf */}
-        <BookShelf
-          title="Bí ẩn & Lãng mạn"
-          subtitle="Từ những bí ẩn chưa lời giải đến tình yêu đẹp như mơ"
-          emoji="🌹"
-          books={mysteryRomanceBooks}
-          onOpenBook={onOpenBook}
-          accentColor="#EC4899"
-        />
-      </div>
+      {/* Thay vì render trực tiếp, chúng ta gọi biến đã được đóng băng bằng useMemo */}
+      {homeContent}
     </main>
   );
 }

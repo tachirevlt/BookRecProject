@@ -31,7 +31,7 @@ export function FeaturedSection({ onOpenBook }: FeaturedSectionProps) {
             className="text-gray-900 dark:text-white"
             style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 700 }}
           >
-            Nổi bật của tuần
+            Sách nổi bật trong tháng
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Được chọn lọc bởi đội ngũ biên tập</p>
         </div>
@@ -66,17 +66,26 @@ export function FeaturedSection({ onOpenBook }: FeaturedSectionProps) {
           <div className="absolute inset-0 flex flex-col justify-between p-6 sm:p-8">
             <div className="flex items-start justify-between">
               <div className="flex gap-2">
-                <div className="flex gap-2">
+                {/* <div className="flex gap-2">
                   {featuredBook.genres?.slice(0, 3).map((g, idx) => (
                     <span key={idx} className={`px-3 py-1 rounded-full text-xs font-semibold ${genreColors[g.toLowerCase()] || 'bg-white/20 text-white'}`}>
                       {g}
                     </span>
                   ))}
-                </div>
-                {featuredBook.badge && (
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${badgeColors[featuredBook.badge]}`}>
-                    {featuredBook.badge}
-                  </span>
+                </div> */}
+                  {featuredBook.badges && featuredBook.badges.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {featuredBook.badges.map((badgeName, index) => (
+                      <span 
+                        key={index} 
+                        className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                          badgeColors[badgeName] || 'bg-gray-200 text-gray-800' // Fallback nếu màu chưa có
+                        }`}
+                      >
+                        {badgeName}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-1 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full">
@@ -151,10 +160,19 @@ export function FeaturedSection({ onOpenBook }: FeaturedSectionProps) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-              {book.badge && (
-                <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColors[book.badge]}`}>
-                  {book.badge}
-                </span>
+              {book.badges && book.badges.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {book.badges.map((badgeName, index) => (
+                    <span 
+                      key={index} 
+                      className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                        badgeColors[badgeName] || 'bg-gray-200 text-gray-800' // Fallback nếu màu chưa có
+                      }`}
+                    >
+                      {badgeName}
+                    </span>
+                  ))}
+                </div>
               )}
 
               <div className="absolute bottom-0 left-0 right-0 p-3">

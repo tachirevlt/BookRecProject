@@ -1,4 +1,4 @@
-// ─── TYPES ────────────────────────────────────────────────────────────────────
+﻿// ─── TYPES ────────────────────────────────────────────────────────────────────
 
 /** Kiểu dữ liệu sách dùng trong toàn bộ UI ứng dụng */
 export interface Book {
@@ -17,7 +17,7 @@ export interface Book {
     5: number;
   };
   genres: string[];
-  badge?: 'Bestseller' | 'New' | "Editor's Choice" | 'Hot' | 'Trending';
+  badges?: string[];
   cover: string;
   description: string;
   longDescription: string;
@@ -31,12 +31,18 @@ export interface Book {
   status?: 'complete' | 'ongoing';
   chapters?: number;
   previewText?: string;
+  views_7d?: number;
+  favorite_7d?: number;
+  purchases_7d?: number;
+  views_30d?: number;
+  favorite_30d?: number;
+  purchases_30d?: number;
 }
 
 // ─── UI CONFIG: GENRES & MOODS ───────────────────────────────────────────────
 
 /** Danh sách thể loại hiển thị trên UI (dùng cho filter, badge, v.v.) */
-export const GENRES = ['fantasy', 'sci-fi', 'romance', 'self-help', 'mystery', 'biography', 'philosophy'];
+export const GENRES = ['fantasy', 'science-fiction', 'romance', 'self-help', 'mystery', 'biography', 'philosophy'];
 
 /** Cấu hình tâm trạng: id, nhãn tiếng Việt, emoji và màu Tailwind */
 export const MOODS = [
@@ -66,7 +72,7 @@ export const MOODS = [
 /** Màu badge thể loại hiển thị trên BookCard và các component khác */
 export const genreColors: Record<string, string> = {
   fantasy: 'bg-violet-100 text-violet-700',
-  'sci-fi': 'bg-cyan-100 text-cyan-700',
+  'science-fition': 'bg-cyan-100 text-cyan-700',
   romance: 'bg-rose-100 text-rose-700',
   classics: 'bg-stone-100 text-stone-700',
   mystery: 'bg-slate-100 text-slate-700',
@@ -82,10 +88,10 @@ export const genreColors: Record<string, string> = {
 
 /** Màu badge đặc biệt (Bestseller, New, v.v.) */
 export const badgeColors: Record<string, string> = {
-  Bestseller: 'bg-amber-400 text-amber-900',
+  "Best Seller": 'bg-amber-400 text-amber-900',
   New: 'bg-emerald-400 text-emerald-900',
   "Editor's Choice": 'bg-violet-400 text-violet-900',
-  Hot: 'bg-rose-400 text-rose-900',
+  Original: 'bg-rose-400 text-rose-900',
   Trending: 'bg-sky-400 text-sky-900',
 };
 
@@ -112,7 +118,7 @@ export const genreInfo: Record<string, {
     subgenres: ['Dark Fantasy', 'Magic Academy', 'Epic Fantasy', 'Isekai', 'Urban Fantasy', 'Fairy Tale Retelling'],
     moodTags: ['Phiêu lưu', 'Huyền bí', 'Sử thi', 'Ma thuật', 'Thần thoại'],
   },
-  'sci-fi': {
+  'science-fiction': {
     description: 'Khoa học viễn tưởng, tương lai xa xôi và những câu hỏi lớn về bản chất con người',
     bgGradient: 'from-cyan-100 via-sky-50 to-[#F8F7F4] dark:from-cyan-950/40 dark:via-sky-950/20 dark:to-[#0D0C14]',
     heroGradient: 'from-cyan-600/30 via-blue-600/20 to-transparent',

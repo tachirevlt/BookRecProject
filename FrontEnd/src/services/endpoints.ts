@@ -19,8 +19,11 @@ export const ENDPOINTS = {
     /** GET /api/books/:book_id  (book_id là Guid) */
     GET_DETAIL: (bookId: string) => `/api/books/${bookId}`,
 
-    /** GET /api/books/:book_id/recommendations */
-    GET_RECOMMENDATIONS: (bookId: string) => `/api/books/${bookId}/recommendations`,
+    /** GET /api/books/recommendations */
+    GET_RECOMMENDATIONS: '/api/books/recommendations',
+
+    /** GET /api/ML/{bookId} */
+    GET_RECOMMENDATIONS_BY_BOOKID: (bookId: string) => `/api/ML/${bookId}`,
 
     /** POST /api/books  (Admin only) */
     CREATE: '/api/books',
@@ -52,14 +55,14 @@ export const ENDPOINTS = {
     /** DELETE /api/users/:user_id  (Admin only) */
     DELETE: (userId: string) => `/api/users/${userId}`,
 
-    /** POST /api/users/:user_id/favorites/:book_id */
-    ADD_FAVORITE: (userId: string, bookId: string) => `/api/users/${userId}/favorites/${bookId}`,
-
-    /** DELETE /api/users/:user_id/favorites/:book_id */
-    REMOVE_FAVORITE: (userId: string, bookId: string) => `/api/users/${userId}/favorites/${bookId}`,
+    /** POST /api/wishlist/:bookId?collection_name */
+    ADD_FAVORITE: (bookId: string) => `/api/wishlist/${bookId}`,
+    
+    /** DELETE /api/wishlist/:bookId */
+    REMOVE_FAVORITE: (bookId: string) => `/api/wishlist/${bookId}`,
 
     /** POST /api/users/:user_id/purchase/:book_id */
-    PURCHASE: (userId: string, bookId: string) => `/api/users/${userId}/purchase/${bookId}`,
+    PURCHASE: (bookId: string) => `/api/users/me/purchase/${bookId}`,
 
     /** POST /api/users/admin/top-up  (Admin only) */
     TOP_UP: '/api/users/admin/top-up',
@@ -70,8 +73,11 @@ export const ENDPOINTS = {
     /** POST /api/ratings  — body: { book_id, Rating } (Authorize) */
     ADD: '/api/ratings',
 
+    /** GET /api/ratings/book/:book_id */
+    GET_BY_BOOK: (bookId: string) => `/api/ratings/book/${bookId}`,
+
     /** DELETE /api/ratings/book/:book_id?user_id= */
-    DELETE: (bookId: string) => `/api/ratings/book/${bookId}`,
+    DELETE: (bookId: string, userId: string) => `/api/ratings/book/${bookId}?user_id=${userId}`,
   },
 
   // ─── REVIEWS ───────────────────────────────────────────────────────────────

@@ -73,7 +73,7 @@ export function Register() {
 
   const genreColors: Record<string, string> = {
     Fantasy: 'from-violet-500 to-purple-600',
-    'Sci-Fi': 'from-cyan-500 to-blue-600',
+    'Science-Fiction': 'from-cyan-500 to-blue-600',
     Romance: 'from-rose-500 to-pink-600',
     'Self-Help': 'from-emerald-500 to-teal-600',
     Mystery: 'from-slate-500 to-gray-600',

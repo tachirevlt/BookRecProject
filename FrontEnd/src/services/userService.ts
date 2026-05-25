@@ -115,6 +115,23 @@ export const userService = {
     );
     return response.data;
   },
+  /**
+   * Lấy danh sách sách đã mua của người dùng
+   * GET /api/users/{user_id}/books
+   */
+  getPurchasedBooks: async (userId: string): Promise<BookEntity[]> => {
+    const response = await axiosClient.get<BookEntity[]>(`/api/users/${userId}/books`);
+    return response.data;
+  },
+
+  /**
+   * Lấy danh sách wishlist (sách yêu thích) của người dùng hiện tại
+   * GET /api/wishlist
+   */
+  getWishlist: async (): Promise<BookEntity[]> => {
+    const response = await axiosClient.get<BookEntity[]>('/api/wishlist');
+    return response.data;
+  },
 
   /**
    * Cập nhật thông tin người dùng.
@@ -143,24 +160,24 @@ export const userService = {
    * Thêm sách vào danh sách yêu thích.
    * POST /api/users/:user_id/favorites/:book_id
    */
-  addFavorite: async (userId: string, bookId: string): Promise<void> => {
-    await axiosClient.post(ENDPOINTS.USERS.ADD_FAVORITE(userId, bookId));
+  addFavorite: async (bookId: string): Promise<void> => {
+    await axiosClient.post(ENDPOINTS.USERS.ADD_FAVORITE(bookId));
   },
 
   /**
    * Xóa sách khỏi danh sách yêu thích.
    * DELETE /api/users/:user_id/favorites/:book_id
    */
-  removeFavorite: async (userId: string, bookId: string): Promise<void> => {
-    await axiosClient.delete(ENDPOINTS.USERS.REMOVE_FAVORITE(userId, bookId));
+  removeFavorite: async (bookId: string): Promise<void> => {
+    await axiosClient.delete(ENDPOINTS.USERS.REMOVE_FAVORITE(bookId));
   },
 
   /**
    * Mua sách (trừ số dư tài khoản).
-   * POST /api/users/:user_id/purchase/:book_id  (Authorize)
+   * POST /api/users/me/purchase/:book_id  (Authorize)
    */
-  purchaseBook: async (userId: string, bookId: string): Promise<void> => {
-    await axiosClient.post(ENDPOINTS.USERS.PURCHASE(userId, bookId));
+  purchaseBook: async (bookId: string): Promise<void> => {
+    await axiosClient.post(ENDPOINTS.USERS.PURCHASE(bookId));
   },
 
   /**

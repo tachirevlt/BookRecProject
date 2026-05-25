@@ -31,7 +31,7 @@ export interface BookEntity {
   price: number;                        // decimal (đổi từ cost → price)
   // Các trường mới có sẵn từ Backend — ánh xạ trực tiếp, không cần sinh giả
   mood?: string;                        // "adventurous,curious" (comma-separated)
-  badge?: string;                       // "Bestseller" | "New" | ...
+  badges?: string[];                    // ĐÃ SỬA: Đổi thành mảng string[] cho khớp API
   description?: string;
   longDescription?: string;
   pages: number;
@@ -69,6 +69,7 @@ export interface BookFilterParams {
   Title?: string;
   Author?: string;
   Genre?: string;
+  Badges?: string; // Đổi từ Badge → Badges để khớp API mới (phân cách bởi dấu phẩy)
   SortBy?: string;
   SortOrder?: string;
   MinRating?: number;
@@ -93,15 +94,43 @@ const hashStr = (str: string): number => {
 };
 
 // Fallback constants dùng khi Backend chưa có dữ liệu
-const FALLBACK_GENRES = ['fantasy', 'sci-fi', 'romance', 'classics', 'mystery', 'biography', 'philosophy', 'historical', 'adventure', 'tech'];
+const FALLBACK_GENRES = ['fantasy', 'science-fiction', 'romance', 'classics', 'mystery', 'biography', 'philosophy', 'historical', 'adventure', 'tech'];
 const FALLBACK_MOODS = ['adventurous', 'curious', 'romantic', 'focused', 'relaxed'];
-const FALLBACK_BADGES = ['Bestseller', 'New', "Editor's Choice", 'Hot', 'Trending'] as const;
+const FALLBACK_BADGES = ['Best Seller', 'New', "Editor's Choice", 'Hot', 'Trending'];
 const FALLBACK_COLORS = ['#4F46E5', '#0EA5E9', '#EC4899', '#10B981', '#8B5CF6', '#D97706', '#059669', '#6366F1', '#CA8A04', '#DB2777'];
 
 /**
  * Chuyển đổi BookEntity (JSON từ API) → Book (kiểu UI).
  * Ưu tiên dùng dữ liệu thực từ Backend, chỉ fallback khi trường là null/empty.
  */
+// Từ điển ánh xạ mã ngôn ngữ sang tên hiển thị
+const LANGUAGE_MAP: Record<string, string> = {
+  'vie': 'Tiếng Việt',
+  'eng': 'English',
+  'en-US': 'English (US)',
+  'en-CA': 'English (Canada)',
+  'en-GB': 'English (UK)',
+  'en': 'English',
+  'spa': 'Tiếng Tây Ban Nha',
+  'fre': 'Tiếng Pháp',
+  'nl': 'Tiếng Hà Lan',
+  'ara': 'Tiếng Ả Rập',
+  'por': 'Tiếng Bồ Đào Nha',
+  'ger': 'Tiếng Đức',
+  'nor': 'Tiếng Na Uy',
+  'jpn': 'Tiếng Nhật',
+  'ind': 'Tiếng Indonesia',
+  'pol': 'Tiếng Ba Lan',
+  'tur': 'Tiếng Thổ Nhĩ Kỳ',
+  'dan': 'Tiếng Đan Mạch',
+  'fil': 'Tiếng Philippines',
+  'ita': 'Tiếng Ý',
+  'per': 'Tiếng Ba Tư',
+  'swe': 'Tiếng Thụy Điển',
+  'rum': 'Tiếng Romania',
+  'mul': 'Đa ngôn ngữ',
+  'rus': 'Tiếng Nga'
+};
 export const mapToBook = (entity: BookEntity): Book => {
   // Tính rating trung bình có trọng số từ ratings_1..5
   const totalRatings = entity.ratings_1 + entity.ratings_2 + entity.ratings_3 + entity.ratings_4 + entity.ratings_5;
@@ -123,14 +152,12 @@ export const mapToBook = (entity: BookEntity): Book => {
     mood = [FALLBACK_MOODS[h % FALLBACK_MOODS.length], FALLBACK_MOODS[(h + 1) % FALLBACK_MOODS.length]];
   }
 
-  // ── Badge: ép kiểu về union type của UI
-  type BadgeType = 'Bestseller' | 'New' | "Editor's Choice" | 'Hot' | 'Trending';
-  const validBadges: BadgeType[] = ['Bestseller', 'New', "Editor's Choice", 'Hot', 'Trending'];
-  let badge: BadgeType | undefined;
-  if (entity.badge && validBadges.includes(entity.badge as BadgeType)) {
-    badge = entity.badge as BadgeType;
-  } else if (!entity.badge && h % 3 === 0) {
-    badge = FALLBACK_BADGES[h % FALLBACK_BADGES.length];
+  // ── Badges: ĐÃ SỬA: Lấy mảng từ Backend, fallback mảng chứa 1 nhãn nếu cần
+  let badges: string[] = [];
+  if (entity.badges && Array.isArray(entity.badges) && entity.badges.length > 0) {
+    badges = entity.badges;
+  } else if (h % 3 === 0) {
+    badges = [FALLBACK_BADGES[h % FALLBACK_BADGES.length]];
   }
 
   // ── readTime: Backend lưu số nguyên (phút) → format thành "X tiếng"
@@ -159,9 +186,8 @@ export const mapToBook = (entity: BookEntity): Book => {
       5: entity.ratings_5 || 0,
     },
     genres,
-    badge,
+    badges,
     cover: entity.image_url,
-    // Dùng dữ liệu thực nếu có, fallback mới sinh
     description: entity.description
       || `Tác phẩm nổi bật của ${entity.authors || 'tác giả'} trong thể loại ${genres[0] || 'này'}.`,
     longDescription: entity.longDescription
@@ -172,9 +198,9 @@ export const mapToBook = (entity: BookEntity): Book => {
     mood,
     popularity,
     accentColor: entity.accentColor || FALLBACK_COLORS[h % FALLBACK_COLORS.length],
-    language: entity.language_code === 'vie' ? 'Tiếng Việt'
-      : entity.language_code === 'eng' ? 'English'
-      : entity.language_code || 'English',
+    language: entity.language_code 
+      ? (LANGUAGE_MAP[entity.language_code] || entity.language_code) 
+      : 'Đang cập nhật',
     status: (entity.status === 'complete' || entity.status === 'ongoing')
       ? entity.status
       : (h % 5 === 0 ? 'ongoing' : 'complete'),
@@ -219,12 +245,22 @@ export const bookService = {
   },
 
   /**
-   * Lấy danh sách sách gợi ý dựa trên AI/Recommendation Engine.
-   * Tương ứng: GET /api/books/{book_id}/recommendations
+   * Lấy danh sách sách gợi ý được lọc từ DB thông qua các feature
    */
-  getRecommendations: async (bookId: string): Promise<Book[]> => {
+  getRecommendations: async (count: number = 8): Promise<Book[]> => {
     const response = await axiosClient.get<BookEntity[]>(
-      ENDPOINTS.BOOKS.GET_RECOMMENDATIONS(bookId)
+      ENDPOINTS.BOOKS.GET_RECOMMENDATIONS,
+      { params: { count } }
+    );
+    return response.data.map(mapToBook);
+  },
+  /**
+   * Lấy danh sách sách gợi ý được đề xuất bằng ML qua BookID
+   */
+  getRecommendationsByBookId: async (bookId: string, count: number = 8): Promise<Book[]> => {
+    const response = await axiosClient.get<BookEntity[]>(
+      ENDPOINTS.BOOKS.GET_RECOMMENDATIONS_BY_BOOKID(bookId), 
+      { params: { count } }
     );
     return response.data.map(mapToBook);
   },

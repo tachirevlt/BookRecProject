@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Star, BookOpen, ShoppingCart, Play } from 'lucide-react';
 import { badgeColors, genreColors } from '../data/books';
+import type { Book } from '../data/books';
 import { useBookCollections } from '../hooks/useBooks';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface HeroCarouselProps {
-  onOpenBook: (id: string | number) => void;
+  onOpenBook: (book: Book) => void;
 }
 
 export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
@@ -33,23 +34,19 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
 
   const book = heroBooks[current];
 
+  if (!book) return null;
+
   const variants = {
-    enter: (dir: 'next' | 'prev') => ({
-      x: dir === 'next' ? 60 : -60,
-      opacity: 0,
-    }),
+    enter: (dir: 'next' | 'prev') => ({ x: dir === 'next' ? 60 : -60, opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit: (dir: 'next' | 'prev') => ({
-      x: dir === 'next' ? -60 : 60,
-      opacity: 0,
-    }),
+    exit: (dir: 'next' | 'prev') => ({ x: dir === 'next' ? -60 : 60, opacity: 0 }),
   };
 
   const formatPrice = (p: number) => p.toLocaleString('vi-VN') + '₫';
 
   return (
     <section className="relative min-h-[88vh] flex items-center overflow-hidden bg-[#F8F7F4] dark:bg-[#0D0C14]">
-      {/* Ambient background */}
+
       <AnimatePresence mode="wait">
         <motion.div
           key={book.id + '-bg'}
@@ -61,13 +58,12 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
         >
           <div
             className="absolute inset-0 opacity-20 dark:opacity-30"
-            style={{ background: `radial-gradient(ellipse 70% 60% at 65% 50%, ${book.accentColor}40, transparent)` }}
+            style={{ background: `radial-gradient(ellipse 70% 60% at 65% 50%, ${book.accentColor || '#4F46E5'}40, transparent)` }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#F8F7F4] via-[#F8F7F4]/80 to-transparent dark:from-[#0D0C14] dark:via-[#0D0C14]/70 dark:to-transparent" />
         </motion.div>
       </AnimatePresence>
 
-      {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {[...Array(8)].map((_, i) => (
           <motion.div
@@ -78,7 +74,7 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
               height: Math.random() * 120 + 40,
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              background: book.accentColor,
+              background: book.accentColor || '#4F46E5',
               filter: 'blur(40px)',
             }}
             animate={{ y: [0, -30, 0], opacity: [0.1, 0.25, 0.1] }}
@@ -90,7 +86,6 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
       <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20 pb-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
 
-          {/* Left: Text content */}
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={book.id}
@@ -102,33 +97,36 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
               transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               className="space-y-6"
             >
-              {/* Labels */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex gap-2">
+                {/* <div className="flex gap-2">
                   {book.genres?.slice(0, 3).map((g, idx) => (
                     <span key={idx} className={`px-3 py-1 rounded-full text-xs font-semibold ${genreColors[g.toLowerCase()] || 'bg-gray-100 text-gray-700'}`}>
                       {g}
                     </span>
                   ))}
-                </div>
-                {book.badge && (
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${badgeColors[book.badge]}`}>
-                    {book.badge}
-                  </span>
+                </div> */}
+                {book.badges && book.badges.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {book.badges.map((badgeName, index) => (
+                      <span 
+                        key={index} 
+                        className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                          badgeColors[badgeName] || 'bg-gray-200 text-gray-800' // Fallback nếu màu chưa có
+                        }`}
+                      >
+                        {badgeName}
+                      </span>
+                    ))}
+                  </div>
                 )}
                 <span className="text-sm text-gray-500 dark:text-gray-400">{book.releaseYear}</span>
               </div>
 
-              {/* Title */}
               <div>
                 <h1
-                  className="text-gray-900 dark:text-white mb-3 leading-tight"
-                  style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontSize: 'clamp(2rem, 4vw, 3.5rem)',
-                    fontWeight: 700,
-                    lineHeight: 1.15
-                  }}
+                  className="text-gray-900 dark:text-white mb-3 leading-tight cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenBook(book); }}
+                  style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 700, lineHeight: 1.15 }}
                 >
                   {book.title}
                 </h1>
@@ -138,12 +136,10 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
                 </p>
               </div>
 
-              {/* Description */}
               <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed max-w-lg">
                 {book.longDescription}
               </p>
 
-              {/* Rating */}
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -154,7 +150,6 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
                 <span className="text-gray-400 text-sm">({book.ratingCount.toLocaleString()} đánh giá)</span>
               </div>
 
-              {/* Price + CTA */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-bold text-gray-900 dark:text-white">{formatPrice(book.price)}</span>
@@ -167,7 +162,7 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => onOpenBook(book.id)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenBook(book); }}
                     className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-200 dark:shadow-indigo-900/40 transition-all"
                   >
                     <ShoppingCart className="w-4 h-4" />
@@ -176,7 +171,7 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => onOpenBook(book.id)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenBook(book); }}
                     className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-white/10 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-white/15 rounded-2xl font-semibold hover:bg-gray-50 dark:hover:bg-white/15 transition-all"
                   >
                     <Play className="w-4 h-4 fill-current" />
@@ -187,7 +182,6 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
             </motion.div>
           </AnimatePresence>
 
-          {/* Right: Book cover */}
           <div className="relative flex justify-center items-center">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
@@ -197,35 +191,30 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
                 animate={{ opacity: 1, x: 0, rotateY: 0 }}
                 exit={{ opacity: 0, x: -80, rotateY: -25 }}
                 transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
-                className="relative"
+                className="relative cursor-pointer"
                 style={{ perspective: '1200px' }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOpenBook(book); }}
               >
-                {/* Glow */}
                 <div
-                  className="absolute inset-0 rounded-3xl opacity-50 blur-2xl scale-90 translate-y-4"
+                  className="absolute inset-0 rounded-3xl opacity-50 blur-2xl scale-90 translate-y-4 pointer-events-none"
                   style={{ background: book.accentColor }}
                 />
-                {/* Cover */}
+
                 <motion.div
                   whileHover={{ rotateY: -5, rotateX: 3, scale: 1.02 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   className="relative w-56 sm:w-72 rounded-3xl overflow-hidden shadow-2xl"
                   style={{ aspectRatio: '2/3' }}
                 >
-                  <ImageWithFallback
-                    src={book.cover}
-                    alt={book.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  <ImageWithFallback src={book.cover} alt={book.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                 </motion.div>
 
-                {/* Floating stats card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="absolute -bottom-4 -left-8 bg-white dark:bg-[#1A1A2E] rounded-2xl p-3 shadow-xl border border-gray-100 dark:border-white/8 flex items-center gap-3"
+                  className="absolute -bottom-4 -left-8 bg-white dark:bg-[#1A1A2E] rounded-2xl p-3 shadow-xl border border-gray-100 dark:border-white/8 flex items-center gap-3 pointer-events-none"
                 >
                   <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
                     <BookOpen className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
@@ -240,7 +229,6 @@ export function HeroCarousel({ onOpenBook }: HeroCarouselProps) {
           </div>
         </div>
 
-        {/* Carousel Controls */}
         <div className="flex items-center justify-between mt-12">
           <div className="flex items-center gap-3">
             {heroBooks.map((_, i) => (

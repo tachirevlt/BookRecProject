@@ -42,9 +42,9 @@ export function TrendingSection({ onOpenBook }: TrendingSectionProps) {
               className="text-gray-900 dark:text-white"
               style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 700 }}
             >
-              Xu hướng tuần này
+              Hot nhất mọi thời đại
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Được đọc nhiều nhất trong 7 ngày qua</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Được nhiều lượt tương tác nhất</p>
           </div>
         </div>
         <NavLink to="/trending" className="flex items-center gap-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors">
@@ -88,10 +88,19 @@ export function TrendingSection({ onOpenBook }: TrendingSectionProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      {book.badge && (
-                        <span className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold mb-1 ${badgeColors[book.badge]}`}>
-                          {book.badge}
-                        </span>
+                      {book.badges && book.badges.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-1">
+                          {book.badges.map((badgeName, index) => (
+                            <span 
+                              key={index} 
+                              className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                                badgeColors[badgeName] || 'bg-gray-200 text-gray-800' // Fallback nếu màu chưa có
+                              }`}
+                            >
+                              {badgeName}
+                            </span>
+                          ))}
+                        </div>
                       )}
                       <h3 className="text-gray-900 dark:text-white font-bold text-sm leading-tight line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" style={{ fontFamily: 'var(--font-serif)' }}>
                         {book.title}

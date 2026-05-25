@@ -8,7 +8,7 @@ import {
 import {
   BookOpen, Flame, Star, ArrowRight, ChevronRight, Trophy,
   Heart, ShoppingBag, Settings, Bookmark, Target, TrendingUp,
-  Calendar, Play, Edit3, Share2, Home as HomeIcon, BarChart2
+  Calendar, Play, Home as HomeIcon, BarChart2
 } from 'lucide-react';
 import { useBooks } from '../hooks/useBooks';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -56,7 +56,8 @@ const defaultUserProfile: UserProfileType = {
   memberType: 'Premium',
 };
 
-type LibraryStatus = 'reading' | 'completed' | 'owned';
+// Đã bỏ 'owned' ra khỏi LibraryStatus
+type LibraryStatus = 'reading' | 'completed';
 type LibTab = 'all' | LibraryStatus;
 
 const currentlyReadingData = [
@@ -64,12 +65,11 @@ const currentlyReadingData = [
   { bookId: 13, progress: 32, currentChapter: 'Chương 7: Hành lang vô tận', lastRead: 'Hôm qua', estimatedLeft: '3g 45m còn lại' },
 ];
 
-const libraryBookIds = [1, 2, 3, 4, 5, 7, 8, 12, 13];
+const libraryBookIds = [1, 3, 4, 8, 12, 13];
 
 const libraryStatuses: Record<number, LibraryStatus> = {
   1: 'reading', 13: 'reading',
   4: 'completed', 8: 'completed', 12: 'completed', 3: 'completed',
-  2: 'owned', 5: 'owned', 7: 'owned',
 };
 
 const userRatings: Record<number, number> = { 4: 5, 8: 5, 12: 5, 3: 4, 2: 4 };
@@ -120,18 +120,18 @@ const moodData = [
 
 const recommendedBookIds = [14, 6, 11, 9];
 
+// Đã cập nhật lại Menu chuyển "Lịch sử mua" xuống dưới "Thống kê"
 const navItems = [
   { id: 'overview', label: 'Tổng quan', icon: HomeIcon },
   { id: 'reading', label: 'Đang đọc', icon: Play },
   { id: 'library', label: 'Thư viện', icon: BookOpen },
   { id: 'achievements', label: 'Thành tựu', icon: Trophy },
-  { id: 'wishlist', label: 'Wishlist', icon: Heart, badge: 8 },
-  { id: 'purchases', label: 'Lịch sử mua', icon: ShoppingBag },
+  { id: 'wishlist', label: 'Sách yêu thích', icon: Heart, badge: 0 },
   { id: 'stats', label: 'Thống kê', icon: BarChart2 },
+  { id: 'purchases', label: 'Lịch sử mua', icon: ShoppingBag },
   { id: 'settings', label: 'Cài đặt', icon: Settings },
 ];
 
-// Generate reading heatmap data (once at module level)
 function generateHeatmap(): number[][] {
   const rng = (seed: number) => {
     let s = seed;
@@ -286,9 +286,9 @@ function ProfileSidebar({ active, onNavigate, user }: { active: string; onNaviga
                 <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
                 <span className="font-medium">{item.label}</span>
               </div>
-              {'badge' in item && item.badge && (
+              {item.id === 'wishlist' && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-white/25 text-white' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400'}`}>
-                  {item.id === 'wishlist' ? (mockUser.favoriteBooks?.length || 0) : item.badge}
+                  {mockUser.favoriteBooks?.length || 0}
                 </span>
               )}
             </button>
@@ -377,15 +377,7 @@ function ProfileHero({ onOpenBook, user }: { onOpenBook: (b: Book) => void; user
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-row sm:flex-col gap-2">
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-medium hover:bg-gray-50 dark:hover:bg-white/15 transition-colors border border-gray-200/80 dark:border-white/12 shadow-sm">
-            <Edit3 className="w-3.5 h-3.5" /> Chỉnh sửa
-          </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-medium hover:bg-gray-50 dark:hover:bg-white/15 transition-colors border border-gray-200/80 dark:border-white/12 shadow-sm">
-            <Share2 className="w-3.5 h-3.5" /> Chia sẻ
-          </button>
-        </div>
+        {/* Đã gỡ bỏ div chứa 2 nút Chỉnh sửa và Chia sẻ theo yêu cầu */}
       </div>
     </motion.div>
   );
@@ -465,26 +457,30 @@ function ContinueReadingSection({ onOpenBook }: { onOpenBook: (b: Book) => void 
 // ─────────────────────────────────────────────────────────────
 function LibrarySection({ onOpenBook, user }: { onOpenBook: (b: Book) => void; user: UserProfileType }) {
   const mockUser = user;
-  const { books } = useBooks();
   const [tab, setTab] = useState<LibTab>('all');
 
+  // Ưu tiên dữ liệu thật trả về từ API (user.purchasedBooks)
+  const purchasedBooks = mockUser.purchasedBooks || []; 
+  const purchasedIds = purchasedBooks.map(b => b.id);
+
   const tabs: { id: LibTab; label: string; count: number }[] = [
-    { id: 'all', label: 'Tất cả', count: libraryBookIds.length },
+    { id: 'all', label: 'Tất cả', count: purchasedIds.length },
     { id: 'reading', label: 'Đang đọc', count: 2 },
     { id: 'completed', label: 'Đã xong', count: 4 },
-    { id: 'owned', label: 'Sở hữu', count: 3 },
+    // Đã xóa nút Sở hữu
   ];
 
-  const purchasedIds = mockUser.purchasedBooks ? mockUser.purchasedBooks.map(b => b.id) : libraryBookIds;
-  const displayBooks = books.filter(b => {
-    if (!purchasedIds.includes(b.id)) return false;
-    return tab === 'all' ? true : libraryStatuses[b.id] === tab;
+  // Lọc list sách dựa trên API
+  const displayBooks = purchasedBooks.filter(b => {
+    // Ép kiểu Number để trị lỗi TS indexing
+    const bookIdNum = Number(b.id);
+    return tab === 'all' ? true : libraryStatuses[bookIdNum] === tab;
   });
 
   const statusDot: Record<LibraryStatus, string> = {
     reading: 'bg-indigo-500',
     completed: 'bg-emerald-500',
-    owned: 'bg-amber-500',
+    // Đã xóa 'owned'
   };
 
   return (
@@ -511,8 +507,10 @@ function LibrarySection({ onOpenBook, user }: { onOpenBook: (b: Book) => void; u
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <AnimatePresence mode="wait">
           {displayBooks.map((book, i) => {
-            const status = libraryStatuses[book.id];
-            const rating = userRatings[book.id];
+            // Sửa lỗi index implicitly has 'any' type bằng cách ép kiểu Book ID sang number
+            const status = libraryStatuses[Number(book.id)] as LibraryStatus | undefined;
+            const rating = userRatings[Number(book.id)];
+
             return (
               <motion.div key={`${tab}-${book.id}`}
                 initial={{ opacity: 0, scale: 0.88 }}
@@ -582,7 +580,7 @@ function WishlistSection({ onOpenBook, user }: { onOpenBook: (b: Book) => void; 
 
   return (
     <motion.div {...fadeIn(0.13)} id="wishlist">
-      <SectionHeader title="Wishlist" emoji="❤️" subtitle={`${favoriteBooks.length} cuốn đang mong chờ`} action="Xem tất cả" />
+      <SectionHeader title="Sách yêu thích" emoji="❤️" subtitle={`${favoriteBooks.length} cuốn đang mong chờ`} action="Xem tất cả" />
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <AnimatePresence mode="wait">
@@ -1019,47 +1017,73 @@ export function Profile() {
   const [userProfile, setUserProfile] = useState<UserProfileType>(defaultUserProfile);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserData = async () => {
       try {
         const userId = userService.getCurrentUserId();
         if (!userId) {
           navigate('/login');
           return;
         }
-        const apiUser = await userService.getUserById(userId);
+
+        // Gọi đồng thời 3 API cùng lúc bằng Promise.all để tối ưu tốc độ tải trang
+        // Dùng .catch() cho từng Promise để nếu 1 API lỗi (VD: wishlist trống) thì web không bị sập
+        const [apiUser, purchasedEntities, wishlistEntities] = await Promise.all([
+          userService.getUserById(userId).catch(e => { console.error('Lỗi lấy User:', e); return null; }),
+          userService.getPurchasedBooks(userId).catch(e => { console.error('Lỗi lấy Purchased Books:', e); return null; }),
+          userService.getWishlist().catch(e => { console.error('Lỗi lấy Wishlist:', e); return null; })
+        ]);
+
         setUserProfile(prev => {
           let updated = { ...prev };
-          if (apiUser.full_name) {
-            updated.name = apiUser.full_name;
-            const names = apiUser.full_name.trim().split(' ');
-            if (names.length >= 2) {
-              updated.initials = (names[0][0] + names[names.length - 1][0]).toUpperCase();
-            } else if (names.length === 1 && names[0].length >= 2) {
-              updated.initials = names[0].substring(0, 2).toUpperCase();
-            } else if (names.length === 1 && names[0].length === 1) {
-              updated.initials = names[0].toUpperCase();
+
+          // 1. Cập nhật thông tin cơ bản của User
+          if (apiUser) {
+            if (apiUser.full_name) {
+              updated.name = apiUser.full_name;
+              const names = apiUser.full_name.trim().split(' ');
+              if (names.length >= 2) {
+                updated.initials = (names[0][0] + names[names.length - 1][0]).toUpperCase();
+              } else if (names.length === 1 && names[0].length >= 2) {
+                updated.initials = names[0].substring(0, 2).toUpperCase();
+              } else if (names.length === 1 && names[0].length === 1) {
+                updated.initials = names[0].toUpperCase();
+              }
+            }
+            if (apiUser.user_name) {
+              updated.username = '@' + apiUser.user_name;
+            }
+            if (apiUser.current_balance !== undefined) {
+              updated.current_balance = apiUser.current_balance;
             }
           }
-          if (apiUser.user_name) {
-            updated.username = '@' + apiUser.user_name;
+
+          // 2. Cập nhật Thư viện (Sách đã mua)
+          if (purchasedEntities && Array.isArray(purchasedEntities)) {
+            updated.purchasedBooks = purchasedEntities.map((item: any) => {
+              // Trích xuất lõi book và dùng hàm mapToBook bạn đã viết sẵn
+              const b = item.book ? item.book : item;
+              return mapToBook(b); 
+            });
+            updated.booksRead = purchasedEntities.length;
           }
-          if (apiUser.current_balance !== undefined) {
-            updated.current_balance = apiUser.current_balance;
+
+          // 3. Cập nhật Sách yêu thích (Wishlist)
+          if (wishlistEntities && Array.isArray(wishlistEntities)) {
+            updated.favoriteBooks = wishlistEntities.map((item: any) => {
+              const b = item.book ? item.book : item;
+              return mapToBook(b);
+            });
           }
-          if (apiUser.favoriteBooks) {
-            updated.favoriteBooks = apiUser.favoriteBooks.map(mapToBook);
-          }
-          if (apiUser.purchasedBooks) {
-            updated.purchasedBooks = apiUser.purchasedBooks.map(mapToBook);
-          }
+
           return updated;
         });
       } catch (error) {
-        console.error('Failed to fetch user:', error);
+        console.error('Failed to fetch user data:', error);
       }
     };
-    fetchUser();
-  }, []);
+
+    fetchUserData();
+  }, [navigate]);
 
   const scrollToSection = (id: string) => {
     setActiveNav(id);
@@ -1070,8 +1094,17 @@ export function Profile() {
     }
   };
 
-  // Track active section on scroll
-  const sectionsRef = useRef<string[]>(['overview', 'reading', 'library', 'stats', 'achievements']);
+  const handleNavigate = (id: string) => {
+    if (id === 'purchases') {
+      navigate('/purchases');
+    } else if (id === 'settings') {
+      navigate('/settings'); 
+    } else {
+      scrollToSection(id);
+    }
+  };
+
+  const sectionsRef = useRef<string[]>(['overview', 'reading', 'library', 'achievements', 'wishlist', 'stats']);
   useEffect(() => {
     const handler = () => {
       for (const id of sectionsRef.current) {
@@ -1093,23 +1126,20 @@ export function Profile() {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-6 items-start">
 
-          {/* ── Sidebar ── */}
           <aside className="hidden lg:block w-60 xl:w-64 shrink-0 sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-none">
-            <ProfileSidebar active={activeNav} onNavigate={scrollToSection} user={userProfile} />
+            <ProfileSidebar active={activeNav} onNavigate={handleNavigate} user={userProfile} />
           </aside>
 
-          {/* ── Main Content ── */}
           <main className="flex-1 min-w-0 space-y-8 pb-16">
             <ProfileHero onOpenBook={onOpenBook} user={userProfile} />
             <ContinueReadingSection onOpenBook={onOpenBook} />
-            <WishlistSection onOpenBook={onOpenBook} user={userProfile} />
             <LibrarySection onOpenBook={onOpenBook} user={userProfile} />
-            <StatsSection user={userProfile} />
             <AchievementsSection />
+            <WishlistSection onOpenBook={onOpenBook} user={userProfile} />
+            <StatsSection user={userProfile} />
             <QuotesSection onOpenBook={onOpenBook} />
           </main>
 
-          {/* ── Right Panel ── */}
           <aside className="hidden xl:block w-68 shrink-0 sticky top-24 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-none" style={{ width: '272px' }}>
             <RightPanel onOpenBook={onOpenBook} user={userProfile} />
           </aside>

@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useParams, useNavigate, useOutletContext } from 'react-router';
 import {
   Star, ShoppingCart, ChevronRight, TrendingUp, Sparkles, BookOpen,
-  Eye, ArrowLeft, Award, Clock, Zap, Filter
+  Filter, ChevronLeft, Loader2
 } from 'lucide-react';
-import { genreInfo, genreColors, badgeColors, GENRES } from '../data/books';
-import { useBooks } from '../hooks/useBooks';
+import { genreInfo, badgeColors, GENRES } from '../data/books';
+import { bookService } from '../../services/bookService';
 import type { Book } from '../data/books';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { BookCard } from '../components/BookCard';
@@ -17,204 +17,290 @@ export function Genre() {
   const { genre } = useParams<{ genre: string }>();
   const navigate = useNavigate();
   const { onOpenBook } = useOutletContext<OutletContextType>();
-  const { books } = useBooks();
+  
+  const [results, setResults] = useState<Book[]>([]);
+  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
+  const [trendingInGenre, setTrendingInGenre] = useState<Book[]>([]);
+  // THÊM STATE RIÊNG CHO EDITOR'S CHOICE
+  const [editorChoice, setEditorChoice] = useState<Book[]>([]);
+
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [selectedSubgenre, setSelectedSubgenre] = useState<string | null>(null);
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    const handler = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, [genre]);
+    setPage(1);
+  }, [genre, selectedSubgenre]);
 
-  if (!genre) {
-    return <NotFound navigate={navigate} />;
-  }
+  useEffect(() => {
+    const fetchGenreBooks = async () => {
+      if (!genre) return;
+      setLoading(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      try {
+        const targetGenre = selectedSubgenre || genre;
+        const isFirstPage = page === 1;
+
+        if (isFirstPage) {
+          // GỌI ĐỒNG THỜI 4 API RIÊNG BIỆT (Thêm API lấy sách Editor's Choice/Original)
+          const [generalRes, popularRes, trendingRes, editorRes] = await Promise.all([
+            bookService.getBooks({ PageNumber: page, PageSize: 60, Genre: targetGenre }),
+            bookService.getBooks({ PageNumber: 1, PageSize: 3, Genre: targetGenre, SortBy: 'popularity', SortOrder: 'desc' }),
+            bookService.getBooks({ PageNumber: 1, PageSize: 10, Genre: targetGenre, SortBy: 'trending_7d', SortOrder: 'desc' }),
+            // Gọi API dùng filter Badge mới cập nhật ở Backend (Phân cách bởi dấu phẩy)
+            bookService.getBooks({ PageNumber: 1, PageSize: 10, Genre: targetGenre, Badges: "Editor's Choice,Original" })
+          ]);
+
+          // Xử lý Lưới Thư viện chung
+          if (generalRes && generalRes.items) {
+            const normalized = generalRes.items.map((b: any) => ({ ...b, id: b.book_id || b.id }));
+            setResults(normalized);
+            
+            const apiTotalPages = (generalRes as any).totalPages || (generalRes as any).TotalPages;
+            const apiTotalCount = (generalRes as any).totalCount || (generalRes as any).TotalCount || normalized.length;
+            
+            if (apiTotalPages) {
+               setTotalPages(apiTotalPages);
+            } else if (apiTotalCount) {
+               setTotalPages(Math.max(1, Math.ceil(apiTotalCount / 60)));
+            } else {
+               setTotalPages(normalized.length === 60 ? page + 1 : page);
+            }
+            setTotalCount(apiTotalCount);
+          } else {
+            setResults([]);
+            setTotalPages(1);
+            setTotalCount(0);
+          }
+
+          // Xử lý 3 thẻ Hero Banner
+          if (popularRes && popularRes.items) {
+            setFeaturedBooks(popularRes.items.map((b: any) => ({ ...b, id: b.book_id || b.id })));
+          } else {
+            setFeaturedBooks([]);
+          }
+
+          // Xử lý Kệ sách Trending
+          if (trendingRes && trendingRes.items) {
+            setTrendingInGenre(trendingRes.items.map((b: any) => ({ ...b, id: b.book_id || b.id })));
+          } else {
+            setTrendingInGenre([]);
+          }
+
+          // Xử lý Kệ sách Editor's Choice
+          if (editorRes && editorRes.items) {
+            setEditorChoice(editorRes.items.map((b: any) => ({ ...b, id: b.book_id || b.id })));
+          } else {
+            setEditorChoice([]);
+          }
+
+        } else {
+          // TỪ TRANG 2 TRỞ ĐI: CHỈ CẦN GỌI ĐÚNG 1 API LƯỚI CHUNG CHO NHẸ SERVER
+          const response = await bookService.getBooks({
+            PageNumber: page,
+            PageSize: 60,
+            Genre: targetGenre 
+          });
+
+          if (response && response.items) {
+            const normalized = response.items.map((b: any) => ({ ...b, id: b.book_id || b.id }));
+            setResults(normalized);
+            
+            const apiTotalPages = (response as any).totalPages || (response as any).TotalPages;
+            const apiTotalCount = (response as any).totalCount || (response as any).TotalCount || normalized.length;
+            
+            if (apiTotalPages) {
+               setTotalPages(apiTotalPages);
+            } else if (apiTotalCount) {
+               setTotalPages(Math.max(1, Math.ceil(apiTotalCount / 60)));
+            } else {
+               setTotalPages(normalized.length === 60 ? page + 1 : page);
+            }
+            setTotalCount(apiTotalCount);
+          } else {
+            setResults([]);
+            setTotalPages(1);
+            setTotalCount(0);
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải sách thể loại:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGenreBooks();
+  }, [genre, selectedSubgenre, page]);
+
+  if (!genre) return <NotFound navigate={navigate} />;
 
   const info = genreInfo[genre];
-  const genreBooks = books.filter(b => b.genres.map(g => g.toLowerCase()).includes(genre.toLowerCase()));
-
-  if (genreBooks.length === 0) {
-    return <NotFound navigate={navigate} message={`Chưa có sách trong thể loại "${genre}"`} />;
-  }
-
-  const sortedGenreBooks = [...genreBooks].sort((a, b) => b.popularity - a.popularity);
-  const featuredBooks = sortedGenreBooks.slice(0, 3);
-  const editorChoice = genreBooks.filter(b => b.badge === "Editor's Choice" || b.badge === 'Bestseller');
-  const newArrivals = genreBooks.filter(b => b.badge === 'New' || b.releaseYear === 2024);
-  const trendingInGenre = genreBooks.filter(b => b.badge === 'Trending' || b.popularity >= 85);
-  const hiddenGems = genreBooks.filter(b => b.rating >= 4.3 && !b.badge).slice(0, 6);
-  const allBooks = sortedGenreBooks;
-
   const accentColor = info?.accentColor ?? '#4F46E5';
-  const emoji = info?.emoji ?? '📚';
+
+  const isFirstPage = page === 1;
+  const libraryBooks = results;
+
+  // ĐÃ XÓA HOÀN TOÀN CÁC PHẦN BÓC TÁCH THỦ CÔNG (Bao gồm cả sách Mới)
+  
+  // ─── TỪ ĐIỂN TỔNG HỢP: ICON & MÔ TẢ THEO VIBE ──────────────────────────────
+  const customGenreData: Record<string, { icon: string, desc: string }> = {
+    'fantasy': { icon: '🐉', desc: 'Bước vào những thế giới phép thuật huyền bí, nơi ranh giới của thực tại bị xóa nhòa bởi những truyền thuyết cổ xưa và các sinh vật thần thoại.' },
+    'magic': { icon: '✨', desc: 'Khám phá sức mạnh của những câu thần chú và thế giới phép thuật kỳ diệu.' },
+    'science-fiction': { icon: '🚀', desc: 'Khám phá những chân trời công nghệ tương lai, nơi khoa học viễn tưởng dẫn lối nhân loại đến các vì sao và những chiều không gian vô tận.' },
+    'science': { icon: '🔬', desc: 'Mở rộng tri thức với những ý tưởng đột phá và những giới hạn mới của khoa học.' },
+    'romance': { icon: '🌹', desc: 'Lạc vào những câu chuyện tình yêu đầy thăng trầm, nơi trái tim rung động qua từng trang sách và cảm xúc đọng lại mãi mãi.' },
+    'love': { icon: '💌', desc: 'Những cung bậc cảm xúc ngọt ngào và cay đắng của tình yêu đôi lứa.' },
+    'mystery': { icon: '🕵️‍♂️', desc: 'Theo chân những manh mối bí ẩn, giải mã các vụ án hóc búa và đối mặt với những sự thật bị chôn vùi trong bóng tối.' },
+    'thriller': { icon: '🔪', desc: 'Trải nghiệm cảm giác hồi hộp đến nghẹt thở với những âm mưu xảo quyệt và những ngã rẽ không thể lường trước.' },
+    'horror': { icon: '🕸️', desc: 'Đối mặt với những nỗi sợ hãi sâu thẳm nhất và những thế lực đen tối đang rình rập.' },
+    'classics': { icon: '🏛️', desc: 'Thưởng thức những tác phẩm kinh điển vượt thời gian, nền tảng của văn học nhân loại mang theo những giá trị tư tưởng sâu sắc.' },
+    'history': { icon: '📜', desc: 'Quay ngược dòng thời gian, sống lại những thời khắc hào hùng và bi tráng nhất trong lịch sử nhân loại.' },
+    'adventure': { icon: '🗺️', desc: 'Sẵn sàng cho những chuyến phiêu lưu kỳ thú, vượt qua muôn vàn thử thách để tìm kiếm những vùng đất mới.' },
+    'biography': { icon: '🖋️', desc: 'Lắng nghe những cuộc đời phi thường và những câu chuyện truyền cảm hứng từ những nhân vật lịch sử.' }
+  };
+
+  const getCustomData = (g: string) => {
+    const key = Object.keys(customGenreData).find(k => g.toLowerCase().includes(k));
+    return key ? customGenreData[key] : { icon: '📚', desc: info?.description || 'Khám phá bộ sưu tập những tựa sách xuất sắc nhất, được chọn lọc kỹ lưỡng dành riêng cho bạn.' };
+  };
+
+  const currentData = getCustomData(genre);
+  const displayIcon = currentData.icon;
+  const displayDescription = currentData.desc;
+
+  const getGenreVibe = (genreName: string) => {
+    const g = genreName.toLowerCase();
+    const baseSize = 'clamp(2.5rem, 5vw, 4rem)';
+
+    if (g.includes('fantasy') || g.includes('magic')) {
+      return {
+        className: "tracking-wide",
+        style: { fontFamily: '"Georgia", "Times New Roman", serif', fontStyle: 'italic', fontSize: baseSize }
+      };
+    }
+    if (g.includes('science-fiction') || g.includes('science')) {
+      return {
+        className: "tracking-[0.15em] uppercase",
+        style: { fontFamily: '"Courier New", Courier, monospace', fontWeight: 800, fontSize: 'clamp(2rem, 4vw, 3.5rem)' }
+      };
+    }
+    if (g.includes('romance') || g.includes('love')) {
+      return {
+        className: "tracking-normal",
+        style: { fontFamily: '"Playfair Display", "Georgia", serif', fontSize: baseSize }
+      };
+    }
+    if (g.includes('mystery') || g.includes('thriller')) {
+      return {
+        className: "tracking-[0.2em] uppercase",
+        style: { fontFamily: 'Impact, "Arial Black", sans-serif', fontSize: 'clamp(2.5rem, 5vw, 3.8rem)', letterSpacing: '4px' }
+      };
+    }
+    
+    return {
+      className: "tracking-tight",
+      style: { fontFamily: 'var(--font-serif), serif', fontSize: baseSize }
+    };
+  };
+
+  const genreVibe = getGenreVibe(genre);
 
   return (
     <div className="min-h-screen bg-[#F8F7F4] dark:bg-[#0D0C14]">
 
-      {/* ── Genre Hero ── */}
-      <div className="relative min-h-[75vh] flex items-end overflow-hidden">
-
-        {/* Background */}
-        <div className="absolute inset-0" style={{ transform: `translateY(${scrollY * 0.2}px)` }}>
-          {featuredBooks[0] && (
-            <img
-              src={featuredBooks[0].cover}
-              alt=""
-              className="w-full h-full object-cover scale-125"
-              style={{ filter: 'blur(65px)', opacity: 0.55 }}
-            />
-          )}
-        </div>
-
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F8F7F4]/50 dark:from-[#0D0C14]/50 via-[#F8F7F4]/55 dark:via-[#0D0C14]/65 to-[#F8F7F4] dark:to-[#0D0C14]" />
-
-        {/* Genre-specific tinted overlay */}
-        {info && (
-          <div
-            className="absolute inset-0 opacity-15"
-            style={{ background: `radial-gradient(ellipse at 50% 40%, ${info.accentColor}70, transparent 65%)` }}
-          />
-        )}
-
-        {/* Ambient orbs */}
-        <motion.div
-          animate={{ y: [0, -18, 0], opacity: [0.12, 0.22, 0.12] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-24 right-24 w-72 h-72 rounded-full blur-3xl opacity-15 pointer-events-none hidden lg:block"
-          style={{ background: accentColor }}
-        />
-
-        {/* Back button */}
-        <div className="absolute top-20 left-0 right-0 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors group"
+      {/* ── Genre Hero Header ── */}
+      <div className="relative min-h-[35vh] lg:min-h-[45vh] flex items-center overflow-hidden py-12">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-br from-[#F8F7F4] to-gray-50 dark:from-[#0D0C14] dark:to-gray-900/20">
+          <div className="absolute top-0 right-0 w-[50vw] h-[50vw] opacity-20 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3" style={{ background: accentColor }} />
+          <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] opacity-15 blur-[80px] rounded-full -translate-x-1/3 translate-y-1/3" style={{ background: accentColor }} />
+          
+          <div className="absolute top-1/2 left-[70%] -translate-x-1/2 -translate-y-1/2 text-[35vw] opacity-[0.04] dark:opacity-[0.06] blur-[2px] rotate-[-15deg] select-none">
+            {displayIcon}
+          </div>
+          
+          <motion.div 
+            animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }} 
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute top-12 left-[15%] text-5xl opacity-10 blur-[1px] select-none"
           >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span className="text-sm font-medium">Quay lại</span>
-          </motion.button>
+            {displayIcon}
+          </motion.div>
+          <motion.div 
+            animate={{ y: [0, 20, 0], rotate: [0, -10, 0] }} 
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+            className="absolute bottom-20 right-[25%] text-7xl opacity-[0.08] blur-[3px] select-none"
+          >
+            {displayIcon}
+          </motion.div>
         </div>
 
-        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-14 pt-8 w-full">
-          <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-end">
-
-            {/* Left: Genre info */}
-            <div className="flex-1 space-y-5">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex items-center gap-2 w-fit px-4 py-2 rounded-full bg-white/60 dark:bg-white/8 backdrop-blur-sm border border-gray-100/80 dark:border-white/10"
-              >
-                <span className="text-xl">{emoji}</span>
-                <span className="text-gray-600 dark:text-gray-300 font-semibold text-sm">Thể loại</span>
-              </motion.div>
-
+        <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 w-full z-10 pt-10">
+          <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-center lg:items-start text-center lg:text-left">
+            
+            <div className="flex-1 space-y-4 flex flex-col items-center lg:items-start max-w-3xl">
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-gray-900 dark:text-white"
-                style={{
-                  fontFamily: 'var(--font-serif)',
-                  fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-                  fontWeight: 800,
-                  lineHeight: 1.1,
-                }}
+                transition={{ duration: 0.6 }}
+                className={`text-gray-900 dark:text-white drop-shadow-sm ${genreVibe.className}`}
+                style={{ fontWeight: 800, lineHeight: 1.15, ...genreVibe.style }}
               >
-                {genre}
+                {genre} <span className="inline-block text-[0.85em] drop-shadow-md ml-1">{displayIcon}</span>
               </motion.h1>
 
-              {info && (
+              {isFirstPage && (
                 <motion.p
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-gray-600 dark:text-gray-300 max-w-xl"
-                  style={{ fontSize: '1.05rem', lineHeight: 1.7 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
+                  className="text-gray-600 dark:text-gray-300 text-base md:text-lg"
+                  style={{ fontWeight: 400, lineHeight: 1.6, maxWidth: '90%' }}
                 >
-                  {info.description}
+                  {displayDescription}
                 </motion.p>
               )}
-
-              {/* Stats */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.25 }}
-                className="flex flex-wrap gap-3"
-              >
-                {[
-                  { icon: <BookOpen className="w-4 h-4 text-indigo-500" />, value: `${genreBooks.length}`, label: 'sách' },
-                  { icon: <Star className="w-4 h-4 fill-amber-400 text-amber-400" />, value: `${(genreBooks.reduce((s, b) => s + b.rating, 0) / genreBooks.length).toFixed(1)}`, label: 'đánh giá TB' },
-                  { icon: <TrendingUp className="w-4 h-4 text-emerald-500" />, value: `${genreBooks.filter(b => b.badge).length}`, label: 'sách nổi bật' },
-                ].map(s => (
-                  <div key={s.label} className="flex items-center gap-2 px-4 py-2.5 bg-white/60 dark:bg-white/8 backdrop-blur-sm rounded-2xl border border-gray-100/80 dark:border-white/8">
-                    {s.icon}
-                    <span className="text-gray-900 dark:text-white font-bold text-sm">{s.value}</span>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">{s.label}</span>
-                  </div>
-                ))}
-              </motion.div>
             </div>
 
-            {/* Right: Featured books showcase */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-              className="hidden lg:flex items-end gap-4 shrink-0"
-            >
-              {featuredBooks.slice(0, 3).map((book, i) => (
-                <motion.div
-                  key={book.id}
-                  whileHover={{ y: -12 }}
-                  onClick={() => onOpenBook(book)}
-                  className="cursor-pointer group"
-                  style={{
-                    width: i === 1 ? '120px' : '96px',
-                    transform: i === 0 ? 'translateY(16px)' : i === 2 ? 'translateY(24px)' : undefined,
-                  }}
-                >
-                  <div className="relative rounded-2xl overflow-hidden shadow-xl" style={{ aspectRatio: '2/3' }}>
-                    <ImageWithFallback
-                      src={book.cover}
-                      alt={book.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div
-                      className="absolute -inset-2 -z-10 blur-2xl opacity-40 rounded-full"
-                      style={{ background: book.accentColor }}
-                    />
-                    <motion.div
-                      className="absolute inset-0 rounded-2xl pointer-events-none"
-                      whileHover={{ boxShadow: `0 0 24px 4px ${book.accentColor}60` }}
-                    />
-                    {book.badge && (
-                      <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColors[book.badge]}`}>
-                        {book.badge}
-                      </span>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-
+            {isFirstPage && featuredBooks.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="hidden lg:flex items-center gap-4 shrink-0"
+              >
+                {featuredBooks.map((book, i) => (
+                  <motion.div
+                    key={book.id}
+                    whileHover={{ y: -12, scale: 1.02 }}
+                    onClick={() => onOpenBook(book)}
+                    className="cursor-pointer group relative z-20"
+                    style={{
+                      width: i === 1 ? '130px' : '100px',
+                      transform: i === 0 ? 'translateY(16px)' : i === 2 ? 'translateY(-16px)' : undefined,
+                      zIndex: i === 1 ? 30 : 20
+                    }}
+                  >
+                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/40 dark:border-white/10 backdrop-blur-sm" style={{ aspectRatio: '2/3' }}>
+                      <ImageWithFallback src={book.cover} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300" />
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ── Subgenre & Mood Tags ── */}
+      {/* ── Subgenre Tags ── */}
       {info && (
-        <div className="sticky top-16 z-30 bg-[#F8F7F4]/90 dark:bg-[#0D0C14]/90 backdrop-blur-xl border-b border-gray-100/80 dark:border-white/8">
+        <div className="sticky top-20 z-30 bg-[#F8F7F4]/90 dark:bg-[#0D0C14]/90 backdrop-blur-xl border-b border-t border-gray-200/50 dark:border-white/10">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-2">
-            {/* Subgenres */}
             <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               <Filter className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               <span className="text-gray-400 text-xs shrink-0 mr-1">Phụ thể loại:</span>
@@ -225,45 +311,14 @@ export function Genre() {
                 Tất cả
               </button>
               {info.subgenres.map(sg => (
-                <motion.button
+                <button
                   key={sg}
                   onClick={() => setSelectedSubgenre(selectedSubgenre === sg ? null : sg)}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all overflow-hidden"
+                  className={`relative shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all overflow-hidden border ${selectedSubgenre === sg ? 'text-white border-transparent shadow-md' : 'bg-white/70 dark:bg-white/8 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/12'}`}
+                  style={selectedSubgenre === sg ? { background: accentColor } : undefined}
                 >
-                  {selectedSubgenre === sg && (
-                    <motion.div
-                      layoutId={`subgenre-bg-${genre}`}
-                      className="absolute inset-0 rounded-full"
-                      style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)` }}
-                    />
-                  )}
-                  <span className={`relative z-10 ${selectedSubgenre === sg ? 'text-white' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>
-                    {sg}
-                  </span>
-                  {selectedSubgenre !== sg && (
-                    <div className="absolute inset-0 rounded-full bg-white/70 dark:bg-white/8 border border-gray-200 dark:border-white/10 -z-10" />
-                  )}
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Mood tags */}
-            <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              <span className="text-gray-400 text-xs shrink-0 ml-4 mr-1">Tâm trạng:</span>
-              {info.moodTags.map(tag => (
-                <motion.button
-                  key={tag}
-                  onClick={() => setSelectedMood(selectedMood === tag ? null : tag)}
-                  whileTap={{ scale: 0.95 }}
-                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all border ${selectedMood === tag
-                    ? 'text-white border-transparent'
-                    : 'bg-white/60 dark:bg-white/8 text-gray-600 dark:text-gray-400 border-gray-200/60 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/12'
-                  }`}
-                  style={selectedMood === tag ? { background: accentColor, borderColor: accentColor } : undefined}
-                >
-                  {tag}
-                </motion.button>
+                  {sg}
+                </button>
               ))}
             </div>
           </div>
@@ -272,310 +327,136 @@ export function Genre() {
 
       {/* ── Main Content ── */}
       <div className="space-y-14 py-12">
-
-        {/* ── Featured Books (cinematic large cards) ── */}
-        {featuredBooks.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg text-xl"
-                  style={{ background: `linear-gradient(135deg, ${accentColor}30, ${accentColor}15)`, border: `1px solid ${accentColor}30` }}>
-                  {emoji}
-                </div>
-                <div>
-                  <h2 className="text-gray-900 dark:text-white" style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 700 }}>
-                    Nổi bật nhất trong {genre}
-                  </h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Được cộng đồng yêu thích nhất</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {featuredBooks.map((book, i) => (
-                <motion.div
-                  key={book.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  onClick={() => onOpenBook(book)}
-                  className="cursor-pointer group relative bg-white/80 dark:bg-[#16152B]/60 backdrop-blur-sm rounded-3xl overflow-hidden border border-gray-100/80 dark:border-white/8 hover:shadow-2xl transition-all"
-                >
-                  {/* Accent glow behind card */}
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-8 transition-opacity rounded-3xl"
-                    style={{ background: book.accentColor }}
-                  />
-
-                  <div className="flex gap-4 p-5">
-                    <div className="relative w-24 shrink-0">
-                      <div
-                        className="absolute -inset-2 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity"
-                        style={{ background: book.accentColor }}
-                      />
-                      <div className="relative rounded-2xl overflow-hidden shadow-xl" style={{ aspectRatio: '2/3' }}>
-                        <ImageWithFallback src={book.cover} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0 space-y-2">
-                      {book.badge && (
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeColors[book.badge]}`}>
-                          {book.badge}
-                        </span>
-                      )}
-                      {i === 0 && (
-                        <span className="inline-block ml-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-400 text-amber-900">
-                          #1 {genre}
-                        </span>
-                      )}
-                      <h3 className="text-gray-900 dark:text-white font-bold text-sm leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"
-                        style={{ fontFamily: 'var(--font-serif)' }}>
-                        {book.title}
-                      </h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs">{book.author}</p>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{book.rating}</span>
-                        <span className="text-xs text-gray-400">({book.ratingCount.toLocaleString()})</span>
-                      </div>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed line-clamp-2">{book.description}</p>
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-gray-900 dark:text-white font-black text-base">{book.price.toLocaleString('vi-VN')}₫</span>
-                        <motion.button
-                          whileTap={{ scale: 0.93 }}
-                          onClick={e => { e.stopPropagation(); }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl text-xs font-bold shadow-md hover:opacity-90 transition-opacity"
-                        >
-                          <ShoppingCart className="w-3 h-3" /> Mua
-                        </motion.button>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Popularity bar */}
-                  <div className="h-0.5 bg-gray-100 dark:bg-white/5">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      whileInView={{ width: `${book.popularity}%` }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: i * 0.1 + 0.3 }}
-                      className="h-full"
-                      style={{ background: `linear-gradient(to right, ${book.accentColor}, ${book.accentColor}99)` }}
-                    />
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* ── Editor's Choice in Genre ── */}
-        {editorChoice.length > 0 && (
-          <BookShelf
-            title={`Editor's Choice · ${genre}`}
-            subtitle="Được các biên tập viên InkShelf chọn lọc kỹ càng"
-            emoji="✨"
-            books={editorChoice}
-            onOpenBook={onOpenBook}
-            accentColor={accentColor}
-          />
-        )}
-
-        {/* ── Discovery Grid (all books in genre) ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/40 dark:to-violet-900/30 flex items-center justify-center shadow-sm">
-                <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <h2 className="text-gray-900 dark:text-white" style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 700 }}>
-                  Thư viện {genre}
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{allBooks.length} tựa sách · Cập nhật liên tục</p>
-              </div>
-            </div>
-            {selectedSubgenre && (
-              <button
-                onClick={() => setSelectedSubgenre(null)}
-                className="text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:underline"
-              >
-                Xoá bộ lọc
-              </button>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+          </div>
+        ) : libraryBooks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-gray-500 py-20">
+            <span className="text-6xl mb-4">🔍</span>
+            <p>Không tìm thấy cuốn sách nào phù hợp.</p>
+          </div>
+        ) : (
+          <>
+            {isFirstPage && (
+              <>
+                {trendingInGenre.length > 0 && (
+                  <BookShelf title={`Trending trong ${selectedSubgenre || genre}`} subtitle="Được tương tác nhiều nhất tuần này" emoji="🔥" books={trendingInGenre} onOpenBook={onOpenBook} accentColor={accentColor} />
+                )}
+                {editorChoice.length > 0 && (
+                  <BookShelf title={`Editor's Choice`} subtitle="Chọn lọc kỹ càng" emoji="✨" books={editorChoice} onOpenBook={onOpenBook} accentColor={accentColor} />
+                )}
+                {/* ĐÃ XÓA KỆ SÁCH MỚI */}
+              </>
             )}
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-            {allBooks.map((book, i) => (
-              <motion.div
-                key={book.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: Math.min(i * 0.04, 0.4) }}
-              >
-                <BookCard book={book} onOpen={onOpenBook} />
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* ── Trending in Genre ── */}
-        {trendingInGenre.length > 0 && (
-          <BookShelf
-            title={`Trending trong ${genre}`}
-            subtitle="Được đọc nhiều nhất tuần này"
-            emoji="🔥"
-            books={trendingInGenre}
-            onOpenBook={onOpenBook}
-            accentColor={accentColor}
-          />
-        )}
-
-        {/* ── New Arrivals ── */}
-        {newArrivals.length > 0 && (
-          <BookShelf
-            title={`Mới thêm · ${genre}`}
-            subtitle="Những tựa sách vừa được thêm vào InkShelf"
-            emoji="✨"
-            books={newArrivals}
-            onOpenBook={onOpenBook}
-            accentColor={accentColor}
-          />
-        )}
-
-        {/* ── Hidden Gems ── */}
-        {hiddenGems.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/20 flex items-center justify-center shadow-sm">
-                <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div>
-                <h2 className="text-gray-900 dark:text-white" style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 700 }}>
-                  Hidden Gems · {genre}
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Ít được biết đến nhưng chất lượng cao</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {hiddenGems.map((book, i) => (
-                <motion.div
-                  key={book.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.08 }}
-                  whileHover={{ y: -4 }}
-                  onClick={() => onOpenBook(book)}
-                  className="cursor-pointer group flex gap-4 bg-white/80 dark:bg-[#16152B]/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-100/80 dark:border-white/8 hover:shadow-lg transition-all"
-                >
-                  <div className="relative w-16 shrink-0 rounded-xl overflow-hidden shadow-md" style={{ aspectRatio: '2/3' }}>
-                    <ImageWithFallback src={book.cover} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            {/* ── Discovery Grid ── */}
+            <motion.section
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/40 dark:to-violet-900/30 flex items-center justify-center shadow-sm">
+                    <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-gray-900 dark:text-white font-semibold text-sm line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1">{book.title}</h4>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-2">{book.author}</p>
-                    <div className="flex items-center gap-1 mb-2">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{book.rating}</span>
-                      <span className="text-gray-400 text-[10px]">· {book.readTime}</span>
-                    </div>
-                    <span className="text-indigo-600 dark:text-indigo-400 font-bold text-sm">{book.price.toLocaleString('vi-VN')}₫</span>
+                  <div>
+                    <h2 className="text-gray-900 dark:text-white" style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.1rem, 2vw, 1.4rem)', fontWeight: 700 }}>
+                      Thư viện {selectedSubgenre || genre}
+                    </h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">Trang {page} / {totalPages}</p>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* ── AI Recommendation for Genre ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8"
-        >
-          <div
-            className="relative overflow-hidden rounded-3xl p-8 sm:p-10 border"
-            style={{
-              background: `linear-gradient(135deg, ${accentColor}10, ${accentColor}05)`,
-              borderColor: `${accentColor}25`,
-            }}
-          >
-            <div
-              className="absolute top-0 right-0 w-72 h-72 rounded-full blur-3xl opacity-15 translate-x-1/3 -translate-y-1/3 pointer-events-none"
-              style={{ background: accentColor }}
-            />
-            <div className="relative flex flex-col lg:flex-row gap-8 items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles className="w-5 h-5" style={{ color: accentColor }} />
-                  <span className="font-semibold text-sm" style={{ color: accentColor }}>Gợi ý AI · Dành cho bạn</span>
-                </div>
-                <h3 className="text-gray-900 dark:text-white font-bold mb-3" style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem' }}>
-                  Vì bạn yêu thích {genre}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-5">
-                  Những độc giả yêu thích thể loại {genre} cũng thường khám phá những thể loại liên quan. Mở rộng thế giới đọc sách của bạn!
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {GENRES.filter(g => g !== genre).slice(0, 4).map(g => (
-                    <motion.button
-                      key={g}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate(`/genre/${g}`)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-white/60 dark:bg-white/8 text-gray-700 dark:text-gray-300 border border-gray-200/60 dark:border-white/10 hover:shadow-md transition-all"
-                    >
-                      Khám phá {g} <ChevronRight className="w-3.5 h-3.5" />
-                    </motion.button>
-                  ))}
                 </div>
               </div>
 
-              {/* Mini book preview grid */}
-              <div className="flex gap-3 shrink-0">
-                {sortedGenreBooks.slice(0, 4).map((book, i) => (
-                  <motion.div
-                    key={book.id}
-                    whileHover={{ y: -8 }}
-                    onClick={() => onOpenBook(book)}
-                    className="cursor-pointer w-16 sm:w-20"
-                    style={{ transform: `translateY(${i % 2 === 0 ? '0' : '12px'})` }}
-                  >
-                    <div className="relative rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow" style={{ aspectRatio: '2/3' }}>
-                      <ImageWithFallback src={book.cover} alt={book.title} className="w-full h-full object-cover" />
-                      <motion.div
-                        className="absolute inset-0 rounded-xl pointer-events-none"
-                        whileHover={{ boxShadow: `0 0 14px 2px ${book.accentColor}50` }}
-                      />
-                    </div>
-                  </motion.div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10">
+                {libraryBooks.map((book) => (
+                  <div key={book.id} className="flex justify-center">
+                    <BookCard book={book} onOpen={onOpenBook} size="md" /> 
+                  </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </motion.section>
 
+              {/* ── THANH CHUYỂN TRANG ── */}
+              {totalPages > 1 && (
+                <div className="mt-14 flex items-center justify-center gap-4">
+                  <button 
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="p-2 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-white/20 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  </button>
+                  
+                  <div className="flex items-center gap-2">
+                    {[...Array(totalPages)].map((_, i) => {
+                      if (i + 1 === 1 || i + 1 === totalPages || (i + 1 >= page - 1 && i + 1 <= page + 1)) {
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => setPage(i + 1)}
+                            className={`w-10 h-10 rounded-xl text-sm font-semibold transition-colors ${
+                              page === i + 1 ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/20'
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        );
+                      } else if (i + 1 === page - 2 || i + 1 === page + 2) {
+                        return <span key={i} className="text-gray-500">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button 
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="p-2 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-white/20 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                  </button>
+                </div>
+              )}
+            </motion.section>
+
+            {/* AI Recommendation */}
+            {isFirstPage && (
+              <motion.section
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mt-12"
+              >
+                <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 border shadow-sm" style={{ background: `linear-gradient(135deg, ${accentColor}10, ${accentColor}05)`, borderColor: `${accentColor}25` }}>
+                  <div className="relative flex flex-col lg:flex-row gap-8 items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-5 h-5" style={{ color: accentColor }} />
+                        <span className="font-semibold text-sm uppercase tracking-wide" style={{ color: accentColor }}>Gợi ý AI</span>
+                      </div>
+                      <h3 className="text-gray-900 dark:text-white font-bold mb-3" style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem' }}>
+                        Khám phá thêm
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-5">
+                        Mở rộng thế giới đọc sách của bạn với các thể loại liên quan.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {GENRES.filter(g => g !== genre).slice(0, 4).map(g => (
+                          <button key={g} onClick={() => navigate(`/genre/${g}`)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-white/80 dark:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200/60 dark:border-white/10 hover:shadow-md transition-all">
+                            Khám phá {g} <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -587,8 +468,7 @@ function NotFound({ navigate, message = 'Không tìm thấy thể loại này' }
       <div className="text-center">
         <span className="text-5xl mb-4 block">📚</span>
         <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">{message}</p>
-        <button onClick={() => navigate('/')}
-          className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium hover:opacity-90 transition-all">
+        <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg">
           Về trang chủ
         </button>
       </div>

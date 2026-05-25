@@ -15,7 +15,7 @@ export function Settings() {
     username: 'Minh Anh Nguyễn',
     gender: 'female' as 'male' | 'female' | 'other',
     bio: 'Yêu sách, yêu đời, yêu những câu chuyện đưa ta đến vô số thế giới.',
-    favoriteGenres: ['Fantasy', 'Sci-Fi', 'Romance'],
+    favoriteGenres: ['Fantasy', 'Science-Fiction', 'Romance'],
   });
 
   const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' });
@@ -32,7 +32,7 @@ export function Settings() {
     { id: 'language' as const, label: 'Ngôn ngữ', icon: Globe },
   ];
 
-  const allGenres = ['Fantasy', 'Sci-Fi', 'Romance', 'Self-Help', 'Mystery', 'Biography', 'Philosophy'];
+  const allGenres = ['Fantasy', 'Science-Fiction', 'Romance', 'Self-Help', 'Mystery', 'Biography', 'Philosophy'];
 
   const toggleGenre = (genre: string) => {
     setProfileData(prev => ({

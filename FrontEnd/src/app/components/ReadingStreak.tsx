@@ -1,7 +1,15 @@
 import { motion } from 'motion/react';
 import { Flame, Target, BookOpen, Trophy, Calendar } from 'lucide-react';
+// THÊM DÒNG NÀY: Import userService để kiểm tra đăng nhập
+import { userService } from '../../services/userService'; 
 
 export function ReadingStreak() {
+  // KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP
+  const isLoggedIn = userService.isLoggedIn();
+
+  // NẾU CHƯA ĐĂNG NHẬP THÌ ẨN HOÀN TOÀN COMPONENT NÀY
+  if (!isLoggedIn) return null;
+
   const streak = 12;
   const goal = 15;
   const booksRead = 4;
