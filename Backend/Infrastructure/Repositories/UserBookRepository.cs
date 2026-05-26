@@ -66,5 +66,16 @@ namespace Infrastructure.Repositories
                 .Select(ub => ub.user_id)
                 .ToListAsync(ct);
         }
+        public async Task<IEnumerable<Guid>> CheckUsersWhoBoughtBookAsync(
+            Guid bookId, 
+            IEnumerable<Guid> userIds, 
+            CancellationToken cancellationToken)
+        {
+            // Lệnh này sẽ sinh ra SQL: SELECT user_id FROM UserBooks WHERE book_id = @bookId AND user_id IN (@id1, @id2,...)
+            return await _db.UserBooks
+                .Where(ub => ub.book_id == bookId && userIds.Contains(ub.user_id))
+                .Select(ub => ub.user_id)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

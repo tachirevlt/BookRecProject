@@ -25,12 +25,16 @@ namespace Infrastructure.Repositories
             return review;
         }
 
-        public async Task<IEnumerable<ReviewEntity>> GetReviewsByBookIdAsync(Guid bookId)
+        public async Task<IEnumerable<ReviewEntity>> GetReviewsByBookIdAsync(Guid bookId, int pageNumber = 1, int pageSize = 3)
         {
+            var skip = (pageNumber - 1) * pageSize;
+
             return await _context.Reviews
                 .Include(r => r.User)
                 .Where(r => r.book_id == bookId)
                 .OrderByDescending(r => r.time)
+                .Skip(skip)     // Bỏ qua các bình luận của những trang trước đó
+                .Take(pageSize) // Chỉ lấy đúng số lượng bình luận được yêu cầu
                 .ToListAsync();
         }
 
