@@ -125,7 +125,7 @@ export function TrendingAll() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white" style={{ fontFamily: 'var(--font-serif)' }}>
-              Top 100 {titleText} {genreLabel && <span className="text-amber-600 dark:text-amber-500">- {genreLabel}</span>}
+              Top  {titleText} {genreLabel && <span className="text-amber-600 dark:text-amber-500">- {genreLabel}</span>}
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">Trang {page} / {totalPages}</p>
           </div>
