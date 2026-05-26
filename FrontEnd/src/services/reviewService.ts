@@ -7,6 +7,8 @@ export interface ReviewData {
   id: string;
   user_id: string;
   book_id: string;
+  full_name?: string;     // Bổ sung để hiển thị tên người dùng
+  is_purchased?: boolean; // Bổ sung để hiển thị nhãn "Đã mua"
   review: string;
   time: string;
 }
@@ -20,12 +22,22 @@ export interface AddReviewPayload {
 
 export const reviewService = {
   /**
-   * Lấy danh sách đánh giá của một cuốn sách
-   * GET /api/reviews/book/:book_id
+   * Lấy danh sách đánh giá của một cuốn sách (Có phân trang)
+   * GET /api/reviews/book/:book_id?pageNumber=1&pageSize=10
    */
-  getReviewsByBook: async (bookId: string): Promise<ReviewData[]> => {
+  getReviewsByBook: async (
+    bookId: string, 
+    pageNumber: number = 1, 
+    pageSize: number = 10
+  ): Promise<ReviewData[]> => {
     const response = await axiosClient.get<ReviewData[]>(
-      ENDPOINTS.REVIEWS.GET_BY_BOOK(bookId)
+      ENDPOINTS.REVIEWS.GET_BY_BOOK(bookId),
+      {
+        params: {
+          pageNumber,
+          pageSize
+        }
+      }
     );
     return response.data;
   },

@@ -4,7 +4,7 @@ import { useParams, useNavigate, useOutletContext } from 'react-router';
 import {
   Star, ShoppingCart, BookOpen, Heart, Share2, ArrowLeft, ChevronRight, ChevronLeft,
   Clock, Tag, Award, MessageSquare, Play, Globe, MoreHorizontal,
-  Layers, Calendar, TrendingUp, Sparkles, Eye, Loader2, Send
+  Layers, Calendar, TrendingUp, Sparkles, Eye, Loader2, Send, ChevronDown, ChevronUp // Đã thêm ChevronDown, ChevronUp
 } from 'lucide-react';
 import { genreColors, badgeColors, genreInfo } from '../data/books';
 import { bookService } from '../../services/bookService';
@@ -102,8 +102,6 @@ export function BookDetail() {
       if (!book?.id) return;
       setLoadingRecommendations(true);
       try {
-        // SAU KHI LÀM XONG MODEL ML SỬA API Ở ĐÂY LẠI ĐỂ LẤY SÁCH ĐỀ XUẤT THEO BOOK ID
-        // const res = await bookService.getRecommendationsByBookId(String(book.id), 8);
         const res = await bookService.getRecommendations();
         setRecommendedBooks(res.filter(b => String(b.id) !== String(book.id)));
       } catch (error) {
@@ -558,7 +556,7 @@ export function BookDetail() {
                 </h3>
                 {[
                   { label: 'Tác giả', value: book.author },
-                  { label: 'Thể loại', value: bookGenres.join(', ') },
+                  { label: 'Thể loại', value: bookGenres, isTags: true }, // Cờ nhận biết dòng Thể loại
                   { label: 'Ngôn ngữ', value: book.language ?? 'Tiếng Việt' },
                   { label: 'Số trang', value: `${book.pages || 0} trang` },
                   { label: 'Số chương', value: `${book.chapters ?? Math.round((book.pages || 0) / 18)} chương` },
@@ -566,9 +564,16 @@ export function BookDetail() {
                   { label: 'Năm xuất bản', value: String(book.releaseYear || 'N/A') },
                   { label: 'Trạng thái', value: book.status === 'complete' ? 'Hoàn thành' : 'Đang ra' },
                 ].map(item => (
-                  <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-gray-100/80 dark:border-white/5 last:border-0">
-                    <span className="text-gray-400 text-xs">{item.label}</span>
-                    <span className="text-gray-900 dark:text-white text-xs font-semibold max-w-[60%] text-right">{item.value}</span>
+                  <div 
+                    key={item.label} 
+                    className={`flex justify-between py-2 border-b border-gray-100/80 dark:border-white/5 last:border-0 ${item.isTags ? 'items-start flex-col gap-2.5 sm:flex-row' : 'items-center'}`}
+                  >
+                    <span className="text-gray-400 text-xs shrink-0">{item.label}</span>
+                    {item.isTags ? (
+                      <BookTagsDisplay tags={item.value as string[]} />
+                    ) : (
+                      <span className="text-gray-900 dark:text-white text-xs font-semibold max-w-[60%] text-right">{item.value as string}</span>
+                    )}
                   </div>
                 ))}
               </motion.div>
@@ -865,6 +870,75 @@ export function BookDetail() {
         />
       )}
 
+    </div>
+  );
+}
+
+// ── COMPONENT HIỂN THỊ THỂ LOẠI (TAGS) ──
+function BookTagsDisplay({ tags }: { tags: string[] }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate(); // Sử dụng hook điều hướng của react-router
+
+  if (!tags || tags.length === 0) return <span className="text-gray-500 text-xs">Đang cập nhật</span>;
+
+  // Bảng màu Pastel cho Light/Dark mode (Đã bổ sung thêm hiệu ứng màu khi hover)
+  const TAG_COLORS = [
+    'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 hover:bg-blue-100 dark:hover:bg-blue-500/30',
+    'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20 hover:bg-purple-100 dark:hover:bg-purple-500/30',
+    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/30',
+    'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30',
+    'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/30',
+    'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/30'
+  ];
+
+  // Hàm tạo mã màu cố định dựa trên tên tag
+  const getTagColor = (tag: string) => {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) {
+      hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+  };
+
+  // Hàm xử lý khi người dùng ấn vào tag
+  const handleTagClick = (tag: string) => {
+    // Chuyển thành chữ thường và thay thế khoảng trắng bằng dấu gạch ngang (nếu có)
+    // Ví dụ: "Science Fiction" -> "science-fiction", "anthropomorphism" -> "anthropomorphism"
+    const formattedTag = tag.trim().toLowerCase().replace(/\s+/g, '-');
+    navigate(`/genre/${formattedTag}`);
+  };
+
+  const VISIBLE_COUNT = 5; 
+  const hiddenCount = tags.length - VISIBLE_COUNT;
+  const visibleTags = isExpanded ? tags : tags.slice(0, VISIBLE_COUNT);
+
+  return (
+    <div className="flex flex-col sm:items-end w-full">
+      <div className="flex flex-wrap gap-1.5 sm:justify-end">
+        {visibleTags.map((tag, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleTagClick(tag)}
+            title={`Xem thêm các sách thể loại ${tag}`}
+            className={`px-2 py-0.5 rounded-md border text-[10px] font-semibold whitespace-nowrap transition-all transform hover:scale-105 cursor-pointer shadow-sm ${getTagColor(tag)}`}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      {hiddenCount > 0 && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-[11px] text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 mt-1.5 transition-colors font-medium"
+        >
+          {isExpanded ? (
+            <>Thu gọn <ChevronUp className="w-3 h-3" /></>
+          ) : (
+            <>+ {hiddenCount} thể loại khác <ChevronDown className="w-3 h-3" /></>
+          )}
+        </button>
+      )}
     </div>
   );
 }

@@ -13,7 +13,7 @@ import { BookCard } from './BookCard';
 import { userService } from '../../services/userService';
 import { reviewService, ReviewData } from '../../services/reviewService';
 import { trackingService } from '../../services/trackingService';
-import { bookService } from '../../services/bookService'; // Thêm import bookService
+import { bookService } from '../../services/bookService'; 
 
 interface BookDetailModalProps {
   bookId: string | number | null;
@@ -109,14 +109,15 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
       
       try {
         // Chạy song song cả API Review và Recommendations
+        // Đã cập nhật tham số pageNumber = 1 và pageSize = 3 cho API Review
         const [reviewsData, recommendationsData] = await Promise.all([
-          reviewService.getReviewsByBook(String(book.id)).catch(() => []),
+          reviewService.getReviewsByBook(String(book.id), 1, 3).catch(() => []),
           bookService.getRecommendationsByBookId(String(book.id), 5).catch(() => [])
         ]);
 
         // Xử lý Reviews
         const sortedReviews = (reviewsData || []).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-        setBookReviews(sortedReviews.slice(0, 5));
+        setBookReviews(sortedReviews.slice(0, 3)); // Cập nhật giới hạn slice thành 3 cho an toàn
 
         // Xử lý Recommendations
         // Loại bỏ chính cuốn sách hiện tại ra khỏi danh sách đề xuất (nếu có bị trùng)
