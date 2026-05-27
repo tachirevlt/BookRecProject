@@ -24,7 +24,7 @@ export interface RegisterPayload {
   email: string;
   full_name: string;
   password: string;
-  sex?: 'Male' | 'Female' | 'Other';
+  sex?: 'Man' | 'Woman' | 'Other';
 }
 
 /**
@@ -34,7 +34,8 @@ export interface RegisterPayload {
 export interface UpdateUserPayload {
   user_name?: string;
   email?: string;
-  sex?: 'Male' | 'Female' | 'Other';
+  full_name?: string;
+  sex?: 'Man' | 'Woman' | 'Other';
 }
 
 /**

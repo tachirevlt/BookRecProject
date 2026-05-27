@@ -17,20 +17,27 @@ export function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    gender: '' as 'male' | 'female' | 'other' | '',
+    gender: '' as 'Man' | 'Woman' | 'Other' | '',
     favoriteGenres: [] as string[],
   });
 
   const [errorMsg, setErrorMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // STATE MỚI: Quản lý lỗi từng ô
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setFieldErrors({});
 
+    // Validate nhanh ở Front-end
     if (step === 1) {
+      if (!formData.gender) {
+        setFieldErrors(prev => ({ ...prev, gender: 'Vui lòng chọn giới tính' }));
+        return;
+      }
       if (formData.password !== formData.confirmPassword) {
-        setErrorMsg('Mật khẩu xác nhận không khớp');
+        setFieldErrors(prev => ({ ...prev, confirmPassword: 'Mật khẩu xác nhận không khớp' }));
         return;
       }
       setStep(2);
@@ -42,20 +49,39 @@ export function Register() {
           full_name: formData.fullName,
           email: formData.email,
           password: formData.password,
-          sex: formData.gender === 'male' ? 'Male' : formData.gender === 'female' ? 'Female' : 'Other'
+          sex: formData.gender || 'Other' // Đã sửa lại để luôn gửi chữ hoa: 'Man', 'Woman', 'Other'
         };
+        
         // 1. Call Register API
         await userService.register(payload as any);
+        
         // 2. Auto Login after register to get Token
         await userService.login({ user_name: formData.username, password: formData.password });
-        
-        // (Optional: handle favoriteGenres here if backend supports it later)
         
         navigate('/profile');
       } catch (error: any) {
         console.error('Registration failed:', error);
-        setErrorMsg(error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
-        setStep(1); // Back to step 1 to show error
+        const responseData = error.response?.data;
+
+        // XỬ LÝ LỖI TRẢ VỀ TỪ BACKEND
+        if (responseData?.errors) {
+          const beErrors = responseData.errors;
+          const newErrors: Record<string, string> = {};
+
+          // Ánh xạ tên trường từ Backend sang Frontend
+          if (beErrors.user_name) newErrors.username = beErrors.user_name[0];
+          if (beErrors.email) newErrors.email = beErrors.email[0];
+          if (beErrors.full_name) newErrors.fullName = beErrors.full_name[0];
+          if (beErrors.password) newErrors.password = beErrors.password[0];
+          if (beErrors.sex) newErrors.gender = beErrors.sex[0];
+
+          setFieldErrors(newErrors);
+          setErrorMsg('Vui lòng kiểm tra lại các thông tin bị lỗi.');
+        } else {
+          setErrorMsg(responseData?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+        }
+        
+        setStep(1); // Quay lại bước 1 để hiển thị ô bị lỗi
       } finally {
         setIsLoading(false);
       }
@@ -79,6 +105,13 @@ export function Register() {
     Mystery: 'from-slate-500 to-gray-600',
     Biography: 'from-red-500 to-rose-600',
     Philosophy: 'from-yellow-500 to-amber-600',
+  };
+
+  // Hàm hỗ trợ xóa lỗi khi người dùng bắt đầu gõ lại
+  const clearFieldError = (field: string) => {
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   return (
@@ -195,17 +228,24 @@ export function Register() {
                       <input
                         type="text"
                         value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, fullName: e.target.value });
+                          clearFieldError('fullName');
+                        }}
                         onFocus={() => setFocusedField('fullName')}
                         onBlur={() => setFocusedField(null)}
                         placeholder="Nguyễn Văn A"
-                        className={`w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${focusedField === 'fullName'
-                          ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
-                          : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
+                        className={`w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${
+                          fieldErrors.fullName 
+                            ? 'border-rose-500 focus:ring-4 focus:ring-rose-100/50 dark:focus:ring-rose-900/30' 
+                            : focusedField === 'fullName'
+                              ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
+                              : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
                         }`}
                         required
                       />
                     </div>
+                    {fieldErrors.fullName && <p className="text-rose-500 text-xs mt-1.5 font-medium">{fieldErrors.fullName}</p>}
                   </div>
 
                   {/* Username */}
@@ -216,41 +256,24 @@ export function Register() {
                       <input
                         type="text"
                         value={formData.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, username: e.target.value });
+                          clearFieldError('username');
+                        }}
                         onFocus={() => setFocusedField('username')}
                         onBlur={() => setFocusedField(null)}
                         placeholder="booklover123"
-                        className={`w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${focusedField === 'username'
-                          ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
-                          : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
+                        className={`w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${
+                          fieldErrors.username 
+                            ? 'border-rose-500 focus:ring-4 focus:ring-rose-100/50 dark:focus:ring-rose-900/30' 
+                            : focusedField === 'username'
+                              ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
+                              : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
                         }`}
                         required
                       />
                     </div>
-                  </div>
-
-                  {/* Gender */}
-                  <div>
-                    <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">Giới tính</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { value: 'male', label: 'Nam', emoji: '👨' },
-                        { value: 'female', label: 'Nữ', emoji: '👩' },
-                        { value: 'other', label: 'Khác', emoji: '🧑' },
-                      ].map(option => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, gender: option.value as any })}
-                          className={`px-3 py-2.5 rounded-2xl font-medium text-sm border transition-all ${formData.gender === option.value
-                            ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-md'
-                            : 'bg-white dark:bg-white/8 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-white/12 hover:border-gray-300 dark:hover:border-white/20'
-                          }`}>
-                          <span className="mr-1.5">{option.emoji}</span>
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
+                    {fieldErrors.username && <p className="text-rose-500 text-xs mt-1.5 font-medium">{fieldErrors.username}</p>}
                   </div>
 
                   {/* Email */}
@@ -261,17 +284,54 @@ export function Register() {
                       <input
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          clearFieldError('email');
+                        }}
                         onFocus={() => setFocusedField('email')}
                         onBlur={() => setFocusedField(null)}
                         placeholder="you@example.com"
-                        className={`w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${focusedField === 'email'
-                          ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
-                          : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
+                        className={`w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${
+                          fieldErrors.email 
+                            ? 'border-rose-500 focus:ring-4 focus:ring-rose-100/50 dark:focus:ring-rose-900/30' 
+                            : focusedField === 'email'
+                              ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
+                              : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
                         }`}
                         required
                       />
                     </div>
+                    {fieldErrors.email && <p className="text-rose-500 text-xs mt-1.5 font-medium">{fieldErrors.email}</p>}
+                  </div>
+
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">Giới tính</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: 'Man', label: 'Nam', emoji: '👨' },
+                        { value: 'Woman', label: 'Nữ', emoji: '👩' },
+                        { value: 'Other', label: 'Khác', emoji: '🧑' },
+                      ].map(option => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, gender: option.value as any });
+                            clearFieldError('gender');
+                          }}
+                          className={`px-3 py-2.5 rounded-2xl font-medium text-sm border transition-all ${formData.gender === option.value
+                            ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-md'
+                            : fieldErrors.gender
+                              ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-900/10'
+                              : 'bg-white dark:bg-white/8 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-white/12 hover:border-gray-300 dark:hover:border-white/20'
+                          }`}>
+                          <span className="mr-1.5">{option.emoji}</span>
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                    {fieldErrors.gender && <p className="text-rose-500 text-xs mt-1.5 font-medium">{fieldErrors.gender}</p>}
                   </div>
 
                   {/* Password */}
@@ -282,13 +342,20 @@ export function Register() {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, password: e.target.value });
+                          clearFieldError('password');
+                        }}
                         onFocus={() => setFocusedField('password')}
                         onBlur={() => setFocusedField(null)}
                         placeholder="••••••••"
-                        className={`w-full pl-11 pr-11 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${focusedField === 'password'
-                          ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
-                          : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
+                        // Thêm [&::-ms-reveal]:hidden để ẩn icon mắt mặc định
+                        className={`w-full pl-11 pr-11 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all [&::-ms-reveal]:hidden ${
+                          fieldErrors.password 
+                            ? 'border-rose-500 focus:ring-4 focus:ring-rose-100/50 dark:focus:ring-rose-900/30' 
+                            : focusedField === 'password'
+                              ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
+                              : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
                         }`}
                         required
                       />
@@ -297,6 +364,7 @@ export function Register() {
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    {fieldErrors.password && <p className="text-rose-500 text-xs mt-1.5 font-medium">{fieldErrors.password}</p>}
                   </div>
 
                   {/* Confirm Password */}
@@ -307,13 +375,19 @@ export function Register() {
                       <input
                         type={showConfirm ? 'text' : 'password'}
                         value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, confirmPassword: e.target.value });
+                          clearFieldError('confirmPassword');
+                        }}
                         onFocus={() => setFocusedField('confirm')}
                         onBlur={() => setFocusedField(null)}
                         placeholder="••••••••"
-                        className={`w-full pl-11 pr-11 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all ${focusedField === 'confirm'
-                          ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
-                          : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
+                        className={`w-full pl-11 pr-11 py-3 bg-gray-50 dark:bg-white/5 border rounded-2xl text-gray-900 dark:text-white placeholder:text-gray-400 outline-none transition-all [&::-ms-reveal]:hidden ${
+                          fieldErrors.confirmPassword 
+                            ? 'border-rose-500 focus:ring-4 focus:ring-rose-100/50 dark:focus:ring-rose-900/30' 
+                            : focusedField === 'confirm'
+                              ? 'border-indigo-500 dark:border-indigo-500 ring-4 ring-indigo-100/50 dark:ring-indigo-900/30 bg-white dark:bg-white/8'
+                              : 'border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/15'
                         }`}
                         required
                       />
@@ -322,6 +396,7 @@ export function Register() {
                         {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    {fieldErrors.confirmPassword && <p className="text-rose-500 text-xs mt-1.5 font-medium">{fieldErrors.confirmPassword}</p>}
                   </div>
 
                   <button type="submit"
