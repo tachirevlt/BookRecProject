@@ -12,5 +12,8 @@ namespace Core.Models
         
         [Required(ErrorMessage = "Tên đầy đủ không được để trống")]
         public string full_name { get; set; } = string.Empty;
+        [RegularExpression("^(Man|Woman|Other)$", ErrorMessage = "Giới tính chỉ được nhập 'Man', 'Woman' hoặc 'Other'")]
+        public string? sex { get; set; }
+        
     }
 }

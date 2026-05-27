@@ -60,6 +60,7 @@ namespace Application.Commands
             existingUser.user_name = request.UpdateData.user_name;
             existingUser.full_name = request.UpdateData.full_name;
             existingUser.email = request.UpdateData.email;
+            existingUser.sex = request.UpdateData.sex;
 
             // 5. Lưu xuống DB
             // (Lưu ý: Không đụng đến hashed_password ở đây nữa)

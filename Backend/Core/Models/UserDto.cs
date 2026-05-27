@@ -8,8 +8,8 @@ namespace Core.Models
         public string user_name { get; set; } = string.Empty;
         public string full_name { get; set; } = string.Empty;
         public string? email { get; set; }
-        public string role { get; set; } = string.Empty;
+        public string? role { get; set; } 
         public string? sex { get; set; }
         public decimal? current_balance { get; set; }
     }
-}
+}

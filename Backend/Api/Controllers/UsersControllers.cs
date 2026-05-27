@@ -62,7 +62,8 @@ namespace Api.Controllers
                     role = result.role,
                     sex = result.sex
                 };
-                return CreatedAtAction("GetUserByIdAsync", new { user_id = result.user_id }, responseDto);
+                // return CreatedAtAction(nameof(GetUserByIdAsync), new { user_id = result.user_id }, responseDto);
+                return Created($"/api/users/{result.user_id}", responseDto);
             }
             catch (ArgumentException ex) { return Conflict(new { message = ex.Message }); }
             catch (Exception ex) { return StatusCode(500, new { message = "Lỗi server.", error = ex.Message }); }
