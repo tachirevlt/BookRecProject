@@ -47,9 +47,11 @@ namespace Api.Controllers
         }
 
         [HttpGet("book/{book_id}")]
-        public async Task<IActionResult> GetReviewsByBookId(Guid book_id)
+        public async Task<IActionResult> GetReviewsByBookId(Guid book_id, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 3)
         {
-            var query = new GetReviewsByBookIdQuery(book_id);
+            // Khởi tạo Query với các tham số phân trang được truyền từ URL
+            // Ví dụ: GET /api/reviews/book/123...?pageNumber=2&pageSize=15
+            var query = new GetReviewsByBookIdQuery(book_id, pageNumber, pageSize);
             var result = await _mediator.Send(query); 
             
             return Ok(result);

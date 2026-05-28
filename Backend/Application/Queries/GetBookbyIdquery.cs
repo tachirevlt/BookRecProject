@@ -6,17 +6,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Core.Models;
 namespace Application.Queries
 {
-    public record GetBookByIdQuery(Guid BookId) : IRequest<BookEntity?>;
+    public record GetBookByIdQuery(Guid BookId) : IRequest<BookDTO?>;
 
     public class GetBookByIdQueryHandler(IBookRepository bookRepository)
-        : IRequestHandler<GetBookByIdQuery, BookEntity?>
+        : IRequestHandler<GetBookByIdQuery, BookDTO?>
     {
-        public async Task<BookEntity?> Handle(GetBookByIdQuery request, CancellationToken cancellationToken)
+        public async Task<BookDTO?> Handle(GetBookByIdQuery request, CancellationToken cancellationToken)
         {
-            return await bookRepository.GetBookByIdAsync(request.BookId, cancellationToken);
+            var book = await bookRepository.GetBookByIdAsync(request.BookId, cancellationToken);
+            return BookDTO.FromEntity(book);
         }
     }
 }

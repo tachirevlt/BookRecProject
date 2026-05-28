@@ -5,6 +5,7 @@ public record BookFilterParams(
     string? Title,
     string? Author,
     string? Genre, 
+    string? Badge,
     string? SortBy,
     string? SortOrder,
     decimal? MinRating,

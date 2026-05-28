@@ -36,12 +36,11 @@ namespace Application.Queries
             {
                 user_id = user.user_id,
                 user_name = user.user_name,
+                full_name = user.full_name,
                 role = user.role,
                 sex = user.sex,
-                FavoriteBooks = user.FavoriteBooks,
-                email = canViewPrivateInfo ? user.email : null ,
-                current_balance = canViewPrivateInfo ? user.current_balance : (decimal?)null,
-                PurchasedBooks = canViewPrivateInfo ? user.PurchasedBooks : null
+                email = canViewPrivateInfo ? user.email : null,
+                current_balance = canViewPrivateInfo ? user.current_balance : (decimal?)null
             };
         }
     }

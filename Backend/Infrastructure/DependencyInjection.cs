@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration; // Bạn có thể cần using này
 using Core.Interfaces;
@@ -23,6 +23,9 @@ namespace Infrastructure
             services.AddScoped<IBookRepository, BookRepository>();
             services.AddScoped<IReviewRepository, ReviewRepository>();
             services.AddScoped<IRatingRepository, RatingRepository>();
+            services.AddScoped<ITrackingRepository, TrackingRepository>();
+            services.AddScoped<IWishlistRepository, WishlistRepository>();
+            services.AddScoped<IUserBookRepository, UserBookRepository>();
             return services;
         }
     }

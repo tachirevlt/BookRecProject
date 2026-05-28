@@ -27,13 +27,34 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("book_id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("accentColor")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("authors")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("cost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<double>("average_rating")
+                        .HasColumnType("float");
+
+                    b.Property<string>("badge")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("badges")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("chapters")
+                        .HasColumnType("int");
+
+                    b.Property<string>("description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("favorite_30d")
+                        .HasColumnType("int");
+
+                    b.Property<int>("favorite_7d")
+                        .HasColumnType("int");
 
                     b.Property<string>("image_url")
                         .IsRequired()
@@ -43,12 +64,34 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("longDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("mood")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<double?>("original_publication_year")
                         .HasColumnType("float");
 
                     b.Property<string>("original_title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("pages")
+                        .HasColumnType("int");
+
+                    b.Property<string>("previewText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("purchases_30d")
+                        .HasColumnType("int");
+
+                    b.Property<int>("purchases_7d")
+                        .HasColumnType("int");
 
                     b.Property<int>("ratings_1")
                         .HasColumnType("int");
@@ -65,13 +108,28 @@ namespace Infrastructure.Migrations
                     b.Property<int>("ratings_5")
                         .HasColumnType("int");
 
+                    b.Property<int>("readTime")
+                        .HasColumnType("int");
+
                     b.Property<string>("small_image_url")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("status")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("tags")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("total_ratings")
+                        .HasColumnType("int");
+
+                    b.Property<int>("views_30d")
+                        .HasColumnType("int");
+
+                    b.Property<int>("views_7d")
+                        .HasColumnType("int");
 
                     b.HasKey("book_id");
 
@@ -127,6 +185,64 @@ namespace Infrastructure.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("Core.Entities.TrackingEventEntity", b =>
+                {
+                    b.Property<Guid>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("book_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("event_type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("user_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("id");
+
+                    b.ToTable("TrackingEvents");
+                });
+
+            modelBuilder.Entity("Core.Entities.UserBookEntity", b =>
+                {
+                    b.Property<Guid>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("book_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("current_chapter")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("last_read_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("purchase_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("purchase_price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("user_id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("book_id");
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("UserBooks");
+                });
+
             modelBuilder.Entity("Core.Entities.UserEntity", b =>
                 {
                     b.Property<Guid>("user_id")
@@ -138,6 +254,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("full_name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -161,34 +281,35 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("UserFavoriteBooks", b =>
+            modelBuilder.Entity("Core.Entities.UserWishlistEntity", b =>
                 {
+                    b.Property<Guid>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("added_at")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("book_id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("collection_name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("price_at_addition")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("user_id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("book_id", "user_id");
+                    b.HasKey("id");
+
+                    b.HasIndex("book_id");
 
                     b.HasIndex("user_id");
 
-                    b.ToTable("UserFavoriteBooks");
-                });
-
-            modelBuilder.Entity("UserPurchasedBooks", b =>
-                {
-                    b.Property<Guid>("book_id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("user_id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("book_id", "user_id");
-
-                    b.HasIndex("user_id");
-
-                    b.ToTable("UserPurchasedBooks");
+                    b.ToTable("Wishlists");
                 });
 
             modelBuilder.Entity("Core.Entities.RatingEntity", b =>
@@ -229,34 +350,49 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("UserFavoriteBooks", b =>
+            modelBuilder.Entity("Core.Entities.UserBookEntity", b =>
                 {
-                    b.HasOne("Core.Entities.BookEntity", null)
+                    b.HasOne("Core.Entities.BookEntity", "Book")
                         .WithMany()
                         .HasForeignKey("book_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.UserEntity", null)
-                        .WithMany()
+                    b.HasOne("Core.Entities.UserEntity", "User")
+                        .WithMany("UserBooks")
                         .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("UserPurchasedBooks", b =>
+            modelBuilder.Entity("Core.Entities.UserWishlistEntity", b =>
                 {
-                    b.HasOne("Core.Entities.BookEntity", null)
+                    b.HasOne("Core.Entities.BookEntity", "Book")
                         .WithMany()
                         .HasForeignKey("book_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Core.Entities.UserEntity", null)
-                        .WithMany()
+                    b.HasOne("Core.Entities.UserEntity", "User")
+                        .WithMany("Wishlists")
                         .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Core.Entities.UserEntity", b =>
+                {
+                    b.Navigation("UserBooks");
+
+                    b.Navigation("Wishlists");
                 });
 #pragma warning restore 612, 618
         }

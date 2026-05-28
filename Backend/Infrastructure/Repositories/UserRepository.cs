@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Persistence;
-using Core.Models;
 
 namespace Infrastructure.Repositories
 {
@@ -17,13 +16,9 @@ namespace Infrastructure.Repositories
 
         public async Task<UserEntity?> GetUserByIdAsync(Guid userId, CancellationToken ct = default)
         {
-
             return await _db.Users
-                .Include(u => u.FavoriteBooks)
-                .Include(u => u.PurchasedBooks)
                 .FirstOrDefaultAsync(u => u.user_id == userId, ct);
         }
-
 
         public async Task<UserEntity> AddUserAsync(UserEntity user, CancellationToken ct = default)
         {
@@ -31,30 +26,13 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
             return user;
         }
+
         public async Task<UserEntity?> GetUserByUsernameAsync(string username, CancellationToken ct = default)
         {
             return await _db.Users
-                .Include(u => u.PurchasedBooks)
                 .FirstOrDefaultAsync(u => u.user_name == username, ct);
         }
 
-        public async Task<bool> PurchaseBookAsync(Guid userId, Guid bookId, CancellationToken ct = default)
-        {
-            var user = await _db.Users.Include(u => u.PurchasedBooks).FirstOrDefaultAsync(u => u.user_id == userId, ct);
-            var book = await _db.Books.FindAsync(new object[] { bookId }, ct);
-
-            if (user == null || book == null) throw new KeyNotFoundException("User hoặc Sách không tồn tại.");
-
-            if (user.PurchasedBooks.Any(b => b.book_id == bookId)) return true; // Đã mua rồi
-
-            if (user.current_balance < book.cost) return false; // Không đủ tiền
-
-            user.current_balance -= book.cost;
-            user.PurchasedBooks.Add(book);
-            
-            await _db.SaveChangesAsync(ct);
-            return true;
-        }
         public async Task<UserEntity> UpdateUserAsync(Guid userId, UserEntity updatedUserData, CancellationToken ct = default)
         {
             var existingUser = await _db.Users.FindAsync(new object?[] { userId }, ct);
@@ -75,15 +53,18 @@ namespace Infrastructure.Repositories
             await _db.SaveChangesAsync(ct);
             return true;
         }
+
         public async Task SaveChangesAsync(CancellationToken ct = default)
         {
             await _db.SaveChangesAsync(ct);
         }
+
         public async Task<bool> IsEmailExistsAsync(string email, Guid? excludeuser_id = null, CancellationToken ct = default)
         {
             return await _db.Users
                 .AnyAsync(u => u.email == email && (!excludeuser_id.HasValue || u.user_id != excludeuser_id), ct);
         }
+
         public async Task<bool> IsUsernameExistsAsync(string username, Guid? excludeuser_id = null, CancellationToken ct = default)
         {
             return await _db.Users
