@@ -16,8 +16,7 @@ export interface LoginPayload {
 
 /**
  * Payload đăng ký tài khoản mới.
- * Khớp với UserRegistrationDto.cs: { user_name, email, Password, sex }
- * sex phải là "Male" | "Female" | "Other"
+ * Khớp với UserRegistrationDto.cs: { user_name, email, password, sex }
  */
 export interface RegisterPayload {
   user_name: string;
@@ -67,7 +66,7 @@ export interface UserDto {
   full_name?: string;
   email?: string;
   role: string;               // "User" | "Admin"
-  sex?: string;               // "Male" | "Female" | "Other"
+  sex?: string;               
   current_balance?: number;   // decimal
   favoriteBooks?: BookEntity[];
   purchasedBooks?: BookEntity[];
