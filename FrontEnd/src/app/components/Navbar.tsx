@@ -34,23 +34,30 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
+  
+  // Thêm state lưu tên người dùng
+  const [userFullName, setUserFullName] = useState<string>('');
 
   useEffect(() => {
     if (isLoggedIn) {
-      const fetchBalance = async () => {
+      const fetchUserData = async () => {
         try {
           const userId = userService.getCurrentUserId();
           if (userId) {
             const apiUser = await userService.getUserById(userId);
-            if (apiUser.current_balance !== undefined) {
-              setBalance(apiUser.current_balance);
+            if (apiUser) {
+              if (apiUser.current_balance !== undefined) {
+                setBalance(apiUser.current_balance);
+              }
+              // Ưu tiên lấy full_name, nếu không có thì lấy user_name
+              setUserFullName(apiUser.full_name || apiUser.user_name || '');
             }
           }
         } catch (e) {
-          console.error('Failed to fetch balance in Navbar', e);
+          console.error('Failed to fetch user data in Navbar', e);
         }
       };
-      fetchBalance();
+      fetchUserData();
     }
   }, [isLoggedIn, location.pathname]);
 
@@ -69,6 +76,14 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
   const handleGoHome = () => {
     setSearchVal('');
     onSearch('');
+  };
+
+  // HÀM LẤY CHỮ CÁI ĐẦU TÊN NGƯỜI DÙNG
+  const getInitials = (name: string) => {
+    if (!name) return 'U'; // Trả về U (User) nếu chưa có tên
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
   };
 
   return (
@@ -216,7 +231,8 @@ export function Navbar({ isDark, onToggleDark, onSearch }: NavbarProps) {
                     onMouseLeave={() => setUserMenuOpen(false)}
                     className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shrink-0 ring-[2px] ring-white dark:ring-gray-900 hover:scale-105 transition-transform hover:ring-indigo-300 dark:hover:ring-indigo-600"
                   >
-                    MA
+                    {/* Hiển thị chữ cái đầu tên người dùng thay vì 'MA' */}
+                    {getInitials(userFullName)}
                   </button>
                   <AnimatePresence>
                     {userMenuOpen && (
