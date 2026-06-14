@@ -165,7 +165,6 @@ export const useBookCollections = () => {
   const mysteryBooks = books.filter(b => matchesGenre(b.genres, genreDictionary.mystery)).slice(0, 20);
   const romanceBooks = books.filter(b => matchesGenre(b.genres, genreDictionary.romance)).slice(0, 20);
   
-  // 5. ĐÃ SỬA: Đổi tên biến popularBooks thành trendingBooks để KHÔNG làm vỡ component TrendingSection.tsx của bạn
   const trendingBooks = popularBooks;
 
   const featuredBook = featuredBooks.length > 0 ? featuredBooks[0] : (books[0] || null);

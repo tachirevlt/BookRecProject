@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router';
 import {
   X, Star, BookOpen, ShoppingCart, Play, Heart,
-  Share2, ChevronRight, Clock, FileText, Calendar, Users, ExternalLink, MessageCircle
+  Share2, ChevronRight, ChevronLeft, Clock, FileText, Calendar, Users, ExternalLink, MessageCircle
 } from 'lucide-react';
 import { badgeColors, genreColors } from '../data/books';
 import type { Book } from '../data/books';
@@ -36,9 +36,10 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
   const [bookReviews, setBookReviews] = useState<ReviewData[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
-  // STATE ĐỀ XUẤT SÁCH
+  // STATE ĐỀ XUẤT SÁCH & ĐIỀU HƯỚNG VÒNG LẶP
   const [recommendedBooksList, setRecommendedBooksList] = useState<Book[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [direction, setDirection] = useState(1); // 1: Trượt tới, -1: Trượt lùi
 
   // LẤY DỮ LIỆU SÁCH
   const { books, recommendedBooks } = useBooks();
@@ -65,12 +66,10 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
     };
   }, [bookId]);
 
-  // KIỂM TRA TRẠNG THÁI SỞ HỮU & WISHLIST QUA API MỚI TÁCH BIỆT
   useEffect(() => {
     const checkUserStatus = async () => {
       if (!book?.id) return;
       
-      // Reset UI trạng thái cũ trước khi check
       setIsAlreadyPurchased(false);
       setLiked(false);
 
@@ -78,13 +77,11 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
       if (!userId) return; 
 
       try {
-        // Chạy song song 2 API riêng biệt để tối ưu thời gian tải dữ liệu
         const [purchasedList, wishlist] = await Promise.all([
           userService.getPurchasedBooks(userId),
           userService.getWishlist()
         ]);
 
-        // Đối chiếu mã book_id từ API thô trả về với book.id hiện tại
         const hasPurchased = purchasedList?.some(b => String(b.book_id) === String(book.id));
         if (hasPurchased) setIsAlreadyPurchased(true);
 
@@ -99,7 +96,6 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
     checkUserStatus();
   }, [book?.id, bookId]);
 
-  // GỌI API REVIEWS VÀ RECOMMENDATIONS KHI MỞ SÁCH
   useEffect(() => {
     const fetchAdditionalData = async () => {
       if (!book?.id) return;
@@ -108,21 +104,30 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
       setLoadingRecommendations(true);
       
       try {
-        // Chạy song song cả API Review và Recommendations
-        // Đã cập nhật tham số pageNumber = 1 và pageSize = 3 cho API Review
-        const [reviewsData, recommendationsData] = await Promise.all([
+        const [reviewsData, recommendationsResponse] = await Promise.all([
           reviewService.getReviewsByBook(String(book.id), 1, 3).catch(() => []),
-          bookService.getRecommendationsByBookId(String(book.id), 5).catch(() => [])
+          bookService.getRecommendationsByBookId(String(book.id), 10).catch(() => []) // Lấy 10 cuốn
         ]);
 
-        // Xử lý Reviews
         const sortedReviews = (reviewsData || []).sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-        setBookReviews(sortedReviews.slice(0, 3)); // Cập nhật giới hạn slice thành 3 cho an toàn
+        setBookReviews(sortedReviews.slice(0, 3));
 
-        // Xử lý Recommendations
-        // Loại bỏ chính cuốn sách hiện tại ra khỏi danh sách đề xuất (nếu có bị trùng)
-        const filteredRecommendations = recommendationsData.filter(b => String(b.id) !== String(book.id));
-        setRecommendedBooksList(filteredRecommendations);
+        const rawRecList = Array.isArray(recommendationsResponse) 
+          ? recommendationsResponse 
+          : (recommendationsResponse as any)?.items || [];
+
+        const normalizedRecs = rawRecList.map((rb: any) => ({
+          ...rb,
+          id: rb.id || rb.book_id,
+          title: rb.title || rb.original_title,
+          author: rb.author || rb.authors,
+          cover: rb.cover || rb.image_url,
+          rating: rb.rating || rb.average_rating || 0,
+        }));
+
+        const filteredRecommendations = normalizedRecs.filter((b: any) => String(b.id) !== String(book.id));
+        
+        setRecommendedBooksList(filteredRecommendations as Book[]);
         
       } catch (error) {
         console.error("Lỗi lấy dữ liệu phụ:", error);
@@ -135,7 +140,7 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
     fetchAdditionalData();
   }, [book?.id]);
 
-  // ─── HANDLERS ───────────────────────────────────────────────────────────────
+  // ─── HANDLERS MUA HÀNG ──────────────────────────────────────────────────────
   const handleSafeClose = () => {
     document.body.style.overflow = '';
     onClose();
@@ -143,7 +148,6 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
 
   const formatPrice = (p: number) => p.toLocaleString('vi-VN') + '₫';
 
-  // XỬ LÝ MUA SÁCH BẰNG API
   const handleBuy = async () => {
     if (isBuying || purchased || isAlreadyPurchased || !book) return;
     
@@ -159,14 +163,12 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
       setPurchased(true);
       setIsAlreadyPurchased(true); 
     } catch (error: any) {
-      console.error("Lỗi mua sách:", error);
       alert(error.response?.data?.message || "Mua sách thất bại. Vui lòng thử lại.");
     } finally {
       setIsBuying(false);
     }
   };
 
-  // XỬ LÝ WISHLIST BẰNG API
   const handleToggleWishlist = async () => {
     if (isLiking || !book) return;
 
@@ -186,11 +188,59 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
         setLiked(true);
       }
     } catch (error: any) {
-      console.error("Lỗi cập nhật Wishlist:", error);
       alert("Không thể cập nhật danh sách yêu thích.");
     } finally {
       setIsLiking(false);
     }
+  };
+
+  // ─── LOGIC CAROUSEL VÒNG LẶP VÔ TẬN ──────────────────────────────────────────
+  
+  // Chỉ lấy đúng 5 cuốn sách đầu tiên của mảng để hiển thị
+  const visibleBooks = recommendedBooksList.slice(0, 5);
+  // Hiển thị nút bấm khi có nhiều hơn 1 cuốn sách
+  const showArrows = recommendedBooksList.length > 1;
+
+  const handleNext = () => {
+    setDirection(1); // Cờ báo hiệu đang trượt tới để set hiệu ứng
+    setRecommendedBooksList((prev) => {
+      if (prev.length <= 1) return prev;
+      // Bốc phần tử đầu tiên, nối vào cuối mảng
+      const [first, ...rest] = prev;
+      return [...rest, first];
+    });
+  };
+
+  const handlePrev = () => {
+    setDirection(-1); // Cờ báo hiệu đang trượt lùi
+    setRecommendedBooksList((prev) => {
+      if (prev.length <= 1) return prev;
+      // Bốc phần tử cuối cùng, nhét lên đầu mảng
+      const last = prev[prev.length - 1];
+      const rest = prev.slice(0, -1);
+      return [last, ...rest];
+    });
+  };
+
+  // Animation cho việc thoát/nhập của thẻ sách
+  const cardVariants = {
+    initial: (dir: number) => ({
+      opacity: 0,
+      x: dir > 0 ? 50 : -50, // Nếu tới thì đi vào từ bên phải, lùi thì từ bên trái
+      scale: 0.9,
+    }),
+    animate: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: { type: "spring" as const, stiffness: 300, damping: 30 }
+    },
+    exit: (dir: number) => ({
+      opacity: 0,
+      x: dir > 0 ? -50 : 50,
+      scale: 0.9,
+      transition: { duration: 0.2 }
+    })
   };
 
   const metaItems = book ? [
@@ -300,13 +350,9 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
                   </div>
                   
                   <div className="flex gap-2 ml-auto flex-wrap justify-end">
-                    
-                    {/* NÚT CHI TIẾT / ĐỌC NGAY */}
                     <button
                       onClick={() => { 
-                        if (book?.id) {
-                          trackingService.logEvent(String(book.id), 'detail_view');
-                        }
+                        if (book?.id) trackingService.logEvent(String(book.id), 'detail_view');
                         handleSafeClose(); 
                         navigate(`/book/${book.id}`); 
                       }}
@@ -316,14 +362,9 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
                           : 'bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-200'
                       }`}
                     >
-                      {isAlreadyPurchased ? (
-                        <><Play className="w-4 h-4 fill-current" /> Đọc ngay</>
-                      ) : (
-                        <><ExternalLink className="w-4 h-4" /> Xem chi tiết</>
-                      )}
+                      {isAlreadyPurchased ? <><Play className="w-4 h-4 fill-current" /> Đọc ngay</> : <><ExternalLink className="w-4 h-4" /> Xem chi tiết</>}
                     </button>
 
-                    {/* ẨN NÚT WISHLIST NẾU SÁCH ĐÃ ĐƯỢC MUA */}
                     {!isAlreadyPurchased && (
                       <button
                         onClick={handleToggleWishlist}
@@ -334,16 +375,11 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
                             : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-transparent dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'
                         }`}
                       >
-                        {isLiking ? (
-                          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
-                        )}
+                        {isLiking ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />}
                         {liked ? 'Đã thích' : 'Yêu thích'}
                       </button>
                     )}
 
-                    {/* NÚT MUA SÁCH */}
                     <button
                       onClick={handleBuy}
                       disabled={isBuying || isAlreadyPurchased}
@@ -355,72 +391,106 @@ export function BookDetailModal({ bookId, bookData, onClose, onOpenBook }: BookD
                             : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:opacity-90'
                       }`}
                     >
-                      {isBuying ? (
-                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : isAlreadyPurchased ? (
-                        <>✓ Đã mua</>
-                      ) : (
-                        <><ShoppingCart className="w-4 h-4" /> Mua ngay</>
-                      )}
+                      {isBuying ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : isAlreadyPurchased ? <>✓ Đã mua</> : <><ShoppingCart className="w-4 h-4" /> Mua ngay</>}
                     </button>
                   </div>
                 </div>
 
-                {/* ── GIỚI THIỆU SÁCH ── */}
-                <div>
-                  <h3 className="text-gray-900 dark:text-white font-semibold mb-3 flex items-center gap-2">
-                    <BookOpen className="w-4.5 h-4.5 text-indigo-500" /> Giới thiệu sách
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm whitespace-pre-line">
-                    {book.longDescription}
-                  </p>
-                </div>
+                {/* ── GIỚI THIỆU & REVIEWS ── */}
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-gray-900 dark:text-white font-semibold mb-3 flex items-center gap-2">
+                      <BookOpen className="w-4.5 h-4.5 text-indigo-500" /> Giới thiệu sách
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm whitespace-pre-line">
+                      {book.longDescription}
+                    </p>
+                  </div>
 
-                {/* ── ĐÁNH GIÁ (REVIEWS) ── */}
-                <div>
-                  <h3 className="text-gray-900 dark:text-white font-semibold mb-4 flex items-center gap-2">
-                    <MessageCircle className="w-4.5 h-4.5 text-indigo-500" /> Nhận xét từ độc giả
-                  </h3>
-                  
-                  {loadingReviews ? (
-                    <div className="flex justify-center py-6">
-                      <span className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : bookReviews.length > 0 ? (
-                    <div className="space-y-4">
-                      {bookReviews.map((review) => (
-                        <div key={review.id} className="bg-white/60 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                              {(review as any).full_name || (review as any).fullName || 'Độc giả'}
-                            </span>
-                            <span className="text-[10px] text-gray-400">
-                              {new Date(review.time).toLocaleDateString('vi-VN')}
-                            </span>
+                  <div>
+                    <h3 className="text-gray-900 dark:text-white font-semibold mb-4 flex items-center gap-2">
+                      <MessageCircle className="w-4.5 h-4.5 text-indigo-500" /> Nhận xét từ độc giả
+                    </h3>
+                    {loadingReviews ? (
+                      <div className="flex justify-center py-6">
+                        <span className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : bookReviews.length > 0 ? (
+                      <div className="space-y-4">
+                        {bookReviews.map((review) => (
+                          <div key={review.id} className="bg-white/60 dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                {(review as any).full_name || (review as any).fullName || 'Độc giả'}
+                              </span>
+                              <span className="text-[10px] text-gray-400">
+                                {new Date(review.time).toLocaleDateString('vi-VN')}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-800 dark:text-gray-200">"{review.review}"</p>
                           </div>
-                          <p className="text-sm text-gray-800 dark:text-gray-200">"{review.review}"</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 bg-white/40 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 text-gray-500 text-sm">
-                      Chưa có đánh giá nào. Hãy là người đầu tiên nhận xét cuốn sách này!
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 bg-white/40 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 text-gray-500 text-sm">
+                        Chưa có đánh giá nào. Hãy là người đầu tiên nhận xét cuốn sách này!
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* ── ĐỀ XUẤT TỪ HỆ THỐNG ── */}
+                {/* ── ĐỀ XUẤT TỪ HỆ THỐNG (VÒNG LẶP VÔ TẬN) ── */}
                 <div>
-                  <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Bạn cũng có thể thích</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-gray-900 dark:text-white font-semibold">Bạn cũng có thể thích</h3>
+                    
+                    {/* BỘ NÚT ĐIỀU HƯỚNG */}
+                    {!loadingRecommendations && showArrows && (
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={handlePrev}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/20 transition-all shadow-sm"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={handleNext}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/20 transition-all shadow-sm"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {loadingRecommendations ? (
                      <div className="flex justify-center py-6">
                        <span className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                      </div>
                   ) : recommendedBooksList.length > 0 ? (
-                    <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                      {recommendedBooksList.map(rb => (
-                        <BookCard key={rb.id} book={rb} onOpen={onOpenBook} size="sm" />
-                      ))}
+                    // Vùng chứa overflow-hidden để cắt gọn mép trượt
+                    <div className="relative overflow-hidden -mx-2 px-2 py-4">
+                      {/* ĐÃ SỬA: Chuyển sang thẻ Flex, bỏ tính năng scroll Native */}
+                      <div className="flex gap-4 sm:gap-5 relative">
+                        <AnimatePresence mode="popLayout" custom={direction}>
+                          {visibleBooks.map((rb) => (
+                            <motion.div
+                              key={rb.id}
+                              custom={direction}
+                              layout // Phép màu làm thẻ tự động trượt mượt mà
+                              variants={cardVariants}
+                              initial="initial"
+                              animate="animate"
+                              exit="exit"
+                              // ĐÃ SỬA: Dùng Tailwind toán học để thẻ có kích thước hoàn hảo (Responsive: 3 thẻ mobile, 4 thẻ tablet, 5 thẻ Desktop)
+                              // Ép chiều rộng con bên trong (!w-full) để đè lên kích thước gốc cố định của BookCard
+                              className="w-[calc((100%-32px)/3)] sm:w-[calc((100%-60px)/4)] md:w-[calc((100%-80px)/5)] shrink-0 [&>div]:!w-full [&>div]:!max-w-none"
+                            >
+                              <BookCard book={rb} onOpen={onOpenBook} size="sm" />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-6 bg-white/40 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 text-gray-500 text-sm">

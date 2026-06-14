@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router';
 import { HeroCarousel } from '../components/HeroCarousel';
 import { FeaturedSection } from '../components/FeaturedSection';
@@ -9,12 +9,12 @@ import { ReadingStreak } from '../components/ReadingStreak';
 import { useBooks, useBookCollections } from '../hooks/useBooks';
 import { genreInfo } from '../data/books'; 
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { userService } from '../../services/userService'; // Import userService
 import type { OutletContextType } from '../components/RootLayout';
+import type { Book } from '../data/books'; // Import type Book
 
 export function Home() {
   const { books, isLoading } = useBooks();
-  
-  // Lấy các mảng sách đã được phân loại chính xác từ hook mới
   const { 
     fantasyBooks, 
     sciFiBooks, 
@@ -24,8 +24,33 @@ export function Home() {
   } = useBookCollections();
   
   const { searchQuery, onOpenBook } = useOutletContext<OutletContextType>();
+
+  // --- THÊM STATE CHO SÁCH ĐỀ XUẤT CÁ NHÂN ---
+  const [personalizedBooks, setPersonalizedBooks] = useState<Book[]>([]);
+  const isLoggedIn = userService.isLoggedIn();
+
+  // --- GỌI API LẤY SÁCH KHI ĐÃ ĐĂNG NHẬP ---
+  useEffect(() => {
+    const fetchPersonalizedBooks = async () => {
+      if (isLoggedIn) {
+        const userId = userService.getCurrentUserId();
+        if (userId) {
+          try {
+            // Lấy 8 cuốn sách đề xuất
+            const recommended = await userService.getRecommendationsByUserkId(userId, 8);
+            if (recommended && recommended.length > 0) {
+              setPersonalizedBooks(recommended);
+            }
+          } catch (error) {
+            console.error("Lỗi khi tải sách đề xuất cá nhân:", error);
+          }
+        }
+      }
+    };
+
+    fetchPersonalizedBooks();
+  }, [isLoggedIn]);
   
-  // 1. Tối ưu hóa việc lọc tìm kiếm để không chạy lại vô nghĩa
   const filtered = useMemo(() => {
     if (!searchQuery) return null;
     const lowerQuery = searchQuery.toLowerCase();
@@ -36,20 +61,30 @@ export function Home() {
     );
   }, [books, searchQuery]);
 
-  // 2. KỸ THUẬT MEMOIZATION: "Đóng băng" toàn bộ giao diện tĩnh của trang chủ
-  // Điều này ngăn React vẽ lại hàng trăm thẻ sách khi bạn mở Modal chi tiết sách.
+  // THÊM CÁC DEPENDENCY MỚI VÀO USEMEMO (isLoggedIn, personalizedBooks)
   const homeContent = useMemo(() => (
     <>
-      {/* Hero */}
       <HeroCarousel onOpenBook={onOpenBook} />
 
-      {/* Sections */}
       <div className="space-y-16 py-14">
+        
+        {/* CHỈ CẦN isLoggedIn LÀ RENDER LUÔN ĐỂ BOOKSHELF LO VIỆC HIỂN THỊ LOADING */}
+        {isLoggedIn && (
+          <BookShelf
+            title="✨ Dành Riêng Cho Bạn"
+            subtitle="Đề xuất dựa trên sở thích và lịch sử đọc của bạn"
+            emoji="🎯"
+            genre="Personalized"
+            books={personalizedBooks} 
+            onOpenBook={onOpenBook}
+            accentColor="from-indigo-500 to-purple-600"
+          />
+        )}
+
         <FeaturedSection onOpenBook={onOpenBook} />
         <ReadingStreak />
         <MoodSection onOpenBook={onOpenBook} />
 
-        {/* Fantasy shelf */}
         <BookShelf
           title="Thế giới Giả tưởng"
           subtitle={genreInfo['fantasy'].description}
@@ -59,10 +94,8 @@ export function Home() {
           accentColor={genreInfo['fantasy'].accentColor}
         />
 
-        {/* Trending */}
         <TrendingSection onOpenBook={onOpenBook} />
 
-        {/* Khoa học Viễn tưởng */}
         <BookShelf
           title="Khoa học Viễn tưởng"
           subtitle={genreInfo['science-fiction'].description}
@@ -72,7 +105,6 @@ export function Home() {
           accentColor={genreInfo['science-fiction'].accentColor}
         />
 
-        {/* Classics shelf */}
         <BookShelf
           title="Tác phẩm Kinh điển"
           subtitle={genreInfo['classics'].description}
@@ -81,18 +113,7 @@ export function Home() {
           onOpenBook={onOpenBook}
           accentColor={genreInfo['classics'].accentColor}
         />
-        
-        {/* Advanture shelf */}
-        {/* <BookShelf
-          title="Phiêu lưu & Thám hiểm"
-          subtitle={genreInfo['advanture'].description}
-          emoji={genreInfo['advanture'].emoji}
-          genre="Advanture"
-          onOpenBook={onOpenBook}
-          accentColor={genreInfo['advanture'].accentColor}
-        /> */}
 
-        {/* Mystery shelf */}
         <BookShelf
           title="Bí ẩn & Trinh thám"
           subtitle={genreInfo['mystery'].description}
@@ -102,7 +123,6 @@ export function Home() {
           accentColor={genreInfo['mystery'].accentColor}
         />
 
-        {/* Romance shelf */}
         <BookShelf
           title="Tiểu thuyết Lãng mạn"
           subtitle={genreInfo['romance'].description}
@@ -113,7 +133,8 @@ export function Home() {
         />
       </div>
     </>
-  ), [books, onOpenBook]); // Chỉ cập nhật giao diện khi mảng sách hoặc hàm mở sách thay đổi
+  ), [books, onOpenBook, isLoggedIn, personalizedBooks]); 
+  // Nhớ giữ mảng dependency ở trên để React biết khi nào cần render lại
 
   if (filtered) {
     return (
@@ -150,7 +171,6 @@ export function Home() {
 
   return (
     <main className="bg-[#F8F7F4] dark:bg-[#0D0C14]">
-      {/* Thay vì render trực tiếp, chúng ta gọi biến đã được đóng băng bằng useMemo */}
       {homeContent}
     </main>
   );

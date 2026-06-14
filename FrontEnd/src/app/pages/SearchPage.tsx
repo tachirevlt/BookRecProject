@@ -32,53 +32,54 @@ export function SearchPage() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       
       try {
-        // 1. Phân tích kiểu sắp xếp để gửi xuống Backend
         let sortBy = '';
         let sortOrder = '';
         
         if (activeSort === 'newest') {
-          sortBy = 'year'; 
-          sortOrder = 'desc';
+          sortBy = 'year'; sortOrder = 'desc';
         } else if (activeSort === 'popular') {
-          sortBy = 'popularity'; 
-          sortOrder = 'desc';
+          sortBy = 'popularity'; sortOrder = 'desc';
         } else if (activeSort === 'top_rated') {
-          sortBy = 'rating'; // Khớp với "rating" ở Backend (lọc điểm 5 sao)
-          sortOrder = 'desc';
+          sortBy = 'rating'; sortOrder = 'desc';
         } else if (activeSort === 'price_asc') {
-          sortBy = 'price'; 
-          sortOrder = 'asc';
+          sortBy = 'price'; sortOrder = 'asc';
         } else if (activeSort === 'price_desc') {
-          sortBy = 'price';
-          sortOrder = 'desc';
+          sortBy = 'price'; sortOrder = 'desc';
         }
 
-        // 2. Gửi lệnh lấy sách
-        const response = await bookService.getBooks({ 
-          PageNumber: page, 
-          PageSize: 60,
-          SearchTerm: query, // Khớp với if (!string.IsNullOrWhiteSpace(filters.SearchTerm)) ở Backend
-          SortBy: sortBy,    // Khớp với if (!string.IsNullOrWhiteSpace(filters.SortBy)) ở Backend
-          SortOrder: sortOrder
+        // ĐẶT BIẾN PAGE_SIZE ĐỂ DỄ QUẢN LÝ
+        const PAGE_SIZE = 30; 
+
+        // 1. Gửi lệnh lấy sách với pageSize = 6
+        const response = await bookService.searchBooksES({ 
+          pageNumber: page, 
+          pageSize: PAGE_SIZE,
+          q: query,
+          // Bỏ comment 2 dòng dưới nếu Microservice ES của bạn đã hỗ trợ sort
+          // sortBy: sortBy,    
+          // sortOrder: sortOrder
         });
 
-        if (response && response.items) {
-          // Chuẩn hóa ID tránh lỗi Popup
-          const normalized = response.items.map((b: any) => ({ ...b, id: b.book_id || b.id }));
+        // 2. Tương thích linh hoạt: Hứng data từ "items" hoặc "data" hoặc "hits"
+        const responseData = response?.items || response?.data || response?.hits || [];
+
+        if (responseData && responseData.length > 0) {
+          // Chuẩn hóa ID
+          const normalized = responseData.map((b: any) => ({ ...b, id: b.book_id || b.id }));
           setResults(normalized);
           
-          // 3. Lấy thông tin phân trang từ API
-          // Tùy thuộc vào cách bookService trả về dữ liệu (có thể là totalPages hoặc totalCount)
-          const apiTotalPages = (response as any).totalPages || (response as any).TotalPages;
-          const apiTotalCount = (response as any).totalCount || (response as any).TotalCount || normalized.length;
+          // Lấy thông tin phân trang từ API
+          const apiTotalPages = response?.totalPages || response?.TotalPages;
+          const apiTotalCount = response?.totalCount || response?.TotalCount || normalized.length;
           
           if (apiTotalPages) {
              setTotalPages(apiTotalPages);
           } else if (apiTotalCount) {
-             setTotalPages(Math.max(1, Math.ceil(apiTotalCount / 60)));
+             // SỬA LẠI: Chia cho PAGE_SIZE (6) thay vì 60
+             setTotalPages(Math.max(1, Math.ceil(apiTotalCount / PAGE_SIZE)));
           } else {
-             // Fallback: Nếu không có cả hai, cứ thấy trả đủ 60 cuốn thì cho đi tiếp
-             setTotalPages(normalized.length === 60 ? page + 1 : page);
+             // SỬA LẠI: Fallback kiểm tra 6 cuốn
+             setTotalPages(normalized.length === PAGE_SIZE ? page + 1 : page);
           }
           
           setTotalCount(apiTotalCount);
@@ -88,13 +89,12 @@ export function SearchPage() {
           setTotalCount(0);
         }
       } catch (error) {
-        console.error("Lỗi trang tìm kiếm:", error);
+        console.error("Lỗi trang tìm kiếm (Elasticsearch):", error);
       } finally {
         setLoading(false);
       }
     };
 
-    // Debounce: Nếu người dùng đang gõ nhanh trên URL thì đợi 300ms mới gọi API
     const timeoutId = setTimeout(() => {
       fetchSearchResults();
     }, 300);

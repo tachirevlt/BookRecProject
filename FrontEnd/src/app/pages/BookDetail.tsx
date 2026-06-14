@@ -4,7 +4,7 @@ import { useParams, useNavigate, useOutletContext } from 'react-router';
 import {
   Star, ShoppingCart, BookOpen, Heart, Share2, ArrowLeft, ChevronRight, ChevronLeft,
   Clock, Tag, Award, MessageSquare, Play, Globe, MoreHorizontal,
-  Layers, Calendar, TrendingUp, Sparkles, Eye, Loader2, Send, ChevronDown, ChevronUp // Đã thêm ChevronDown, ChevronUp
+  Layers, Calendar, TrendingUp, Sparkles, Eye, Loader2, Send, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { genreColors, badgeColors, genreInfo } from '../data/books';
 import { bookService } from '../../services/bookService';
@@ -96,14 +96,33 @@ export function BookDetail() {
     fetchBookDetail();
   }, [id]);
 
-  // 2. GỌI API LẤY SÁCH ĐỀ XUẤT
+  // 2. GỌI API LẤY SÁCH ĐỀ XUẤT (ĐÃ CHỈNH SỬA)
   useEffect(() => {
     const fetchRecommendations = async () => {
       if (!book?.id) return;
       setLoadingRecommendations(true);
       try {
-        const res = await bookService.getRecommendations();
-        setRecommendedBooks(res.filter(b => String(b.id) !== String(book.id)));
+        // Đổi sang gọi API bằng BookId và lấy 30 cuốn
+        const recommendationsResponse = await bookService.getRecommendationsByBookId(String(book.id), 30);
+        
+        // Chuẩn hóa dữ liệu an toàn giống hệt Modal
+        const rawRecList = Array.isArray(recommendationsResponse) 
+          ? recommendationsResponse 
+          : (recommendationsResponse as any)?.items || [];
+
+        const normalizedRecs = rawRecList.map((rb: any) => ({
+          ...rb,
+          id: rb.id || rb.book_id,
+          title: rb.title || rb.original_title,
+          author: rb.author || rb.authors,
+          cover: rb.cover || rb.image_url,
+          rating: rb.rating || rb.average_rating || 0,
+        }));
+
+        // Lọc bỏ cuốn sách hiện tại
+        const filteredRecommendations = normalizedRecs.filter((b: any) => String(b.id) !== String(book.id));
+        setRecommendedBooks(filteredRecommendations as Book[]);
+        
       } catch (error) {
         console.error("Lỗi tải sách đề xuất:", error);
       } finally {

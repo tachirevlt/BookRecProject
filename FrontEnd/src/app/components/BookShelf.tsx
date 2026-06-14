@@ -30,11 +30,14 @@ export function BookShelf({ title, subtitle, emoji, genre, books: propBooks, onO
 
   const displayBooks = propBooks !== undefined ? propBooks : fetchedBooks;
 
-  // Nếu cha không truyền sách xuống và chưa fetch xong -> Đang loading
-  const isLoading = propBooks === undefined && (!hasFetched || isFetching);
+  // SỬA LỖI 1: Nếu dùng propBooks, isLoading phụ thuộc vào việc mảng cha đã có data chưa
+  const isLoading = propBooks !== undefined 
+    ? propBooks.length === 0  // Đang đợi cha truyền data vào
+    : (!hasFetched || isFetching); // Tự gọi API thì tính theo hasFetched
 
   useEffect(() => {
-    if (propBooks) {
+    // SỬA LỖI 2: Chỉ dừng IntersectionObserver nếu propBooks THỰC SỰ ĐÃ CÓ DATA
+    if (propBooks && propBooks.length > 0) {
       setIsVisible(true);
       return;
     }
@@ -56,7 +59,6 @@ export function BookShelf({ title, subtitle, emoji, genre, books: propBooks, onO
   useEffect(() => {
     if (!isVisible) return; 
     
-    // NẾU ĐÃ CÓ SÁCH HOẶC KHÔNG CÓ GENRE -> KHÔNG GỌI API (Đúng ý bạn)
     if (propBooks !== undefined || !genre) {
       setHasFetched(true);
       return; 
@@ -95,7 +97,7 @@ export function BookShelf({ title, subtitle, emoji, genre, books: propBooks, onO
     return () => window.removeEventListener('resize', updateCardsToShow);
   }, []);
 
-  // Ẩn kệ sách nếu đã load xong mà API trả về mảng rỗng (Tránh để lại khoảng trống vô duyên)
+  // Ẩn kệ sách nếu đã load xong mà API trả về mảng rỗng
   if (!isLoading && displayBooks.length === 0) return null;
 
   const nextSlide = () => setStartIndex((prev) => (prev + 1) % displayBooks.length);
@@ -135,7 +137,7 @@ export function BookShelf({ title, subtitle, emoji, genre, books: propBooks, onO
           <button onClick={nextSlide} className="w-8 h-8 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/15 transition-colors shadow-sm">
             <ChevronRight className="w-4 h-4" />
           </button>
-          {genre && (
+          {genre && genre !== "Personalized" && (
             <a href={`/genre/${genre}`} className="flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 transition-colors ml-1">
               Tất cả <ArrowRight className="w-3.5 h-3.5" />
             </a>

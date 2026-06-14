@@ -1,6 +1,8 @@
 import axiosClient from './axiosClient';
 import { ENDPOINTS } from './endpoints';
 import type { BookEntity } from './bookService';
+import axios from 'axios';
+import { mapToBook } from './bookService';
 
 // ─── TYPES: REQUEST PAYLOADS ──────────────────────────────────────────────────
 
@@ -229,5 +231,19 @@ export const userService = {
    */
   isLoggedIn: (): boolean => {
     return !!localStorage.getItem('accessToken');
+  },
+
+  getRecommendationsByUserkId: async (userId: string, count: number = 8): Promise<any[]> => {
+    const recommendApiUrl = import.meta.env.VITE_RECOMMEND_API_URL || 'http://localhost:8000';
+
+    // Sử dụng axios gốc để không bị dính baseURL của axiosClient
+    const response = await axios.get(
+      `${recommendApiUrl}/recommend/als/${userId}`,
+      { params: { limit: count } }
+    );
+
+    const dataArray = Array.isArray(response.data) ? response.data : response.data.data || [];
+
+    return dataArray.map(mapToBook);
   },
 };
