@@ -33,6 +33,9 @@ namespace Infrastructure.Repositories
             CancellationToken cancellationToken)
         {
             IQueryable<BookEntity> query = _db.Books.AsNoTracking();
+            
+            // Lấy năm hiện tại 1 lần ở ngoài để SQL dễ dàng biên dịch
+            int currentYear = DateTime.UtcNow.Year; 
 
             // 1. CÁC BỘ LỌC TÌM KIẾM CƠ BẢN
             if (!string.IsNullOrWhiteSpace(filters.SearchTerm))
@@ -60,16 +63,8 @@ namespace Infrastructure.Repositories
                 var genreFilter = filters.Genre.Trim().ToLower();
                 query = query.Where(b => b.tags.Contains(genreFilter));
             }
-            if (!string.IsNullOrWhiteSpace(filters.Badge))
-            {
-                // Tách các badge nếu client truyền vào nhiều nhãn cách nhau bằng dấu phẩy
-                var targetBadges = filters.Badge.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                                .Select(b => b.Trim())
-                                                .ToList();
 
-                // Lọc ra sách mà mảng badges chứa ÍT NHẤT 1 nhãn nằm trong danh sách targetBadges
-                query = query.Where(b => b.badges.Any(dbBadge => targetBadges.Contains(dbBadge)));
-            }
+            
             // 2. LỌC THEO SỐ ĐIỂM 
             if (filters.MinRating.HasValue || filters.MaxRating.HasValue)
             {
@@ -111,6 +106,7 @@ namespace Infrastructure.Repositories
                     "popularity" => isDescending ? query.OrderByDescending(b => b.total_ratings) : query.OrderBy(b => b.total_ratings),
                     "price" => isDescending ? query.OrderByDescending(b => b.price) : query.OrderBy(b => b.price),
                     
+                    // Tối ưu thuật toán Trending đồng nhất với BadgeService
                     "trending_7d" => isDescending 
                         ? query.OrderByDescending(b => (b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d) 
                         : query.OrderBy(b => (b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d),
@@ -124,22 +120,30 @@ namespace Infrastructure.Repositories
             }
             else
             {
+                // ĐÃ SỬA: SẮP XẾP DEFAULT THEO ĐÚNG CẤP ĐỘ ƯU TIÊN CỦA BADGE
                 query = query
-                    // 1. Ưu tiên sách bán chạy nhất tuần (Quyết định nhãn Best Seller)
-                    .OrderByDescending(b => b.purchases_7d)
+                    // Ưu tiên 1: Sách có nhãn thủ công (True xếp trước False)
+                    .OrderByDescending(b => b.badge != null && b.badge != "")
                     
-                    // 2. Nếu lượt mua bằng nhau, ưu tiên sách đang có gia tốc tương tác cao (Quyết định nhãn Trending)
+                    // Ưu tiên 2: Best Seller (Căn cứ theo số lượt mua cao nhất)
+                    .ThenByDescending(b => b.purchases_7d)
+                    
+                    // Ưu tiên 3: Trending (Sách nào thoả mãn công thức Trending sẽ được ưu tiên nổi lên)
+                    .ThenByDescending(b => 
+                        ((b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d) > 50 &&
+                        ((b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d) > (((b.purchases_30d * 10) + (b.favorite_30d * 5) + b.views_30d) / 4.0 * 1.8)
+                    )
+                    // Phụ trợ 3.1: Nếu cả 2 sách đều thoả Trending, quyển nào điểm cao hơn xếp trên
                     .ThenByDescending(b => (b.purchases_7d * 10) + (b.favorite_7d * 5) + b.views_7d)
                     
-                    // 3. Nếu vẫn bằng, ưu tiên sách mới xuất bản (Quyết định nhãn New)
-                    .ThenByDescending(b => b.original_publication_year)
+                    // Ưu tiên 4: New (Sách xuất bản <= 10 năm)
+                    .ThenByDescending(b => b.original_publication_year != null && (currentYear - b.original_publication_year) <= 10)
                     
-                    // 4. Cuối cùng mới xét đến điểm đánh giá chất lượng
+                    // Ưu tiên 5: Điểm đánh giá (Sách hay tự động nổi lên)
                     .ThenByDescending(b => b.ratings_5)
                     .ThenByDescending(b => b.total_ratings);
             }
             
-
             // 4. THỰC THI PHÂN TRANG
             int totalCount = await query.CountAsync(cancellationToken);
 

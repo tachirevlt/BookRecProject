@@ -15,7 +15,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          // Thay thế "*" bằng địa chỉ Frontend của bạn khi lên Production
+                          // Tạm thời cho phép tất cả các nguồn (origin) truy cập API. 
                           policy.WithOrigins("*")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
