@@ -237,23 +237,24 @@ export const bookService = {
 
   // Thêm hàm này dành riêng cho ElasticSearch Microservice
   searchBooksES: async (params: { q?: string; pageNumber?: number; pageSize?: number } = {}) => {
-    // Đặt mặc định theo API của bạn
-    const queryParams = { pageNumber: 1, pageSize: 4, ...params };
+  // Đặt mặc định theo API của bạn
+  const queryParams = { pageNumber: 1, pageSize: 4, ...params };
 
-    // Gọi thẳng URL của microservice (Ghi đè baseURL của axiosClient nếu có)
-    const response = await axiosClient.get(
-      'http://127.0.0.1:8000/recommend/es/search',
-      { params: queryParams }
-    );
+  // Lấy đường dẫn FastAPI từ file .env (hoặc cấu hình chung). 
+  // Nhớ thay VITE_FASTAPI_URL bằng đúng tên biến bạn đang dùng cho 2 API đề xuất nhé!
+  const esBaseUrl = import.meta.env.VITE_RECOMMEND_API_URL || 'http://localhost:8000';
 
-    // CHÚ Ý CHỖ NÀY: Phải check xem API ES của bạn trả về data cấu trúc như thế nào.
-    // Nếu nó giống hệt C# backend (có items, totalPages...):
-    return {
-      ...response.data,
-      // Vẫn dùng mapToBook để chuẩn hóa dữ liệu hiển thị lên UI
-      items: (response.data.items || []).map(mapToBook), 
-    };
-  },
+  // Gọi URL linh hoạt để chạy mượt trên mọi thiết bị
+  const response = await axiosClient.get(
+    `${esBaseUrl}/recommend/es/search`,
+    { params: queryParams }
+  );
+
+  return {
+    ...response.data,
+    items: (response.data.items || []).map(mapToBook), 
+  };
+},
   
   /**
    * Lấy chi tiết một cuốn sách theo ID (Guid).
